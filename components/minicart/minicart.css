@@ -1,0 +1,513 @@
+/*
+ * components/minicart/minicart.css — default skin for the Mini-cart / Checkout.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The overlay is always in the
+ * DOM and shown/hidden via [data-state], so it fades in cleanly with no FOUC; the
+ * panel docks to the right edge and slides off-screen when closed.
+ *
+ * Width: --micra-minicart-size sets the panel width. Override it on the component
+ * (or globally) to widen/narrow the drawer.
+ */
+
+micra-minicart {
+  display: block;
+}
+
+
+.micra-minicart {
+  --micra-minicart-size: 26rem;
+
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--micra-overlay);
+
+  /* hidden + non-interactive until [data-state="open"] */
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--micra-duration) var(--micra-ease),
+    visibility var(--micra-duration) var(--micra-ease);
+}
+
+.micra-minicart[data-state='open'] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.micra-minicart__panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(var(--micra-minicart-size), 100%);
+  display: flex;
+  flex-direction: column;
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  border-left: 1px solid var(--micra-border);
+  box-shadow: var(--micra-shadow);
+
+  transform: translateX(100%);
+  transition: transform var(--micra-duration) var(--micra-ease);
+}
+
+.micra-minicart[data-state='open'] .micra-minicart__panel {
+  transform: none;
+}
+
+/* — Head ————————————————————————————————————————————————————————— */
+
+.micra-minicart__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--micra-border);
+}
+
+.micra-minicart__head h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.micra-minicart__close {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--micra-muted);
+  border-radius: var(--micra-radius);
+}
+
+.micra-minicart__close:hover {
+  color: var(--micra-fg);
+}
+
+/* — Stepper ——————————————————————————————————————————————————————— */
+
+.micra-minicart__stepper {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.875rem 1.25rem;
+  list-style: none;
+  border-bottom: 1px solid var(--micra-border);
+}
+
+.micra-minicart__step {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  font-size: 0.8125rem;
+  color: var(--micra-muted);
+}
+
+.micra-minicart__step-badge {
+  display: grid;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 50%;
+  border: 1px solid var(--micra-border);
+  font-size: 0.75rem;
+  background: var(--micra-surface);
+}
+
+.micra-minicart__step[data-state='current'] {
+  color: var(--micra-fg);
+  font-weight: 600;
+}
+
+.micra-minicart__step[data-state='current'] .micra-minicart__step-badge {
+  border-color: var(--micra-primary);
+  color: var(--micra-primary);
+}
+
+.micra-minicart__step[data-state='done'] {
+  color: var(--micra-fg);
+}
+
+.micra-minicart__step[data-state='done'] .micra-minicart__step-badge {
+  background: var(--micra-primary);
+  border-color: var(--micra-primary);
+  color: var(--micra-primary-fg);
+}
+
+/* — Body / scroll region —————————————————————————————————————————— */
+
+.micra-minicart__body {
+  flex: 1;
+  overflow: auto;
+  padding: 1.25rem;
+}
+
+/* — Line items ———————————————————————————————————————————————————— */
+
+.micra-minicart__items {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.micra-minicart__item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 1rem;
+  align-items: start;
+}
+
+.micra-minicart__item-name {
+  font-weight: 600;
+}
+
+.micra-minicart__item-price {
+  color: var(--micra-muted);
+  font-size: 0.875rem;
+}
+
+.micra-minicart__item-total {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.micra-minicart__item-controls {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Qty stepper */
+.micra-minicart__qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  overflow: hidden;
+}
+
+.micra-minicart__qty-btn {
+  font: inherit;
+  cursor: pointer;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  background: none;
+  color: var(--micra-fg);
+  line-height: 1;
+}
+
+.micra-minicart__qty-btn:hover {
+  background: var(--micra-bg);
+}
+
+.micra-minicart__qty-btn:disabled {
+  color: var(--micra-muted);
+  cursor: not-allowed;
+}
+
+.micra-minicart__qty-input {
+  width: 2.5rem;
+  height: 2rem;
+  border: 0;
+  border-left: 1px solid var(--micra-border);
+  border-right: 1px solid var(--micra-border);
+  text-align: center;
+  font: inherit;
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  -moz-appearance: textfield;
+}
+
+.micra-minicart__qty-input::-webkit-outer-spin-button,
+.micra-minicart__qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.micra-minicart__remove {
+  font: inherit;
+  cursor: pointer;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--micra-muted);
+  text-decoration: underline;
+  font-size: 0.8125rem;
+}
+
+.micra-minicart__remove:hover {
+  color: var(--micra-error);
+}
+
+/* — Coupon ———————————————————————————————————————————————————————— */
+
+.micra-minicart__coupon {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.micra-minicart__coupon-input {
+  flex: 1;
+  font: inherit;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+}
+
+.micra-minicart__coupon-input:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 1px;
+}
+
+.micra-minicart__coupon-msg {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--micra-error);
+  min-height: 1.1em;
+}
+
+.micra-minicart__coupon-applied {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--micra-success);
+}
+
+.micra-minicart__coupon-clear {
+  font: inherit;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  color: var(--micra-muted);
+  text-decoration: underline;
+  font-size: 0.8125rem;
+}
+
+.micra-minicart__coupon-clear:hover {
+  color: var(--micra-fg);
+}
+
+/* — Totals ————————————————————————————————————————————————————————— */
+
+.micra-minicart__totals {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--micra-border);
+  display: grid;
+  gap: 0.4rem;
+}
+
+.micra-minicart__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--micra-muted);
+}
+
+.micra-minicart__row span:last-child {
+  font-variant-numeric: tabular-nums;
+  color: var(--micra-fg);
+}
+
+.micra-minicart__row--discount span:last-child {
+  color: var(--micra-success);
+}
+
+.micra-minicart__row--total {
+  margin-top: 0.25rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--micra-border);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--micra-fg);
+}
+
+.micra-minicart__row--total span:last-child {
+  color: var(--micra-fg);
+}
+
+/* — Empty + success states ———————————————————————————————————————— */
+
+.micra-minicart__empty,
+.micra-minicart__success {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--micra-muted);
+}
+
+.micra-minicart__success h3 {
+  margin: 0 0 0.5rem;
+  color: var(--micra-fg);
+}
+
+.micra-minicart__success-mark {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: var(--micra-success);
+  color: var(--micra-primary-fg);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+/* — Checkout form ————————————————————————————————————————————————— */
+
+.micra-minicart__field {
+  margin-bottom: 1rem;
+}
+
+.micra-minicart__label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.micra-minicart__req {
+  color: var(--micra-error);
+  margin-left: 0.15rem;
+}
+
+.micra-minicart__input {
+  width: 100%;
+  font: inherit;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  box-sizing: border-box;
+}
+
+.micra-minicart__input:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 1px;
+}
+
+.micra-minicart__input[aria-invalid='true'] {
+  border-color: var(--micra-error);
+}
+
+.micra-minicart__error {
+  margin: 0.3rem 0 0;
+  min-height: 1.1em;
+  font-size: 0.8125rem;
+  color: var(--micra-error);
+}
+
+/* — Review summary —————————————————————————————————————————————————— */
+
+.micra-minicart__review-block {
+  margin-bottom: 1.25rem;
+}
+
+.micra-minicart__review-block h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.micra-minicart__review-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  padding: 0.2rem 0;
+}
+
+.micra-minicart__review-addr {
+  font-size: 0.9rem;
+  color: var(--micra-muted);
+  white-space: pre-line;
+}
+
+/* — Foot / actions ———————————————————————————————————————————————— */
+
+.micra-minicart__foot {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--micra-border);
+}
+
+.micra-minicart__foot .micra-btn,
+.micra-minicart__foot .micra-btn--ghost {
+  flex: 1;
+}
+
+/* — Buttons (token-driven) ———————————————————————————————————————— */
+
+.micra-btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.55rem 1rem;
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border: 0;
+  border-radius: var(--micra-radius);
+}
+
+.micra-btn:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.micra-btn--ghost {
+  color: var(--micra-fg);
+  background: none;
+  border: 1px solid var(--micra-border);
+}
+
+/* — Cart trigger + count badge —————————————————————————————————————— */
+
+.micra-minicart-trigger {
+  position: relative;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.55rem 1rem;
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border: 0;
+  border-radius: var(--micra-radius);
+}
+
+.micra-minicart-trigger:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-minicart-trigger__badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  margin-left: 0.4rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--micra-primary-fg);
+  color: var(--micra-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

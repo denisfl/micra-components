@@ -1,0 +1,77 @@
+/*
+ * components/pagination/pagination.css — default skin for Pagination.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The current page is marked
+ * with data-state="current" via data-bind, so the active styling reacts to
+ * selection and Tailwind's data-[state=current]: variants can target it too.
+ */
+
+.micra-pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--micra-fg);
+}
+
+/* Shared button geometry for the prev/next controls and the page numbers. */
+.micra-pagination__item,
+.micra-pagination__nav {
+  font: inherit;
+  cursor: pointer;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--micra-fg);
+  background: none;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  transition:
+    color var(--micra-duration) var(--micra-ease),
+    background var(--micra-duration) var(--micra-ease);
+}
+
+.micra-pagination__item:hover,
+.micra-pagination__nav:hover {
+  color: var(--micra-primary);
+  border-color: var(--micra-primary);
+}
+
+/* Current page — driven by data-state, not :hover, so it stays marked. */
+.micra-pagination__item[data-state='current'] {
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border-color: var(--micra-primary);
+}
+
+.micra-pagination__item:focus-visible,
+.micra-pagination__nav:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+/* Prev/Next at the bounds — the HTML disabled attribute handles interaction. */
+.micra-pagination__nav:disabled {
+  cursor: not-allowed;
+  color: var(--micra-muted);
+  border-color: var(--micra-border);
+}
+
+.micra-pagination__nav:disabled:hover {
+  color: var(--micra-muted);
+  border-color: var(--micra-border);
+}
+
+/* Ellipsis gap — non-interactive, no border, just a spacer with the dots. */
+.micra-pagination__gap {
+  min-width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--micra-muted);
+  user-select: none;
+}

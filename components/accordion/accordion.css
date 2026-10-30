@@ -1,0 +1,71 @@
+/*
+ * components/accordion/accordion.css — default skin for the Accordion.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. Each item exposes its
+ * open/closed via [data-state], so the chevron rotates and the panel reveals
+ * cleanly. Only open panels are in the DOM (the markup uses data-show).
+ */
+
+micra-accordion {
+  display: block;
+}
+
+
+.micra-accordion {
+  width: min(34rem, 100%);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  overflow: hidden;
+}
+
+.micra-accordion__item + .micra-accordion__item {
+  border-top: 1px solid var(--micra-border);
+}
+
+.micra-accordion__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  color: var(--micra-fg);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.micra-accordion__header:hover {
+  background: var(--micra-bg);
+}
+
+.micra-accordion__header:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: -2px;
+}
+
+/* Chevron — rotates when its item is open. */
+.micra-accordion__icon {
+  flex: none;
+  color: var(--micra-muted);
+  transition: transform var(--micra-duration) var(--micra-ease);
+}
+
+.micra-accordion__item[data-state='open'] .micra-accordion__icon {
+  transform: rotate(180deg);
+}
+
+.micra-accordion__panel {
+  padding: 0 1.25rem 1.25rem;
+  color: var(--micra-muted);
+}
+
+.micra-accordion__panel p {
+  margin: 0;
+}

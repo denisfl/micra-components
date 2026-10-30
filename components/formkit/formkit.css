@@ -1,0 +1,349 @@
+/*
+ * components/formkit/formkit.css — default skin for Form Kit.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. Invalid fields are outlined
+ * with --micra-error and their message printed in --micra-error; the stepper
+ * shows done / current / upcoming states off [data-state]; the upload and wizard
+ * progress bars fill with --micra-primary. All transitions run through
+ * --micra-duration, so prefers-reduced-motion zeroes them.
+ */
+
+.micra-formkit {
+  max-width: 34rem;
+  color: var(--micra-fg);
+}
+
+/* — stepper ———————————————————————————————————————————————————————— */
+.micra-formkit__stepper {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.micra-formkit__step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--micra-muted);
+}
+
+.micra-formkit__step-badge {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--micra-border);
+  background: var(--micra-surface);
+  color: var(--micra-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition:
+    background var(--micra-duration) var(--micra-ease),
+    border-color var(--micra-duration) var(--micra-ease),
+    color var(--micra-duration) var(--micra-ease);
+}
+
+.micra-formkit__step[data-state='current'] {
+  color: var(--micra-fg);
+  font-weight: 600;
+}
+.micra-formkit__step[data-state='current'] .micra-formkit__step-badge {
+  border-color: var(--micra-primary);
+  color: var(--micra-primary);
+}
+.micra-formkit__step[data-state='done'] .micra-formkit__step-badge {
+  background: var(--micra-primary);
+  border-color: var(--micra-primary);
+  color: var(--micra-primary-fg);
+}
+
+/* Wizard progress bar under the stepper. */
+.micra-formkit__progress {
+  height: 4px;
+  margin: 0 0 1.5rem;
+  border-radius: 999px;
+  background: var(--micra-border);
+  overflow: hidden;
+}
+.micra-formkit__progress-fill {
+  height: 100%;
+  background: var(--micra-primary);
+  border-radius: inherit;
+  transition: width var(--micra-duration) var(--micra-ease);
+}
+
+/* — fieldset / fields ——————————————————————————————————————————————— */
+.micra-formkit__fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.micra-formkit__legend {
+  padding: 0;
+  margin: 0 0 1rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.micra-formkit__field {
+  margin-bottom: 1.1rem;
+}
+
+.micra-formkit__label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.micra-formkit__req {
+  color: var(--micra-error);
+  margin-left: 0.15rem;
+}
+
+.micra-formkit__input,
+.micra-formkit__textarea,
+.micra-formkit__select {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  color: var(--micra-fg);
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  padding: 0.55rem 0.7rem;
+  transition:
+    border-color var(--micra-duration) var(--micra-ease),
+    box-shadow var(--micra-duration) var(--micra-ease);
+}
+
+/* Drop the native dropdown button (its square corner pokes past the radius). */
+.micra-formkit__select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding-right: 2rem;
+}
+
+/* Caret: an SVG used as a mask, tinted with --micra-muted — the shape comes from
+   the SVG, the colour from a token (no hardcoded colour). Wraps the select. */
+.micra-formkit__select-wrap {
+  position: relative;
+  display: block;
+}
+.micra-formkit__select-wrap::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0.7rem;
+  width: 1rem;
+  height: 1rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+  background-color: var(--micra-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23fff' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 8 10 12 14 8'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23fff' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 8 10 12 14 8'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.micra-formkit__textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.micra-formkit__input:focus-visible,
+.micra-formkit__textarea:focus-visible,
+.micra-formkit__select:focus-visible {
+  outline: none;
+  border-color: var(--micra-ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-ring) 30%, transparent);
+}
+
+/* Invalid state: the input and the message both go to --micra-error. */
+.micra-formkit__input[aria-invalid='true'],
+.micra-formkit__textarea[aria-invalid='true'],
+.micra-formkit__select[aria-invalid='true'] {
+  border-color: var(--micra-error);
+}
+.micra-formkit__input[aria-invalid='true']:focus-visible,
+.micra-formkit__textarea[aria-invalid='true']:focus-visible,
+.micra-formkit__select[aria-invalid='true']:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-error) 30%, transparent);
+}
+
+.micra-formkit__help {
+  margin: 0.3rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--micra-muted);
+}
+.micra-formkit__error {
+  margin: 0.3rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--micra-error);
+}
+
+/* — checkbox / radio ————————————————————————————————————————————————— */
+.micra-formkit__check,
+.micra-formkit__radio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+.micra-formkit__radios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.micra-formkit__check input,
+.micra-formkit__radio input {
+  accent-color: var(--micra-primary);
+}
+
+/* — file upload ————————————————————————————————————————————————————— */
+.micra-formkit__file-input {
+  font: inherit;
+  color: var(--micra-muted);
+}
+.micra-formkit__preview {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+  padding: 0.6rem;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+}
+.micra-formkit__thumb {
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: calc(var(--micra-radius) - 4px);
+  background: var(--micra-border);
+}
+.micra-formkit__thumb--file {
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  color: var(--micra-muted);
+  text-transform: uppercase;
+}
+.micra-formkit__preview-meta {
+  flex: 1;
+  min-width: 0;
+}
+.micra-formkit__preview-name {
+  display: block;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.micra-formkit__preview-size {
+  font-size: 0.8125rem;
+  color: var(--micra-muted);
+}
+.micra-formkit__bar {
+  height: 4px;
+  margin-top: 0.4rem;
+  border-radius: 999px;
+  background: var(--micra-border);
+  overflow: hidden;
+}
+.micra-formkit__bar-fill {
+  height: 100%;
+  background: var(--micra-primary);
+  border-radius: inherit;
+  transition: width var(--micra-duration) var(--micra-ease);
+}
+.micra-formkit__bar-fill[data-state='done'] {
+  background: var(--micra-success);
+}
+.micra-formkit__remove {
+  flex-shrink: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--micra-muted);
+  border-radius: var(--micra-radius);
+}
+.micra-formkit__remove:hover {
+  color: var(--micra-error);
+}
+
+/* — footer / actions ————————————————————————————————————————————————— */
+.micra-formkit__footer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--micra-border);
+}
+.micra-formkit__spacer {
+  flex: 1;
+}
+
+.micra-formkit__btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.55rem 1.1rem;
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border: 1px solid var(--micra-primary);
+  border-radius: var(--micra-radius);
+}
+.micra-formkit__btn--ghost {
+  color: var(--micra-fg);
+  background: none;
+  border-color: var(--micra-border);
+}
+.micra-formkit__btn:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+.micra-formkit__btn[disabled],
+.micra-formkit__btn[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Subtle autosave indicator. */
+.micra-formkit__saved {
+  font-size: 0.8125rem;
+  color: var(--micra-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.micra-formkit__saved::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--micra-success);
+}
+
+/* Visually-hidden live region (announcements without layout impact). */
+.micra-formkit__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

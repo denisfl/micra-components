@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Command palette</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./commandpalette.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-hint {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1.25rem;
+        color: var(--micra-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+    </div>
+
+    <micra-commandpalette @keydown.escape.window="close" @keydown.tab.window="trapTab" @keydown.meta.k.window.prevent="toggle" @keydown.ctrl.k.window.prevent="toggle"
+      data-commands='[
+        {"id":"home","group":"Navigation","label":"Go to Dashboard","keywords":["home","overview","start"]},
+        {"id":"projects","group":"Navigation","label":"Open Projects","keywords":["repos","workspaces"]},
+        {"id":"settings","group":"Navigation","label":"Open Settings","keywords":["preferences","config"],"hint":"g s"},
+        {"id":"new-doc","group":"Actions","label":"New Document","keywords":["create","add","file"],"hint":"Ctrl N"},
+        {"id":"invite","group":"Actions","label":"Invite Teammate","keywords":["member","user","share"]},
+        {"id":"deploy","group":"Actions","label":"Deploy to Production","keywords":["ship","release","push"],"hint":"Ctrl D"},
+        {"id":"theme","group":"Actions","label":"Toggle Dark Mode","keywords":["theme","appearance","light"]},
+        {"id":"search","group":"Actions","label":"Search Everything","keywords":["find","lookup"],"hint":"Ctrl F"},
+        {"id":"docs","group":"Help","label":"Read Documentation","keywords":["guide","manual","reference"]},
+        {"id":"shortcuts","group":"Help","label":"Keyboard Shortcuts","keywords":["keys","hotkeys"],"hint":"?"},
+        {"id":"support","group":"Help","label":"Contact Support","keywords":["help","ticket","email"]},
+        {"id":"logout","group":"Help","label":"Sign Out","keywords":["logout","exit","leave"]}
+      ]'
+    >
+      <button class="micra-btn" @click="open">Open command palette</button>
+
+      <p class="demo-hint">
+        Press <span class="micra-kbd">Cmd/Ctrl</span> + <span class="micra-kbd">K</span> anywhere.
+      </p>
+
+      <div
+        class="micra-cmdk"
+        data-bind="data-state:open ? 'open' : 'closed'"
+        @click.self="close"
+      >
+        <div
+          class="micra-cmdk__panel"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Command palette"
+          data-ref="panel"
+          tabindex="-1"
+        >
+          <input
+            class="micra-cmdk__input"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-controls="cmdk-listbox"
+            placeholder="Type a command or search…"
+            autocomplete="off"
+            data-ref="input"
+            data-model="query"
+            data-bind="aria-expanded:open ? 'true' : 'false', aria-activedescendant:activeDescendant()"
+            @input="onInput"
+            @keydown.down.prevent="next"
+            @keydown.up.prevent="prev"
+            @keydown.enter.prevent="run"
+            @keydown.escape="close"
+          />
+
+          <ul
+            class="micra-cmdk__listbox"
+            id="cmdk-listbox"
+            role="listbox"
+            aria-label="Commands"
+          >
+            <template data-each="filtered()" data-key="id">
+              <li class="micra-cmdk__row" role="presentation">
+                <div
+                  class="micra-cmdk__group"
+                  role="presentation"
+                  data-if="firstInGroup(item)"
+                  data-text="item.group"
+                ></div>
+                <div
+                  class="micra-cmdk__option"
+                  role="option"
+                  data-bind="id:'cmdk-option-' + item.id, aria-selected:item.id === activeId ? 'true' : 'false', data-state:item.id === activeId ? 'active' : ''"
+                  @click="choose(item.id)"
+                  @mousemove="setActive(item.id)"
+                >
+                  <span class="micra-cmdk__label" data-text="item.label"></span>
+                  <span class="micra-cmdk__hint" data-if="item.hint" data-text="item.hint"></span>
+                </div>
+              </li>
+            </template>
+            <li class="micra-cmdk__empty" role="presentation" data-if="noResults()">No commands</li>
+          </ul>
+        </div>
+      </div>
+    </micra-commandpalette>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      Micra.start();
+
+      // Wire the run event — in a real app this is where you'd route/dispatch.
+      const root = document.querySelector('[data-component="commandpalette"]');
+      const palette = Micra.instances().get(root);
+      palette.on('run', (cmd) => {
+        console.log('run command:', cmd.id, '—', cmd.label);
+      });
+
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const el = document.documentElement;
+        el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

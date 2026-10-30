@@ -1,0 +1,74 @@
+/*
+ * theme/theme.css — Micra components design tokens.
+ *
+ * This is the skin contract. Every component's default CSS references only these
+ * --micra-* variables, so re-skinning is a matter of overriding tokens — no need
+ * to touch component CSS. Dark mode swaps the same tokens.
+ *
+ * Usage: load this once, before any component skin.
+ *   <link rel="stylesheet" href="theme/theme.css">
+ */
+
+:root {
+  /* surfaces & text */
+  --micra-bg:          #faf9f7;   /* page background */
+  --micra-surface:     #ffffff;   /* cards, dialogs, menus */
+  --micra-fg:          #1c1b19;   /* primary text */
+  --micra-muted:       #6b7280;   /* secondary text, icons */
+  --micra-border:      #e5e7eb;
+
+  /* accent */
+  --micra-primary:     #4f46e5;
+  --micra-primary-fg:  #ffffff;   /* text/icon on a primary surface */
+  --micra-ring:        #4f46e5;   /* focus outline */
+
+  /* status (semantic accents — used by toasts, alerts, validation) */
+  --micra-success:     #16a34a;
+  --micra-warning:     #d97706;
+  --micra-error:       #dc2626;
+
+  /* overlays & elevation */
+  --micra-overlay:     rgb(0 0 0 / 0.5);
+  --micra-radius:      10px;
+  --micra-shadow:      0 10px 30px rgb(0 0 0 / 0.12);
+
+  /* motion */
+  --micra-duration:    150ms;
+  --micra-ease:        cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Dark theme: explicit opt-in via [data-theme="dark"] on <html> or any ancestor. */
+[data-theme="dark"] {
+  --micra-bg:       #0f0f0e;
+  --micra-surface:  #18181a;
+  --micra-fg:       #f5f5f4;
+  --micra-muted:    #9ca3af;
+  --micra-border:   #2a2a28;
+  /* status — brighter shades for legibility on dark surfaces */
+  --micra-success:  #4ade80;
+  --micra-warning:  #fbbf24;
+  --micra-error:    #f87171;
+  --micra-overlay:  rgb(0 0 0 / 0.6);
+  --micra-shadow:   0 10px 30px rgb(0 0 0 / 0.4);
+}
+
+/* Auto dark by OS preference — unless the user explicitly chose light. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --micra-bg:       #0f0f0e;
+    --micra-surface:  #18181a;
+    --micra-fg:       #f5f5f4;
+    --micra-muted:    #9ca3af;
+    --micra-border:   #2a2a28;
+    --micra-success:  #4ade80;
+    --micra-warning:  #fbbf24;
+    --micra-error:    #f87171;
+    --micra-overlay:  rgb(0 0 0 / 0.6);
+    --micra-shadow:   0 10px 30px rgb(0 0 0 / 0.4);
+  }
+}
+
+/* Respect reduced-motion globally: kills every token-driven transition. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --micra-duration: 0ms; }
+}

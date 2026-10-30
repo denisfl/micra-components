@@ -1,0 +1,118 @@
+/*
+ * components/checkbox/checkbox.css — default skin for the Checkbox group.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. Each box is marked with
+ * data-state="checked | mixed | unchecked" via data-bind, so the indicator fills
+ * and shows its glyph, and Tailwind's data-[state=checked]: variants can target
+ * it too.
+ *
+ * The check and the dash are drawn from tokens, not images: the box fills with
+ * --micra-primary when checked or mixed, and the glyph is a --micra-primary-fg
+ * shape on top — a rotated two-sided border for the checkmark, a single bar for
+ * the mixed (indeterminate) dash.
+ */
+
+micra-checkbox {
+  display: block;
+}
+
+
+.micra-checkbox {
+  width: min(28rem, 100%);
+  color: var(--micra-fg);
+}
+
+.micra-checkbox__label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.micra-checkbox__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Visually separate the "select all" control from the list it governs. */
+.micra-checkbox__all {
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--micra-border);
+}
+
+.micra-checkbox__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  width: 100%;
+  padding: 0.5rem 0.25rem;
+  background: none;
+  color: var(--micra-fg);
+  border: 0;
+  border-radius: var(--micra-radius);
+}
+
+.micra-checkbox__item:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-checkbox__item[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* The box: an outlined square that fills when checked or mixed. */
+.micra-checkbox__box {
+  position: relative;
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 2px solid var(--micra-border);
+  border-radius: calc(var(--micra-radius) / 2.5);
+  transition:
+    background var(--micra-duration) var(--micra-ease),
+    border-color var(--micra-duration) var(--micra-ease);
+}
+
+.micra-checkbox__item[data-state='checked'] .micra-checkbox__box,
+.micra-checkbox__item[data-state='mixed'] .micra-checkbox__box {
+  background: var(--micra-primary);
+  border-color: var(--micra-primary);
+}
+
+/* Checkmark — a rotated rectangle with two visible borders. Shown only when
+   the box is fully checked. */
+.micra-checkbox__item[data-state='checked'] .micra-checkbox__box::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 0.3rem;
+  height: 0.55rem;
+  border: solid var(--micra-primary-fg);
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -55%) rotate(45deg);
+}
+
+/* Dash — the indeterminate "mixed" glyph: a single horizontal bar. */
+.micra-checkbox__item[data-state='mixed'] .micra-checkbox__box::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.6rem;
+  height: 2px;
+  background: var(--micra-primary-fg);
+  border-radius: 1px;
+  transform: translate(-50%, -50%);
+}
+
+.micra-checkbox__text {
+  user-select: none;
+}

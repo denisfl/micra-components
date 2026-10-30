@@ -1,0 +1,109 @@
+/*
+ * glightbox.css — Micra token skin for the GLightbox wrapper.
+ *
+ * Two surfaces:
+ *   1. The Micra-rendered thumbnail grid (.micra-glightbox-grid) — fully ours,
+ *      token-styled top to bottom.
+ *   2. The GLightbox chrome (overlay, caption, nav/close buttons) — GLightbox's
+ *      own dist CSS loads first; this file re-tints the parts that read cleanly
+ *      with --micra-* tokens. We don't fight the library: the grid is the main
+ *      token surface, the chrome tweaks are a tasteful bonus.
+ *
+ * References only --micra-* tokens, so it follows your theme and works in light
+ * AND dark — recolor by overriding tokens, or edit this file; you own it.
+ */
+
+micra-glightbox {
+  display: block;
+}
+
+
+/* ── Thumbnail grid (ours) ──────────────────────────────────────────────────── */
+.micra-glightbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.micra-glightbox-grid__item {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 3 / 2;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+  cursor: zoom-in;
+  transition: border-color var(--micra-duration) var(--micra-ease),
+    box-shadow var(--micra-duration) var(--micra-ease),
+    transform var(--micra-duration) var(--micra-ease);
+}
+.micra-glightbox-grid__item:hover {
+  border-color: var(--micra-primary);
+  box-shadow: var(--micra-shadow);
+  transform: translateY(-2px);
+}
+.micra-glightbox-grid__item:focus-visible {
+  outline: none;
+  border-color: var(--micra-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-ring) 25%, transparent);
+}
+
+.micra-glightbox-grid__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── GLightbox chrome (re-tinted with tokens) ───────────────────────────────── */
+
+/* The backdrop behind the slide. Drive it from the overlay token so the dim
+   matches the rest of the system in both themes. */
+.goverlay {
+  background: var(--micra-overlay);
+}
+
+/* The caption panel (title + description). On the default "bottom" layout this is
+   a band under the image; tint it to the surface token with token text colors. */
+.gslide-description {
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  border-radius: var(--micra-radius);
+}
+.gslide-title {
+  color: var(--micra-fg);
+}
+.gslide-desc {
+  color: var(--micra-muted);
+}
+
+/* Nav + close controls. Give the icons the primary accent and a token focus ring
+   so the chrome reads as part of the themed system. */
+.gnext,
+.gprev,
+.gclose {
+  border-radius: var(--micra-radius);
+  transition: background var(--micra-duration) var(--micra-ease);
+}
+.gnext svg,
+.gprev svg,
+.gclose svg {
+  color: var(--micra-primary-fg);
+}
+.gnext:hover,
+.gprev:hover,
+.gclose:hover {
+  background: color-mix(in srgb, var(--micra-primary) 22%, transparent);
+}
+.gnext:focus-visible,
+.gprev:focus-visible,
+.gclose:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-ring) 35%, transparent);
+}
+
+/* Slide counter ("2/6") GLightbox shows — match the muted token. */
+.gslide-media .gslide-title + .gdesc-inner,
+.glightbox-clean .gslide-media {
+  color: var(--micra-fg);
+}

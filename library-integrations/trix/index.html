@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Trix integration</title>
+
+    <!-- Tokens, Trix's own stylesheet, then the Micra token skin over it. -->
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/trix@2/dist/trix.css" />
+    <link rel="stylesheet" href="./trix.css" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem 1.5rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-wrap {
+        max-width: 44rem;
+        margin: 0 auto;
+      }
+      .demo-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.5rem 0.9rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-h1 {
+        font-size: 1.4rem;
+        margin: 0 0 0.25rem;
+      }
+      .demo-sub {
+        margin: 0 0 1.75rem;
+        color: var(--micra-muted);
+      }
+      /* Editor → state glue: a meta bar + a live preview, both reactive. */
+      .editor-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+        font-size: 0.85rem;
+      }
+      .editor-meta__count {
+        color: var(--micra-muted);
+      }
+      .editor-meta__status {
+        font-weight: 600;
+      }
+      .editor-meta__status[data-dirty="true"] {
+        color: var(--micra-warning);
+      }
+      .editor-meta__status[data-dirty="false"] {
+        color: var(--micra-success);
+      }
+      .editor-meta__spacer {
+        flex: 1;
+      }
+      .demo-btn {
+        font: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+        padding: 0.45rem 0.8rem;
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+        background: var(--micra-surface);
+        color: var(--micra-fg);
+      }
+      .demo-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .demo-btn--primary {
+        background: var(--micra-primary);
+        color: var(--micra-primary-fg);
+        border-color: var(--micra-primary);
+      }
+      .preview {
+        margin-top: 2rem;
+      }
+      .preview__label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--micra-muted);
+        margin-bottom: 0.5rem;
+      }
+      .preview__body {
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+        padding: 1rem 1.25rem;
+        background: var(--micra-surface);
+        min-height: 4rem;
+      }
+      .preview__body:empty::before {
+        content: "Nothing yet — start typing above.";
+        color: var(--micra-muted);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="demo-wrap">
+      <div class="demo-bar">
+        <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+        <span style="color: var(--micra-muted); font-size: 0.85rem">Trix is MIT — loaded from a CDN. The wrapper is the Micra glue.</span>
+      </div>
+
+      <h1 class="demo-h1">Rich text, reactively bound</h1>
+      <p class="demo-sub">Trix owns the editor; Micra mirrors its HTML into state — so the word count, the saved/unsaved flag, and the live preview below all react with no extra code.</p>
+
+      <!-- The wrapper. data-seed seeds initial content once the editor is ready. -->
+      <micra-trix
+        data-seed="&lt;h1&gt;Release notes&lt;/h1&gt;&lt;div&gt;Type here — &lt;strong&gt;bold&lt;/strong&gt;, &lt;em&gt;italic&lt;/em&gt;, lists, links, quotes.&lt;/div&gt;"
+      >
+        <input id="trix-content" type="hidden" />
+        <trix-editor input="trix-content" class="micra-trix" aria-label="Rich text editor"></trix-editor>
+
+        <div class="editor-meta">
+          <span class="editor-meta__count" data-text="wordCount() + ' words'"></span>
+          <span class="editor-meta__status" data-text="isDirty() ? 'Unsaved changes' : 'Saved'" data-bind="data-dirty:isDirty() ? 'true' : 'false'"></span>
+          <span class="editor-meta__spacer"></span>
+          <button class="demo-btn" type="button" @click="clear" data-bind="disabled:isEmpty()">Clear</button>
+          <button class="demo-btn demo-btn--primary" type="button" @click="save" data-bind="disabled:!isDirty()">Save</button>
+        </div>
+
+        <div class="preview">
+          <div class="preview__label">Live preview (state.html)</div>
+          <div class="preview__body trix-content" data-html="html"></div>
+        </div>
+      </micra-trix>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/trix@2/dist/trix.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      Micra.start();
+
+      // The host owns persistence — the wrapper hands back the HTML on save.
+      const root = document.querySelector('[data-component="trix"]');
+      const editor = Micra.instances().get(root);
+      if (editor) {
+        editor.on('save', (html) => console.log('[trix] save:', html.length, 'chars'));
+      }
+
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const el = document.documentElement;
+        el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

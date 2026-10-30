@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Swiper integration</title>
+
+    <!-- Tokens, then the Micra token skin. Swiper Element injects its own styles
+         from the bundle script below; swiper.css maps tokens onto them. -->
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./swiper.css" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem 1.5rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-wrap {
+        max-width: 44rem;
+        margin: 0 auto;
+      }
+      .demo-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.5rem 0.9rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-h1 {
+        font-size: 1.4rem;
+        margin: 0 0 0.25rem;
+      }
+      .demo-sub {
+        margin: 0 0 1.75rem;
+        color: var(--micra-muted);
+      }
+      /* Self-contained slide content — colored-by-token cards, no remote images. */
+      .slide-card {
+        text-align: center;
+      }
+      .slide-card__num {
+        font-size: 3rem;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--micra-primary);
+      }
+      .slide-card__title {
+        margin: 0.5rem 0 0.25rem;
+        font-size: 1.1rem;
+      }
+      .slide-card__body {
+        margin: 0;
+        color: var(--micra-muted);
+        max-width: 22rem;
+      }
+      /* Carousel → state glue: a reactive readout + the Micra-built controls. */
+      .carousel-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+      }
+      .carousel-meta__pos {
+        font-weight: 600;
+      }
+      .carousel-meta__spacer {
+        flex: 1;
+      }
+      .demo-btn {
+        font: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+        padding: 0.45rem 0.8rem;
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+        background: var(--micra-surface);
+        color: var(--micra-fg);
+      }
+      .demo-btn--primary {
+        background: var(--micra-primary);
+        color: var(--micra-primary-fg);
+        border-color: var(--micra-primary);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="demo-wrap">
+      <div class="demo-bar">
+        <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+        <span style="color: var(--micra-muted); font-size: 0.85rem"
+          >Swiper is MIT — loaded from a CDN. The wrapper is the Micra glue.</span
+        >
+      </div>
+
+      <h1 class="demo-h1">A carousel, reactively bound</h1>
+      <p class="demo-sub">
+        Swiper owns the carousel — touch, momentum, arrows, keyboard. Micra mirrors its active index
+        into state, so the "Slide X of N" readout and the custom dot strip below both react. The dots
+        also drive Swiper back (click one to jump) — the binding runs both ways.
+      </p>
+
+      <!-- The wrapper. Swiper's own navigation/pagination/keyboard are attribute
+           config on <swiper-container>; the reactive UI underneath is Micra. -->
+      <micra-swiper>
+        <swiper-container
+          slides-per-view="1"
+          loop="true"
+          navigation="true"
+          pagination="true"
+          keyboard="true"
+          aria-label="Featured cards"
+        >
+          <swiper-slide>
+            <div class="slide-card">
+              <div class="slide-card__num">1</div>
+              <h2 class="slide-card__title">Headless behavior</h2>
+              <p class="slide-card__body">Swiper handles the hard interaction work; you keep your stack.</p>
+            </div>
+          </swiper-slide>
+          <swiper-slide>
+            <div class="slide-card">
+              <div class="slide-card__num">2</div>
+              <h2 class="slide-card__title">Token skin</h2>
+              <p class="slide-card__body">Arrows, bullets, and slides all follow your --micra-* tokens.</p>
+            </div>
+          </swiper-slide>
+          <swiper-slide>
+            <div class="slide-card">
+              <div class="slide-card__num">3</div>
+              <h2 class="slide-card__title">Reactive index</h2>
+              <p class="slide-card__body">The active slide mirrors into Micra state on every change.</p>
+            </div>
+          </swiper-slide>
+          <swiper-slide>
+            <div class="slide-card">
+              <div class="slide-card__num">4</div>
+              <h2 class="slide-card__title">Two-way</h2>
+              <p class="slide-card__body">Micra UI both reflects the carousel and controls it.</p>
+            </div>
+          </swiper-slide>
+          <swiper-slide>
+            <div class="slide-card">
+              <div class="slide-card__num">5</div>
+              <h2 class="slide-card__title">Dark mode</h2>
+              <p class="slide-card__body">It's all tokens, so data-theme="dark" just works.</p>
+            </div>
+          </swiper-slide>
+          <swiper-slide>
+            <div class="slide-card">
+              <div class="slide-card__num">6</div>
+              <h2 class="slide-card__title">Clean teardown</h2>
+              <p class="slide-card__body">onDestroy removes the listener — safe under autoCleanup.</p>
+            </div>
+          </swiper-slide>
+        </swiper-container>
+
+        <div class="carousel-meta">
+          <span class="carousel-meta__pos" data-text="position()"></span>
+          <span class="carousel-meta__spacer"></span>
+          <button class="demo-btn" type="button" @click="prev">Prev</button>
+          <button class="demo-btn demo-btn--primary" type="button" @click="next">Next</button>
+        </div>
+
+        <!-- Custom Micra-rendered dot strip: each dot reflects the active state and
+             clicking jumps Swiper to that slide. List via <template data-each>. -->
+        <ul class="swiper-dots" aria-label="Slide navigation">
+          <template data-each="dots()" data-key="key">
+            <li>
+              <button
+                class="swiper-dots__dot"
+                type="button"
+                @click="goTo(item.i)"
+                data-text="item.label"
+                data-bind="data-active:item.active ? 'true' : 'false', aria-current:item.active ? 'true' : 'false'"
+              ></button>
+            </li>
+          </template>
+        </ul>
+      </micra-swiper>
+    </div>
+
+    <!-- Swiper Element bundle: registers <swiper-container>/<swiper-slide> and
+         injects Swiper's styles. Must run BEFORE Micra.start() so the element
+         exists (and, in fact, initializes) by the time the wrapper wires it. -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-element-bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const el = document.documentElement;
+        el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

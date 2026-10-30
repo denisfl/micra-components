@@ -1,0 +1,650 @@
+/*
+ * admin.css — layout for the Micra Admin template.
+ *
+ * Token-driven (only --micra-* from theme/theme.css); no Tailwind. Re-skin by
+ * overriding the theme tokens, or edit this file — it's yours. The component
+ * skins (datatable.css, …) are loaded separately and styled by the same tokens.
+ */
+
+micra-admin {
+  display: block;
+}
+
+
+* {
+  box-sizing: border-box;
+}
+html {
+  min-height: 100%;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--micra-bg);
+  color: var(--micra-fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.admin {
+  --admin-sidebar: 16rem;
+}
+
+/* ── Sidebar (off-canvas on mobile, fixed on desktop) ───────────────────────── */
+.admin__sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--admin-sidebar);
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0.75rem;
+  background: var(--micra-surface);
+  border-right: 1px solid var(--micra-border);
+  z-index: 40;
+  transform: translateX(-100%);
+  transition: transform var(--micra-duration) var(--micra-ease);
+}
+.admin__sidebar.is-open {
+  transform: translateX(0);
+  box-shadow: var(--micra-shadow);
+}
+
+.admin__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.6rem 1rem;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.admin__logo {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 8px;
+  background: var(--micra-primary);
+  color: var(--micra-primary-fg);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.admin__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.admin__nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 0;
+  border-radius: var(--micra-radius);
+  background: none;
+  color: var(--micra-fg);
+  font: inherit;
+  font-size: 0.925rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--micra-duration) var(--micra-ease);
+}
+.admin__nav-item:hover {
+  background: color-mix(in srgb, var(--micra-fg) 6%, transparent);
+}
+.admin__nav-item.is-active {
+  background: color-mix(in srgb, var(--micra-primary) 12%, transparent);
+  color: var(--micra-primary);
+}
+.admin__nav-item svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: none;
+}
+
+.admin__user {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.4rem 0.2rem;
+  border-top: 1px solid var(--micra-border);
+}
+.admin__avatar {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--micra-primary) 18%, var(--micra-surface));
+  color: var(--micra-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.admin__user-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.admin__user-mail {
+  font-size: 0.78rem;
+  color: var(--micra-muted);
+}
+
+/* ── Main column ────────────────────────────────────────────────────────────── */
+.admin__main {
+  margin-left: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin__topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 3.5rem;
+  padding: 0 1.25rem;
+  background: color-mix(in srgb, var(--micra-bg) 85%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--micra-border);
+}
+.admin__page-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.admin__spacer {
+  flex: 1;
+}
+
+/* Command-palette trigger — looks like a search field, opens the ⌘K palette.
+   Hidden on mobile (the shortcut and menu still work); shown from 48rem up. */
+.admin__cmdk-trigger {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 1rem;
+  min-width: 16rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-bg);
+  color: var(--micra-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color var(--micra-duration) var(--micra-ease);
+}
+.admin__cmdk-trigger:hover {
+  border-color: var(--micra-muted);
+}
+.admin__cmdk-trigger svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+.admin__cmdk-trigger span {
+  flex: 1;
+  text-align: left;
+}
+.admin__kbd {
+  flex: none;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--micra-border);
+  border-radius: 6px;
+  background: var(--micra-surface);
+  font-size: 0.75rem;
+  font-family: inherit;
+  color: var(--micra-muted);
+}
+@media (min-width: 48rem) {
+  .admin__cmdk-trigger {
+    display: inline-flex;
+  }
+}
+.admin__icon-btn {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: var(--micra-radius);
+  background: none;
+  color: var(--micra-muted);
+  cursor: pointer;
+  transition:
+    background var(--micra-duration) var(--micra-ease),
+    color var(--micra-duration) var(--micra-ease);
+}
+.admin__icon-btn:hover {
+  background: color-mix(in srgb, var(--micra-fg) 6%, transparent);
+  color: var(--micra-fg);
+}
+.admin__icon-btn svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.admin__menu {
+  display: grid;
+}
+
+.admin__content {
+  flex: 1;
+  padding: 1.5rem 1.25rem 3rem;
+}
+.admin__view {
+  max-width: 64rem;
+  margin: 0 auto;
+}
+.admin__view-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.admin__view-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+.admin__view-sub {
+  margin: 0.25rem 0 0;
+  color: var(--micra-muted);
+  font-size: 0.9rem;
+}
+
+.admin__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.admin__btn svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+.admin__btn--primary {
+  background: var(--micra-primary);
+  color: var(--micra-primary-fg);
+  border-color: var(--micra-primary);
+}
+.admin__btn--primary:hover {
+  background: color-mix(in srgb, var(--micra-primary) 88%, #000);
+}
+
+/* Data Table rows are click-to-edit in this template. */
+.micra-datatable__table tbody tr {
+  cursor: pointer;
+  user-select: none; /* a click opens the editor — don't select cell text */
+}
+
+.admin__placeholder {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.75rem;
+  min-height: 16rem;
+  border: 1px dashed var(--micra-border);
+  border-radius: var(--micra-radius);
+  color: var(--micra-muted);
+}
+.admin__placeholder svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+/* ── Customers card grid ────────────────────────────────────────────────────── */
+.cust-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 1rem;
+}
+.cust-card {
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  padding: 1rem;
+  cursor: pointer;
+  transition: border-color var(--micra-duration) var(--micra-ease);
+}
+.cust-card:hover,
+.cust-card:focus-visible {
+  border-color: var(--micra-primary);
+  outline: none;
+}
+.cust-card__top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.cust-card__avatar {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--micra-primary) 16%, var(--micra-surface));
+  color: var(--micra-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.cust-card__id {
+  flex: 1;
+  min-width: 0;
+}
+.cust-card__name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cust-card__company {
+  font-size: 0.82rem;
+  color: var(--micra-muted);
+}
+.cust-badge {
+  flex: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+.cust-badge[data-status="active"] {
+  color: var(--micra-success);
+  background: color-mix(in srgb, var(--micra-success) 14%, transparent);
+}
+.cust-badge[data-status="trial"] {
+  color: var(--micra-warning);
+  background: color-mix(in srgb, var(--micra-warning) 16%, transparent);
+}
+.cust-badge[data-status="churned"] {
+  color: var(--micra-error);
+  background: color-mix(in srgb, var(--micra-error) 14%, transparent);
+}
+.cust-card__stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--micra-border);
+}
+.cust-card__stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.cust-card__k {
+  font-size: 0.72rem;
+  color: var(--micra-muted);
+}
+.cust-card__v {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ── Settings: tabs + flat form ─────────────────────────────────────────────── */
+.set-save {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.set-saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--micra-success);
+}
+.set-saved svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.set-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--micra-border);
+}
+.set-tab {
+  padding: 0.6rem 0.85rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  color: var(--micra-muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--micra-duration) var(--micra-ease);
+}
+.set-tab:hover {
+  color: var(--micra-fg);
+}
+.set-tab.is-active {
+  color: var(--micra-primary);
+  border-bottom-color: var(--micra-primary);
+}
+
+.set-card {
+  max-width: 36rem;
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  padding: 1.25rem 1.5rem;
+}
+
+.set-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--micra-border);
+}
+.set-field:first-child {
+  padding-top: 0;
+}
+.set-field:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.set-field--row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.set-field__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.set-field__hint {
+  font-size: 0.8rem;
+  color: var(--micra-muted);
+}
+
+.set-input {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--micra-fg);
+  background: var(--micra-bg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  transition: border-color var(--micra-duration) var(--micra-ease);
+}
+.set-input:focus-visible {
+  outline: none;
+  border-color: var(--micra-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-ring) 25%, transparent);
+}
+.set-textarea {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+.set-error {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--micra-error);
+}
+
+/* The editor <form> is the panel's only child, so it must carry the panel's
+   flex column itself — otherwise the footer wouldn't pin to the bottom. */
+.micra-slideover__panel > form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.set-input--num {
+  width: 8rem;
+}
+
+/* Token-tinted select caret (shape from SVG mask, colour from a token). */
+.set-select-wrap {
+  position: relative;
+  display: inline-block;
+}
+.set-select {
+  padding: 0.5rem 2rem 0.5rem 0.7rem;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--micra-fg);
+  background: var(--micra-bg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+.set-select:focus-visible {
+  outline: none;
+  border-color: var(--micra-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-ring) 25%, transparent);
+}
+.set-select-wrap::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0.6rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+  background-color: var(--micra-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23fff' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 8 10 12 14 8'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23fff' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 8 10 12 14 8'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* Toggle rows */
+.set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--micra-border);
+}
+.set-row:first-child {
+  padding-top: 0;
+}
+.set-row__title {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.set-row__desc {
+  font-size: 0.8rem;
+  color: var(--micra-muted);
+  margin-top: 0.15rem;
+}
+
+/* Switch: a role="switch" button, fully state-driven via aria-checked.
+   Track + knob are token-coloured; no native checkbox. */
+.set-switch {
+  position: relative;
+  flex: none;
+  width: 2.5rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  cursor: pointer;
+}
+.set-switch:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+.set-switch__track {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--micra-border);
+  transition: background var(--micra-duration) var(--micra-ease);
+}
+.set-switch__track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1.4rem - 4px);
+  height: calc(1.4rem - 4px);
+  border-radius: 50%;
+  background: var(--micra-surface);
+  transition: transform var(--micra-duration) var(--micra-ease);
+}
+.set-switch[aria-checked="true"] .set-switch__track {
+  background: var(--micra-primary);
+}
+.set-switch[aria-checked="true"] .set-switch__track::after {
+  transform: translateX(1.1rem);
+}
+
+.admin__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  background: var(--micra-overlay);
+}
+
+/* ── Desktop: pin the sidebar, drop the off-canvas chrome ───────────────────── */
+@media (min-width: 64rem) {
+  .admin__sidebar {
+    transform: none;
+    box-shadow: none;
+  }
+  .admin__main {
+    margin-left: var(--admin-sidebar);
+  }
+  .admin__menu {
+    display: none;
+  }
+  .admin__backdrop {
+    display: none;
+  }
+}

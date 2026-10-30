@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Switch</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./switch.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+      }
+      .row label {
+        user-select: none;
+      }
+      .status {
+        margin-top: 1.5rem;
+        color: var(--micra-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+    </div>
+
+    <micra-switch data-checked>
+      <div class="row">
+        <button
+          class="micra-switch"
+          type="button"
+          role="switch"
+          aria-labelledby="notify-label"
+          data-bind="aria-checked:checked ? 'true' : 'false', aria-disabled:disabled ? 'true' : 'false',
+                     data-state:checked ? 'checked' : 'unchecked'"
+          @click="toggle"
+          @keydown.space.prevent="toggle"
+        >
+          <span class="micra-switch__thumb"></span>
+        </button>
+        <label id="notify-label">Notifications</label>
+      </div>
+
+      <p class="status" data-text="label()"></p>
+    </micra-switch>
+
+    <micra-switch data-disabled>
+      <div class="row">
+        <button
+          class="micra-switch"
+          type="button"
+          role="switch"
+          aria-labelledby="sync-label"
+          data-bind="aria-checked:checked ? 'true' : 'false', aria-disabled:disabled ? 'true' : 'false',
+                     data-state:checked ? 'checked' : 'unchecked'"
+          @click="toggle"
+          @keydown.space.prevent="toggle"
+        >
+          <span class="micra-switch__thumb"></span>
+        </button>
+        <label id="sync-label">Background sync (disabled)</label>
+      </div>
+    </micra-switch>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

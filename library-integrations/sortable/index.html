@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — SortableJS integration</title>
+
+    <!-- Tokens, then the Micra token skin. SortableJS ships no CSS of its own. -->
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./sortable.css" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem 1.5rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-wrap {
+        max-width: 38rem;
+        margin: 0 auto;
+      }
+      .demo-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.5rem 0.9rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-h1 {
+        font-size: 1.4rem;
+        margin: 0 0 0.25rem;
+      }
+      .demo-sub {
+        margin: 0 0 1.75rem;
+        color: var(--micra-muted);
+      }
+      /* The reactive readout below the list. */
+      .order-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1.25rem;
+        font-size: 0.85rem;
+      }
+      .order-meta__status {
+        font-weight: 600;
+      }
+      .order-meta__status[data-dirty='true'] {
+        color: var(--micra-warning);
+      }
+      .order-meta__status[data-dirty='false'] {
+        color: var(--micra-success);
+      }
+      .order-meta__spacer {
+        flex: 1;
+      }
+      .demo-btn {
+        font: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+        padding: 0.45rem 0.8rem;
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+        background: var(--micra-surface);
+        color: var(--micra-fg);
+      }
+      .demo-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .demo-btn--primary {
+        background: var(--micra-primary);
+        color: var(--micra-primary-fg);
+        border-color: var(--micra-primary);
+      }
+      .order-readout {
+        margin-top: 1.5rem;
+        font-size: 0.8rem;
+      }
+      .order-readout__label {
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--micra-muted);
+        margin-bottom: 0.4rem;
+      }
+      .order-readout__value {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        padding: 0.6rem 0.8rem;
+        background: var(--micra-surface);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="demo-wrap">
+      <div class="demo-bar">
+        <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+        <span style="color: var(--micra-muted); font-size: 0.85rem">SortableJS is MIT — loaded from a CDN. The wrapper is the Micra glue.</span>
+      </div>
+
+      <h1 class="demo-h1">Drag to reorder, reactively bound</h1>
+      <p class="demo-sub">SortableJS owns the drag; Micra owns the order. The list renders from state, so the rank numbers, the live order line, and the Save button all react — the order is real reactive state, not just the DOM.</p>
+
+      <!-- The wrapper. The list is rendered from state.items via data-each — the
+           single source of truth. Drag by the ⠿ grip. -->
+      <micra-sortable
+        data-seed='[{"id":"ship","label":"Ship the changelog"},{"id":"docs","label":"Update the docs"},{"id":"tests","label":"Add reorder tests"},{"id":"review","label":"Review the PR"},{"id":"deploy","label":"Deploy to staging"}]'
+      >
+        <ul class="micra-sortable" data-ref="list" aria-label="Priority list, drag to reorder">
+          <template data-each="items" data-key="id">
+            <li class="micra-sortable__row">
+              <span class="micra-sortable__rank" data-text="$index + 1"></span>
+              <span class="micra-sortable__label" data-text="item.label"></span>
+              <span class="micra-sortable__handle" data-sortable-handle aria-hidden="true">⠿</span>
+            </li>
+          </template>
+        </ul>
+
+        <div class="order-meta">
+          <span class="order-meta__status" data-text="isDirty() ? 'Unsaved order' : 'Saved'" data-bind="data-dirty:isDirty() ? 'true' : 'false'"></span>
+          <span class="order-meta__spacer"></span>
+          <button class="demo-btn" type="button" @click="reset" data-bind="disabled:!isDirty()">Reset</button>
+          <button class="demo-btn demo-btn--primary" type="button" @click="save" data-bind="disabled:!isDirty()">Save order</button>
+        </div>
+
+        <div class="order-readout">
+          <div class="order-readout__label">Live order (state.items)</div>
+          <div class="order-readout__value" data-text="orderLabel()"></div>
+        </div>
+      </micra-sortable>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      Micra.start();
+
+      // The host owns persistence — the wrapper hands back the order on save.
+      const root = document.querySelector('[data-component="sortable"]');
+      const list = Micra.instances().get(root);
+      if (list) {
+        list.on('reorder', (ids) => console.log('[sortable] reorder:', ids.join(', ')));
+        list.on('save', (ids) => console.log('[sortable] save:', ids.join(', ')));
+      }
+
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const el = document.documentElement;
+        el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,88 @@
+/*
+ * swiper.css — Micra token skin for Swiper.
+ *
+ * Loads AFTER Swiper Element registers and injects its own styles. It maps
+ * --micra-* tokens onto Swiper's documented CSS custom properties (so the
+ * built-in navigation arrows and pagination bullets follow your theme), and
+ * styles the slides plus the custom Micra dot strip with the same tokens.
+ * References only --micra-* tokens — recolor by overriding them, or edit this
+ * file; you own it. Works in light and dark because it's all tokens.
+ */
+
+micra-swiper {
+  display: block;
+}
+
+
+/* ── Swiper's own theming hooks ───────────────────────────────────────────────
+   Swiper exposes these CSS custom properties; setting them on the container
+   re-colors its built-in navigation arrows and pagination bullets. */
+swiper-container {
+  --swiper-theme-color: var(--micra-primary);
+  --swiper-navigation-color: var(--micra-primary);
+  --swiper-navigation-size: 1.6rem;
+  --swiper-pagination-color: var(--micra-primary);
+  --swiper-pagination-bullet-inactive-color: var(--micra-muted);
+  --swiper-pagination-bullet-inactive-opacity: 0.5;
+  --swiper-pagination-bullet-size: 0.5rem;
+
+  display: block;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+  overflow: hidden;
+}
+
+/* ── Slides ───────────────────────────────────────────────────────────────────
+   The demo slides are self-contained content cards (no remote images). Style
+   them off tokens so they read in light and dark. */
+swiper-slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 16rem;
+  padding: 2rem;
+  background: var(--micra-bg);
+  color: var(--micra-fg);
+}
+
+/* ── Custom Micra dot strip ───────────────────────────────────────────────────
+   The Micra-rendered thumbnail/dot strip below the carousel — reflects the
+   active slide (data-active) and controls it (click → slideTo). Active dot uses
+   --micra-primary; inactive dots use --micra-border / --micra-muted. */
+.swiper-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0;
+  list-style: none;
+}
+.swiper-dots__dot {
+  font: inherit;
+  cursor: pointer;
+  min-width: 2.25rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+  color: var(--micra-muted);
+  transition: border-color var(--micra-duration) var(--micra-ease),
+    color var(--micra-duration) var(--micra-ease),
+    background var(--micra-duration) var(--micra-ease);
+}
+.swiper-dots__dot:hover {
+  border-color: var(--micra-primary);
+  color: var(--micra-fg);
+}
+.swiper-dots__dot:focus-visible {
+  outline: none;
+  border-color: var(--micra-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-ring) 25%, transparent);
+}
+.swiper-dots__dot[data-active='true'] {
+  border-color: var(--micra-primary);
+  background: var(--micra-primary);
+  color: var(--micra-primary-fg);
+}

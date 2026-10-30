@@ -1,0 +1,54 @@
+/*
+ * components/breadcrumbs/breadcrumbs.css — default skin for Breadcrumbs.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The separator between crumbs
+ * is a CSS ::before on every crumb but the first, so it is purely decorative and
+ * never reaches the accessibility tree (no aria-hidden markup needed).
+ */
+
+.micra-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9375rem;
+}
+
+.micra-breadcrumbs__crumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--micra-muted);
+}
+
+/* Decorative separator — drawn before every crumb except the first. */
+.micra-breadcrumbs__crumb:not(:first-child)::before {
+  content: '/';
+  color: var(--micra-border);
+}
+
+.micra-breadcrumbs__link {
+  color: var(--micra-muted);
+  text-decoration: none;
+  border-radius: var(--micra-radius);
+  transition: color var(--micra-duration) var(--micra-ease);
+}
+
+.micra-breadcrumbs__link:hover {
+  color: var(--micra-fg);
+}
+
+.micra-breadcrumbs__link:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+/* The current page — plain text, carries aria-current="page". */
+.micra-breadcrumbs__current {
+  color: var(--micra-fg);
+  font-weight: 600;
+}

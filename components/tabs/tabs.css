@@ -1,0 +1,68 @@
+/*
+ * components/tabs/tabs.css — default skin for the Tabs.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The active tab is marked with
+ * data-state="active" via data-bind, so the underline reacts to selection and
+ * Tailwind's data-[state=active]: variants can target it too.
+ */
+
+micra-tabs {
+  display: block;
+}
+
+
+.micra-tabs {
+  width: min(36rem, 100%);
+  color: var(--micra-fg);
+}
+
+.micra-tabs__list {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--micra-border);
+}
+
+.micra-tabs__tab {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.6rem 0.9rem;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px; /* sit the underline on top of the list border */
+  color: var(--micra-muted);
+  border-top-left-radius: var(--micra-radius);
+  border-top-right-radius: var(--micra-radius);
+  transition: color var(--micra-duration) var(--micra-ease);
+}
+
+.micra-tabs__tab:hover {
+  color: var(--micra-fg);
+}
+
+.micra-tabs__tab[data-state='active'] {
+  color: var(--micra-primary);
+  border-bottom-color: var(--micra-primary);
+}
+
+.micra-tabs__tab[aria-disabled='true'] {
+  cursor: not-allowed;
+  color: var(--micra-muted);
+  opacity: 0.5;
+}
+
+.micra-tabs__tab:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-tabs__panel {
+  padding: 1.25rem 0.25rem;
+}
+
+.micra-tabs__panel:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+  border-radius: var(--micra-radius);
+}

@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra Admin — template</title>
+
+    <!-- Theme tokens, then the component skins this template assembles, then the
+         template's own layout. All token-driven; no Tailwind. -->
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="../../components/datatable/datatable.css" />
+    <link rel="stylesheet" href="../../components/slideover/slideover.css" />
+    <link rel="stylesheet" href="../../components/commandpalette/commandpalette.css" />
+    <link rel="stylesheet" href="./admin.css" />
+  </head>
+
+  <body>
+    <micra-admin class="admin">
+      <!-- Mobile backdrop (under the off-canvas sidebar). -->
+      <div class="admin__backdrop" data-show="sidebarOpen" @click="closeSidebar"></div>
+
+      <!-- ── Sidebar ───────────────────────────────────────────────────────── -->
+      <aside class="admin__sidebar" data-class="is-open:sidebarOpen">
+        <div class="admin__brand">
+          <span class="admin__logo" aria-hidden="true">M</span>
+          <span>Micra Admin</span>
+        </div>
+
+        <nav class="admin__nav" aria-label="Primary">
+          <button class="admin__nav-item" data-class="is-active:isView('users')" @click="go" data-view="users">
+            <i data-lucide="users"></i><span>Users</span>
+          </button>
+          <button class="admin__nav-item" data-class="is-active:isView('customers')" @click="go" data-view="customers">
+            <i data-lucide="building-2"></i><span>Customers</span>
+          </button>
+          <button class="admin__nav-item" data-class="is-active:isView('settings')" @click="go" data-view="settings">
+            <i data-lucide="settings"></i><span>Settings</span>
+          </button>
+        </nav>
+
+        <div class="admin__user">
+          <span class="admin__avatar" aria-hidden="true" data-text="userInitials()"></span>
+          <div class="admin__user-meta">
+            <div class="admin__user-name" data-text="settings.fullName"></div>
+            <div class="admin__user-mail" data-text="settings.email"></div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ── Main ──────────────────────────────────────────────────────────── -->
+      <div class="admin__main">
+        <header class="admin__topbar">
+          <button class="admin__icon-btn admin__menu" @click="toggleSidebar" aria-label="Toggle menu">
+            <i data-lucide="menu"></i>
+          </button>
+          <h1 class="admin__page-title" data-text="viewTitle()"></h1>
+          <button class="admin__cmdk-trigger" @click="openPalette" aria-label="Open command palette">
+            <i data-lucide="search"></i>
+            <span>Search or jump to…</span>
+            <kbd class="admin__kbd">⌘K</kbd>
+          </button>
+          <span class="admin__spacer"></span>
+          <button class="admin__icon-btn" @click="toggleTheme" aria-label="Toggle theme">
+            <i data-lucide="sun-moon"></i>
+          </button>
+          <button class="admin__icon-btn" aria-label="Notifications">
+            <i data-lucide="bell"></i>
+          </button>
+        </header>
+
+        <main class="admin__content">
+          <!-- ===== Users view ===== -->
+          <section data-show="isView('users')" class="admin__view">
+            <div class="admin__view-head">
+              <div>
+                <h2 class="admin__view-title">Users</h2>
+                <p class="admin__view-sub">Manage your team and their access.</p>
+              </div>
+              <button class="admin__btn admin__btn--primary" type="button" @click="addUser">
+                <i data-lucide="plus"></i><span>Add user</span>
+              </button>
+            </div>
+
+            <!-- Data Table component (assembled as-is; seeded from JS below). -->
+            <micra-datatable class="micra-datatable" data-page-size="10">
+              <div class="micra-datatable__toolbar">
+                <input
+                  class="micra-datatable__search"
+                  type="search"
+                  placeholder="Search users…"
+                  aria-label="Search the table"
+                  data-ref="search"
+                  @input="onSearch"
+                />
+                <div class="micra-datatable__actions">
+                  <button class="micra-datatable__btn" type="button" @click="exportCSV">Export CSV</button>
+                  <button class="micra-datatable__btn" type="button" @click="exportJSON">Export JSON</button>
+                </div>
+                <div class="micra-datatable__bulk" data-if="hasSelection()">
+                  <span class="micra-datatable__bulk-count" data-text="selectedCount() + ' selected'"></span>
+                  <button class="micra-datatable__btn" type="button" @click="clearSelection">Clear</button>
+                  <span class="micra-datatable__bulk-spacer"></span>
+                  <button class="micra-datatable__btn" type="button" @click="bulk('export')">Export selected</button>
+                  <button class="micra-datatable__btn micra-datatable__btn--danger" type="button" @click="bulk('delete')">Delete</button>
+                </div>
+              </div>
+
+              <div class="micra-datatable__scroll">
+                <table class="micra-datatable__table" data-bind="aria-busy:loading ? 'true' : 'false'">
+                  <thead>
+                    <tr>
+                      <th class="micra-datatable__select-col" scope="col">
+                        <button
+                          class="micra-datatable__check"
+                          type="button"
+                          role="checkbox"
+                          aria-label="Select all rows on this page"
+                          @click="toggleAllOnPage"
+                          @keydown.space.prevent="toggleAllOnPage"
+                          data-bind="aria-checked:selectionState(), data-state:headerBoxState()"
+                        >
+                          <span class="micra-datatable__box" aria-hidden="true"></span>
+                        </button>
+                      </th>
+                      <template data-each="columns" data-key="key">
+                        <th
+                          scope="col"
+                          data-bind="aria-sort:item.sortable ? sortState(item.key) : false, data-state:item.sortable ? columnSortState(item.key) : '', class:item.align === 'right' ? 'micra-datatable__cell--right' : '', style:colStyle(item)"
+                        >
+                          <button class="micra-datatable__sort" type="button" data-if="item.sortable" @click="toggleSort(item.key, $event)">
+                            <span data-text="item.label"></span>
+                            <span class="micra-datatable__sort-ind" aria-hidden="true" data-text="sortIndicator(item.key)"></span>
+                          </button>
+                          <span data-if="!item.sortable" data-text="item.label"></span>
+                        </th>
+                      </template>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template data-each="view()" data-key="id">
+                      <tr data-bind="data-state:item.selected ? 'selected' : '', aria-selected:item.selected ? 'true' : 'false', data-id:item.id">
+                        <td class="micra-datatable__select-col">
+                          <button
+                            class="micra-datatable__check"
+                            type="button"
+                            role="checkbox"
+                            aria-label="Select row"
+                            @click="toggleRow(item.id)"
+                            @keydown.space.prevent="toggleRow(item.id)"
+                            data-bind="aria-checked:item.selected ? 'true' : 'false', data-state:item.selected ? 'checked' : 'unchecked'"
+                          >
+                            <span class="micra-datatable__box" aria-hidden="true"></span>
+                          </button>
+                        </td>
+                        <template data-each="item.cells" data-key="key">
+                          <td
+                            data-bind="class:item.align === 'right' ? 'micra-datatable__cell--right' : (item.align === 'center' ? 'micra-datatable__cell--center' : '')"
+                            data-text="item.text"
+                          ></td>
+                        </template>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+
+                <div class="micra-datatable__status" data-if="loading" role="status">Loading…</div>
+                <div class="micra-datatable__status" data-if="isEmpty()">No results</div>
+                <div class="micra-datatable__status micra-datatable__status--error" data-if="error" role="alert" data-text="error"></div>
+              </div>
+
+              <div class="micra-datatable__footer">
+                <span data-text="rangeLabel()"></span>
+                <label class="micra-datatable__pagesize">
+                  Rows per page
+                  <span class="micra-datatable__select-wrap">
+                    <select aria-label="Rows per page" @change="setPageSize">
+                      <option value="10" selected>10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                    </select>
+                  </span>
+                </label>
+                <nav class="micra-datatable__pager" aria-label="Pagination">
+                  <button class="micra-datatable__pagenav" type="button" @click="prevPage" data-bind="disabled:atFirstPage(), aria-disabled:atFirstPage() ? 'true' : 'false'">Prev</button>
+                  <template data-each="pages()" data-key="key">
+                    <button class="micra-datatable__page" type="button" data-if="item.type === 'page'" @click="goToPage(item.n)" data-text="item.n" data-bind="aria-current:isCurrentPage(item.n) ? 'page' : 'false'"></button>
+                    <span class="micra-datatable__gap" data-if="item.type === 'gap'" aria-hidden="true">&hellip;</span>
+                  </template>
+                  <button class="micra-datatable__pagenav" type="button" @click="nextPage" data-bind="disabled:atLastPage(), aria-disabled:atLastPage() ? 'true' : 'false'">Next</button>
+                </nav>
+              </div>
+
+              <div class="micra-datatable__sr" aria-live="polite" data-text="liveMessage()"></div>
+            </micra-datatable>
+          </section>
+
+          <!-- ===== Customers / Settings — wired next ===== -->
+          <section data-show="isView('customers')" class="admin__view">
+            <div class="admin__view-head">
+              <div>
+                <h2 class="admin__view-title">Customers</h2>
+                <p class="admin__view-sub">Accounts and their plans.</p>
+              </div>
+              <button class="admin__btn admin__btn--primary" type="button" @click="addCustomer">
+                <i data-lucide="plus"></i><span>Add customer</span>
+              </button>
+            </div>
+
+            <div class="cust-grid">
+              <template data-each="customers" data-key="id">
+                <article class="cust-card" @click="editCustomer(item.id)" tabindex="0" @keydown.enter="editCustomer(item.id)">
+                  <div class="cust-card__top">
+                    <span class="cust-card__avatar" data-text="item.initials" aria-hidden="true"></span>
+                    <div class="cust-card__id">
+                      <div class="cust-card__name" data-text="item.name"></div>
+                      <div class="cust-card__company" data-text="item.company"></div>
+                    </div>
+                    <span class="cust-badge" data-bind="data-status:item.status" data-text="item.status"></span>
+                  </div>
+                  <div class="cust-card__stats">
+                    <div><span class="cust-card__k">Plan</span><span class="cust-card__v" data-text="item.plan"></span></div>
+                    <div><span class="cust-card__k">MRR</span><span class="cust-card__v" data-text="item.mrr"></span></div>
+                    <div><span class="cust-card__k">Seats</span><span class="cust-card__v" data-text="item.seats"></span></div>
+                  </div>
+                </article>
+              </template>
+            </div>
+          </section>
+          <!-- ===== Settings view ===== -->
+          <section data-show="isView('settings')" class="admin__view">
+            <div class="admin__view-head">
+              <div>
+                <h2 class="admin__view-title">Settings</h2>
+                <p class="admin__view-sub">Manage your account and preferences.</p>
+              </div>
+              <div class="set-save">
+                <span class="set-saved" data-show="saved"><i data-lucide="check"></i>Saved</span>
+                <button class="admin__btn admin__btn--primary" type="button" @click="save">
+                  <span>Save changes</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tabs: plain buttons that flip a state field; panels toggle on data-show. -->
+            <div class="set-tabs" role="tablist" aria-label="Settings sections">
+              <button class="set-tab" type="button" role="tab" @click="setTab" data-tab="profile"
+                data-class="is-active:isTab('profile')" data-bind="aria-selected:isTab('profile') ? 'true' : 'false'">Profile</button>
+              <button class="set-tab" type="button" role="tab" @click="setTab" data-tab="notifications"
+                data-class="is-active:isTab('notifications')" data-bind="aria-selected:isTab('notifications') ? 'true' : 'false'">Notifications</button>
+              <button class="set-tab" type="button" role="tab" @click="setTab" data-tab="security"
+                data-class="is-active:isTab('security')" data-bind="aria-selected:isTab('security') ? 'true' : 'false'">Security</button>
+            </div>
+
+            <!-- Profile — text fields, two-way bound to state.settings.* -->
+            <form class="set-card" data-show="isTab('profile')" @submit.prevent="save">
+              <div class="set-field">
+                <label class="set-field__label" for="set-name">Full name</label>
+                <input class="set-input" id="set-name" type="text" data-model="settings.fullName" />
+              </div>
+              <div class="set-field">
+                <label class="set-field__label" for="set-email">Email</label>
+                <input class="set-input" id="set-email" type="email" data-model="settings.email" />
+              </div>
+              <div class="set-field">
+                <label class="set-field__label" for="set-company">Company</label>
+                <input class="set-input" id="set-company" type="text" data-model="settings.company" />
+              </div>
+              <div class="set-field">
+                <label class="set-field__label" for="set-tz">Timezone</label>
+                <span class="set-select-wrap">
+                  <select class="set-select" id="set-tz" data-model="settings.timezone">
+                    <option value="America/Los_Angeles">Pacific (US)</option>
+                    <option value="America/Denver">Mountain (US)</option>
+                    <option value="America/New_York">Eastern (US)</option>
+                    <option value="Europe/London">London</option>
+                    <option value="Europe/Belgrade">Central European</option>
+                  </select>
+                </span>
+              </div>
+              <div class="set-field">
+                <label class="set-field__label" for="set-bio">Bio</label>
+                <textarea class="set-input set-textarea" id="set-bio" rows="3" data-model="settings.bio"></textarea>
+                <span class="set-field__hint">Brief description for your profile.</span>
+              </div>
+            </form>
+
+            <!-- Notifications — toggle rows, each bound to a boolean. -->
+            <div class="set-card" data-show="isTab('notifications')">
+              <div class="set-row">
+                <div class="set-row__text">
+                  <div class="set-row__title">Product updates</div>
+                  <div class="set-row__desc">New features, improvements, and changes.</div>
+                </div>
+                <button type="button" class="set-switch" role="switch" aria-label="Product updates"
+                  @click="toggle" data-field="notifyProduct"
+                  data-bind="aria-checked:settings.notifyProduct ? 'true' : 'false'">
+                  <span class="set-switch__track"></span>
+                </button>
+              </div>
+              <div class="set-row">
+                <div class="set-row__text">
+                  <div class="set-row__title">Weekly digest</div>
+                  <div class="set-row__desc">A summary of activity, every Monday.</div>
+                </div>
+                <button type="button" class="set-switch" role="switch" aria-label="Weekly digest"
+                  @click="toggle" data-field="notifyDigest"
+                  data-bind="aria-checked:settings.notifyDigest ? 'true' : 'false'">
+                  <span class="set-switch__track"></span>
+                </button>
+              </div>
+              <div class="set-row">
+                <div class="set-row__text">
+                  <div class="set-row__title">Mentions</div>
+                  <div class="set-row__desc">When a teammate mentions you.</div>
+                </div>
+                <button type="button" class="set-switch" role="switch" aria-label="Mentions"
+                  @click="toggle" data-field="notifyMentions"
+                  data-bind="aria-checked:settings.notifyMentions ? 'true' : 'false'">
+                  <span class="set-switch__track"></span>
+                </button>
+              </div>
+              <div class="set-row">
+                <div class="set-row__text">
+                  <div class="set-row__title">Billing alerts</div>
+                  <div class="set-row__desc">Invoices, failed payments, plan changes.</div>
+                </div>
+                <button type="button" class="set-switch" role="switch" aria-label="Billing alerts"
+                  @click="toggle" data-field="notifyBilling"
+                  data-bind="aria-checked:settings.notifyBilling ? 'true' : 'false'">
+                  <span class="set-switch__track"></span>
+                </button>
+              </div>
+              <div class="set-field set-field--row">
+                <label class="set-field__label" for="set-freq">Email frequency</label>
+                <span class="set-select-wrap">
+                  <select class="set-select" id="set-freq" data-model="settings.frequency">
+                    <option value="realtime">Real-time</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                  </select>
+                </span>
+              </div>
+            </div>
+
+            <!-- Security -->
+            <div class="set-card" data-show="isTab('security')">
+              <div class="set-row">
+                <div class="set-row__text">
+                  <div class="set-row__title">Two-factor authentication</div>
+                  <div class="set-row__desc">Require a one-time code at sign-in.</div>
+                </div>
+                <button type="button" class="set-switch" role="switch" aria-label="Two-factor authentication"
+                  @click="toggle" data-field="twoFactor"
+                  data-bind="aria-checked:settings.twoFactor ? 'true' : 'false'">
+                  <span class="set-switch__track"></span>
+                </button>
+              </div>
+              <div class="set-field set-field--row">
+                <label class="set-field__label" for="set-timeout">Session timeout</label>
+                <span class="set-select-wrap">
+                  <select class="set-select" id="set-timeout" data-model="settings.sessionTimeout">
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="60">1 hour</option>
+                    <option value="0">Never</option>
+                  </select>
+                </span>
+              </div>
+              <div class="set-row">
+                <div class="set-row__text">
+                  <div class="set-row__title">Password</div>
+                  <div class="set-row__desc">Last changed 3 months ago.</div>
+                </div>
+                <button class="admin__btn" type="button">Change password</button>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <!-- ── Add-user slide-over ───────────────────────────────────────────────
+           Three components compose here: the shipped Slide-over owns the chrome
+           (focus trap, Escape, backdrop, scroll lock); a small `userform`
+           component (defined in this template) owns the draft + validation; the
+           `admin` shell owns the table. They talk over Micra's event bus —
+           `user:new` / `user:save` / `editor:close` — never reaching into each
+           other's state. -->
+      <micra-slideover id="user-editor" @keydown.escape.window="close" @keydown.tab.window="trapTab" data-side="right" data-size="26rem">
+        <div
+          class="micra-slideover"
+          data-bind="data-state:open ? 'open' : 'closed', data-side:side()"
+          @click.self="close"
+        >
+          <div
+            class="micra-slideover__panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="user-editor-title"
+            data-ref="panel"
+            tabindex="-1"
+            data-bind="data-side:side(), style:panelStyle()"
+          >
+            <form data-component="userform" @submit.prevent="save">
+              <header class="micra-slideover__head">
+                <h2 id="user-editor-title" data-text="title()"></h2>
+                <button type="button" class="micra-slideover__close" @click="cancel" aria-label="Close">&times;</button>
+              </header>
+
+              <div class="micra-slideover__body">
+                <div class="set-field">
+                  <label class="set-field__label" for="uf-name">Full name</label>
+                  <input class="set-input" id="uf-name" type="text" data-model="draft.name" placeholder="Ada Lovelace" />
+                </div>
+                <div class="set-field">
+                  <label class="set-field__label" for="uf-email">Email</label>
+                  <input class="set-input" id="uf-email" type="email" data-model="draft.email" placeholder="ada@example.com" />
+                </div>
+                <div class="set-field">
+                  <label class="set-field__label" for="uf-role">Role</label>
+                  <span class="set-select-wrap">
+                    <select class="set-select" id="uf-role" data-model="draft.role">
+                      <option value="Admin">Admin</option>
+                      <option value="Editor">Editor</option>
+                      <option value="Viewer">Viewer</option>
+                    </select>
+                  </span>
+                </div>
+                <div class="set-field">
+                  <label class="set-field__label" for="uf-status">Status</label>
+                  <span class="set-select-wrap">
+                    <select class="set-select" id="uf-status" data-model="draft.status">
+                      <option value="active">Active</option>
+                      <option value="pending">Pending</option>
+                      <option value="invited">Invited</option>
+                    </select>
+                  </span>
+                </div>
+                <p class="set-error" data-show="error" data-text="error" role="alert"></p>
+              </div>
+
+              <footer class="micra-slideover__foot">
+                <button type="button" class="admin__btn" @click="cancel">Cancel</button>
+                <button type="submit" class="admin__btn admin__btn--primary">Save user</button>
+              </footer>
+            </form>
+          </div>
+        </div>
+      </micra-slideover>
+
+      <!-- ── Add-customer slide-over (same composition as the user one) ──────── -->
+      <micra-slideover id="customer-editor" @keydown.escape.window="close" @keydown.tab.window="trapTab" data-side="right" data-size="26rem">
+        <div
+          class="micra-slideover"
+          data-bind="data-state:open ? 'open' : 'closed', data-side:side()"
+          @click.self="close"
+        >
+          <div
+            class="micra-slideover__panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="customer-editor-title"
+            data-ref="panel"
+            tabindex="-1"
+            data-bind="data-side:side(), style:panelStyle()"
+          >
+            <form data-component="customerform" @submit.prevent="save">
+              <header class="micra-slideover__head">
+                <h2 id="customer-editor-title" data-text="title()"></h2>
+                <button type="button" class="micra-slideover__close" @click="cancel" aria-label="Close">&times;</button>
+              </header>
+
+              <div class="micra-slideover__body">
+                <div class="set-field">
+                  <label class="set-field__label" for="cf-name">Contact name</label>
+                  <input class="set-input" id="cf-name" type="text" data-model="draft.name" placeholder="Ada Lovelace" />
+                </div>
+                <div class="set-field">
+                  <label class="set-field__label" for="cf-company">Company</label>
+                  <input class="set-input" id="cf-company" type="text" data-model="draft.company" placeholder="Acme Inc" />
+                </div>
+                <div class="set-field">
+                  <label class="set-field__label" for="cf-status">Status</label>
+                  <span class="set-select-wrap">
+                    <select class="set-select" id="cf-status" data-model="draft.status">
+                      <option value="active">Active</option>
+                      <option value="trial">Trial</option>
+                      <option value="churned">Churned</option>
+                    </select>
+                  </span>
+                </div>
+                <div class="set-field">
+                  <label class="set-field__label" for="cf-plan">Plan</label>
+                  <span class="set-select-wrap">
+                    <select class="set-select" id="cf-plan" data-model="draft.plan">
+                      <option value="Free">Free</option>
+                      <option value="Pro">Pro</option>
+                      <option value="Team">Team</option>
+                    </select>
+                  </span>
+                </div>
+                <div class="set-field set-field--row">
+                  <label class="set-field__label" for="cf-seats">Seats</label>
+                  <input class="set-input set-input--num" id="cf-seats" type="number" min="0" data-model="draft.seats" />
+                </div>
+                <div class="set-field set-field--row">
+                  <label class="set-field__label" for="cf-mrr">MRR ($/mo)</label>
+                  <input class="set-input set-input--num" id="cf-mrr" type="number" min="0" data-model="draft.mrr" />
+                </div>
+                <p class="set-error" data-show="error" data-text="error" role="alert"></p>
+              </div>
+
+              <footer class="micra-slideover__foot">
+                <button type="button" class="admin__btn" @click="cancel">Cancel</button>
+                <button type="submit" class="admin__btn admin__btn--primary">Save customer</button>
+              </footer>
+            </form>
+          </div>
+        </div>
+      </micra-slideover>
+
+      <!-- ── Command palette (⌘K) ──────────────────────────────────────────────
+           Shipped component: built-in Cmd/Ctrl+K, fuzzy search, keyboard nav.
+           It emits `run` on the bus with the chosen command; the admin shell
+           routes that to a view switch or an action below. -->
+      <micra-commandpalette @keydown.escape.window="close" @keydown.tab.window="trapTab" @keydown.meta.k.window.prevent="toggle" @keydown.ctrl.k.window.prevent="toggle"
+        data-commands='[
+          {"id":"nav-users","group":"Navigation","label":"Go to Users","keywords":["team","people","members"]},
+          {"id":"nav-customers","group":"Navigation","label":"Go to Customers","keywords":["accounts","companies","billing"]},
+          {"id":"nav-settings","group":"Navigation","label":"Go to Settings","keywords":["preferences","profile","account"]},
+          {"id":"add-user","group":"Actions","label":"Add user","keywords":["new","invite","create","member"],"hint":"N"},
+          {"id":"add-customer","group":"Actions","label":"Add customer","keywords":["new","account","company","create"]},
+          {"id":"toggle-theme","group":"Actions","label":"Toggle dark mode","keywords":["theme","appearance","light","dark"]}
+        ]'
+      >
+        <div class="micra-cmdk" data-bind="data-state:open ? 'open' : 'closed'" @click.self="close">
+          <div class="micra-cmdk__panel" role="dialog" aria-modal="true" aria-label="Command palette" data-ref="panel" tabindex="-1">
+            <input
+              class="micra-cmdk__input"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-controls="cmdk-listbox"
+              placeholder="Type a command or search…"
+              autocomplete="off"
+              data-ref="input"
+              data-model="query"
+              data-bind="aria-expanded:open ? 'true' : 'false', aria-activedescendant:activeDescendant()"
+              @input="onInput"
+              @keydown.down.prevent="next"
+              @keydown.up.prevent="prev"
+              @keydown.enter.prevent="run"
+              @keydown.escape="close"
+            />
+            <ul class="micra-cmdk__listbox" id="cmdk-listbox" role="listbox" aria-label="Commands">
+              <template data-each="filtered()" data-key="id">
+                <li class="micra-cmdk__row" role="presentation">
+                  <div class="micra-cmdk__group" role="presentation" data-if="firstInGroup(item)" data-text="item.group"></div>
+                  <div
+                    class="micra-cmdk__option"
+                    role="option"
+                    data-bind="id:'cmdk-option-' + item.id, aria-selected:item.id === activeId ? 'true' : 'false', data-state:item.id === activeId ? 'active' : ''"
+                    @click="choose(item.id)"
+                    @mousemove="setActive(item.id)"
+                  >
+                    <span class="micra-cmdk__label" data-text="item.label"></span>
+                    <span class="micra-cmdk__hint" data-if="item.hint" data-text="item.hint"></span>
+                  </div>
+                </li>
+              </template>
+              <li class="micra-cmdk__empty" role="presentation" data-if="noResults()">No commands</li>
+            </ul>
+          </div>
+        </div>
+      </micra-commandpalette>
+    </micra-admin>
+
+    <!-- Micra + the component behaviors this template assembles. -->
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="../../components/datatable/define.js"></script>
+    <script src="../../components/slideover/define.js"></script>
+    <script src="../../components/commandpalette/define.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0/dist/umd/lucide.min.js"></script>
+
+    <script>
+      // ── The admin shell: nav state, mobile sidebar, theme, page title. ──────
+      Micra.define("admin", {
+        state: {
+          view: "users",
+          sidebarOpen: false,
+          customers: [],
+          // Settings form — two-way bound via data-model="settings.*".
+          settingsTab: "profile",
+          saved: false,
+          settings: {
+            fullName: "Eric Cartman",
+            email: "eric@sp.ca",
+            company: "South Park Elementary",
+            timezone: "America/Denver",
+            bio: "Respect my authority.",
+            notifyProduct: true,
+            notifyDigest: false,
+            notifyMentions: true,
+            notifyBilling: true,
+            frequency: "daily",
+            twoFactor: false,
+            sessionTimeout: "30",
+          },
+        },
+        onCreate() {
+          // Bus wiring — the slide-over editor hands a finished user back here,
+          // and asks to be closed. The admin owns the table; it never touches
+          // the editor's draft, and the editor never touches the table.
+          // Upsert: an existing id (editing) replaces in place; a null id (adding)
+          // gets a client id here so the grid can key it, then prepends. Your
+          // server would assign that id instead (see README).
+          this.on("user:save", (u) => {
+            const t = this._table();
+            if (t) t.state.rows = this._upsert(t.state.rows, this._withId(u));
+          });
+          this.on("customer:save", (c) => {
+            this.state.customers = this._upsert(this.state.customers, this._withId(c));
+          });
+          // The Data Table's bulk bar only emits intent — the host acts. Here we
+          // remove rows client-side; in production this is where you'd DELETE on
+          // the server (and likely confirm first). 'export' reuses the table's
+          // own selection-aware CSV export.
+          this.on("bulk", ({ action, ids }) => {
+            const t = this._table();
+            if (!t) return;
+            if (action === "delete") {
+              t.state.rows = t.state.rows.filter((r) => !ids.includes(r.id));
+              t.clearSelection();
+            } else if (action === "export") {
+              t.exportCSV();
+            }
+          });
+          // Either editor asks to be closed; one is open at a time, so closing
+          // both is a no-op on the other.
+          this.on("editor:close", () => this._closeEditors());
+
+          // Row click → edit a user. The table re-renders its rows on every
+          // change, so we delegate from the (stable) admin root instead of
+          // binding per row. Document-level-style listener: removed in onDestroy.
+          this._onRowClick = (e) => {
+            if (e.target.closest(".micra-datatable__select-col")) return; // checkbox
+            const tr = e.target.closest("tr[data-id]");
+            if (!tr) return;
+            const id = Number(tr.dataset.id);
+            const u = this._table()?.state.rows.find((r) => r.id === id);
+            if (!u) return;
+            this.emit("user:edit", u);
+            this._instance("#user-editor").open();
+          };
+          this.$el.addEventListener("click", this._onRowClick);
+
+          // Command palette routing. The palette closes itself synchronously
+          // right after emitting 'run'; a microtask defers our handler until
+          // after that close, so an action that opens the slide-over (scroll
+          // lock + focus) isn't undone by the palette's own teardown.
+          this.on("run", (cmd) => queueMicrotask(() => this._runCommand(cmd)));
+        },
+        onDestroy() {
+          this.$el.removeEventListener("click", this._onRowClick);
+        },
+        _withId(item) {
+          return item.id == null ? { ...item, id: Date.now() } : item;
+        },
+        _upsert(list, item) {
+          return list.some((x) => x.id === item.id)
+            ? list.map((x) => (x.id === item.id ? item : x))
+            : [item, ...list];
+        },
+        _runCommand(cmd) {
+          switch (cmd.id) {
+            case "nav-users": this.state.view = "users"; break;
+            case "nav-customers": this.state.view = "customers"; break;
+            case "nav-settings": this.state.view = "settings"; break;
+            case "add-user": this.state.view = "users"; this.addUser(); break;
+            case "add-customer": this.state.view = "customers"; this.addCustomer(); break;
+            case "toggle-theme": this.toggleTheme(); break;
+          }
+        },
+        _table() {
+          return Micra.instances().get(this.$el.querySelector('[data-component="datatable"]'));
+        },
+        _instance(sel) {
+          return Micra.instances().get(this.$el.querySelector(sel));
+        },
+        _closeEditors() {
+          this.$el.querySelectorAll('[data-component="slideover"]').forEach((el) => {
+            const inst = Micra.instances().get(el);
+            if (inst) inst.close();
+          });
+        },
+        _palette() {
+          return this._instance('[data-component="commandpalette"]');
+        },
+        openPalette() {
+          const p = this._palette();
+          if (p) p.open();
+        },
+        addUser() {
+          this.emit("user:new"); // tell the form to reset its draft
+          const ed = this._instance("#user-editor");
+          if (ed) ed.open();
+        },
+        addCustomer() {
+          this.emit("customer:new");
+          const ed = this._instance("#customer-editor");
+          if (ed) ed.open();
+        },
+        editCustomer(id) {
+          const c = this.state.customers.find((x) => x.id === id);
+          if (!c) return;
+          this.emit("customer:edit", c);
+          const ed = this._instance("#customer-editor");
+          if (ed) ed.open();
+        },
+        go(e) {
+          this.state.view = e.currentTarget.dataset.view;
+          this.state.sidebarOpen = false;
+        },
+        isView(v) {
+          return this.state.view === v;
+        },
+        // ── Settings ──────────────────────────────────────────────────────────
+        setTab(e) {
+          this.state.settingsTab = e.currentTarget.dataset.tab;
+        },
+        isTab(t) {
+          return this.state.settingsTab === t;
+        },
+        toggle(e) {
+          const k = e.currentTarget.dataset.field;
+          this.set("settings." + k, !this.state.settings[k]);
+        },
+        save() {
+          // In a real app: POST this.state.settings to your server. The fields
+          // are already bound, so there's nothing to gather. Here we just flash.
+          this.state.saved = true;
+        },
+        userInitials() {
+          return this.state.settings.fullName
+            .split(" ")
+            .map((w) => w[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase();
+        },
+        toggleSidebar() {
+          this.state.sidebarOpen = !this.state.sidebarOpen;
+        },
+        closeSidebar() {
+          this.state.sidebarOpen = false;
+        },
+        toggleTheme() {
+          const root = document.documentElement;
+          root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+        },
+        viewTitle() {
+          return { users: "Users", customers: "Customers", settings: "Settings" }[this.state.view] || "";
+        },
+      });
+
+      // ── The add-user form (lives inside the slide-over). Owns its draft and
+      //    validation; hands a finished user to the admin over the bus. ────────
+      const blankUser = () => ({ id: null, name: "", email: "", role: "Viewer", status: "active", joined: null });
+      Micra.define("userform", {
+        state: { draft: blankUser(), error: "" },
+        onCreate() {
+          this.on("user:new", () => {
+            this.state.draft = blankUser();
+            this.state.error = "";
+          });
+          this.on("user:edit", (u) => {
+            // Copy only the fields the form edits (+ joined, preserved on save).
+            this.state.draft = { id: u.id, name: u.name, email: u.email, role: u.role, status: u.status, joined: u.joined };
+            this.state.error = "";
+          });
+        },
+        title() {
+          return this.state.draft.id ? "Edit user" : "Add user";
+        },
+        cancel() {
+          this.emit("editor:close");
+        },
+        save() {
+          const d = this.state.draft;
+          if (!d.name.trim() || !d.email.trim()) {
+            this.state.error = "Name and email are required.";
+            return;
+          }
+          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) {
+            this.state.error = "Enter a valid email address.";
+            return;
+          }
+          this.emit("user:save", {
+            id: d.id, // null when adding — the shell (or your server) assigns it
+            name: d.name.trim(),
+            email: d.email.trim(),
+            role: d.role,
+            status: d.status,
+            joined: d.joined || new Date().toISOString().slice(0, 10), // keep original on edit
+          });
+          this.emit("editor:close");
+        },
+      });
+
+      // ── The add-customer form (same shape as userform, different fields). ────
+      const blankCustomer = () => ({ id: null, name: "", company: "", status: "trial", plan: "Pro", seats: 3, mrr: 0 });
+      Micra.define("customerform", {
+        state: { draft: blankCustomer(), error: "" },
+        onCreate() {
+          this.on("customer:new", () => {
+            this.state.draft = blankCustomer();
+            this.state.error = "";
+          });
+          this.on("customer:edit", (c) => {
+            this.state.draft = {
+              id: c.id,
+              name: c.name,
+              company: c.company,
+              status: c.status,
+              plan: c.plan,
+              seats: c.seats,
+              mrr: Number(String(c.mrr).replace(/[^0-9.]/g, "")) || 0, // "$420" → 420
+            };
+            this.state.error = "";
+          });
+        },
+        title() {
+          return this.state.draft.id ? "Edit customer" : "Add customer";
+        },
+        cancel() {
+          this.emit("editor:close");
+        },
+        save() {
+          const d = this.state.draft;
+          if (!d.name.trim() || !d.company.trim()) {
+            this.state.error = "Contact name and company are required.";
+            return;
+          }
+          const initials = d.name.trim().split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+          this.emit("customer:save", {
+            id: d.id, // null when adding — the shell (or your server) assigns it
+            name: d.name.trim(),
+            company: d.company.trim(),
+            status: d.status,
+            plan: d.plan,
+            seats: Number(d.seats) || 0,
+            mrr: "$" + (Number(d.mrr) || 0),
+            initials,
+          });
+          this.emit("editor:close");
+        },
+      });
+
+      // ── Seed the Users table (swap for your server data — see README). ──────
+      const NAMES = [
+        "Ada Lovelace", "Alan Turing", "Grace Hopper", "Edsger Dijkstra",
+        "Donald Knuth", "Barbara Liskov", "John McCarthy", "Margaret Hamilton",
+        "Ken Thompson", "Dennis Ritchie", "Linus Torvalds", "Tim Berners-Lee",
+        "Radia Perlman", "Vint Cerf", "Leslie Lamport", "Frances Allen",
+        "Bjarne Stroustrup", "Guido van Rossum", "Anita Borg", "Brian Kernighan",
+        "Carol Shaw", "Claude Shannon", "Katherine Johnson", "Adele Goldberg",
+      ];
+      const ROLES = ["Admin", "Editor", "Viewer"];
+      const STATUSES = ["active", "pending", "invited"];
+      const users = NAMES.map((name, i) => {
+        const first = name.split(" ")[0].toLowerCase();
+        const day = String((i % 28) + 1).padStart(2, "0");
+        const month = String((i % 12) + 1).padStart(2, "0");
+        return {
+          id: 1000 + i,
+          name,
+          email: first + "@example.com",
+          role: ROLES[i % ROLES.length],
+          status: STATUSES[i % STATUSES.length],
+          joined: "2025-" + month + "-" + day,
+        };
+      });
+      const columns = [
+        { key: "id", label: "ID", sortable: true, width: "5rem" },
+        { key: "name", label: "Name", sortable: true },
+        { key: "email", label: "Email", sortable: true },
+        { key: "role", label: "Role", sortable: true },
+        { key: "status", label: "Status", sortable: true },
+        { key: "joined", label: "Joined", sortable: true, format: "date" },
+      ];
+
+      Micra.start();
+
+      const tableEl = document.querySelector('[data-component="datatable"]');
+      const table = Micra.instances().get(tableEl);
+      if (table) {
+        table.state.columns = columns;
+        table.state.rows = users;
+      }
+
+      // ── Seed the Customers grid (swap for your server data — see README). ───
+      const COMPANIES = [
+        "Acme Inc", "Globex", "Initech", "Umbrella Co", "Hooli", "Soylent",
+        "Vehement", "Massive Dynamic", "Stark Industries", "Wayne Enterprises",
+        "Cyberdyne", "Aperture",
+      ];
+      const CUST_STATUS = ["active", "trial", "churned"];
+      const PLANS = ["Free", "Pro", "Team"];
+      const initials = (name) =>
+        name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+      const customers = COMPANIES.map((company, i) => {
+        const plan = PLANS[i % 3];
+        return {
+          id: i + 1,
+          name: NAMES[i],
+          company,
+          status: CUST_STATUS[(i + 1) % 3],
+          plan,
+          mrr: plan === "Free" ? "$0" : "$" + (i + 2) * 23,
+          seats: plan === "Free" ? 1 : (i % 7) + 2,
+          initials: initials(NAMES[i]),
+        };
+      });
+      const admin = Micra.instances().get(document.querySelector('[data-component="admin"]'));
+      if (admin) admin.state.customers = customers;
+
+      // Render lucide icons (replaces <i data-lucide> with inline SVG).
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

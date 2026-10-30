@@ -1,0 +1,100 @@
+/*
+ * components/modal/modal.css — default skin for the Modal.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The overlay is always in the
+ * DOM and shown/hidden via [data-state], so it fades in and out cleanly.
+ */
+
+micra-modal {
+  display: block;
+}
+
+
+.micra-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: var(--micra-overlay);
+
+  /* hidden + non-interactive until [data-state="open"] */
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--micra-duration) var(--micra-ease),
+    visibility var(--micra-duration) var(--micra-ease);
+}
+
+.micra-modal[data-state='open'] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.micra-modal__dialog {
+  width: min(32rem, 100%);
+  max-height: 85vh;
+  overflow: auto;
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  box-shadow: var(--micra-shadow);
+
+  transform: translateY(8px) scale(0.98);
+  transition: transform var(--micra-duration) var(--micra-ease);
+}
+
+.micra-modal[data-state='open'] .micra-modal__dialog {
+  transform: none;
+}
+
+.micra-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--micra-border);
+}
+
+.micra-modal__head h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.micra-modal__close {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--micra-muted);
+  border-radius: var(--micra-radius);
+}
+
+.micra-modal__close:hover {
+  color: var(--micra-fg);
+}
+
+.micra-modal__body {
+  padding: 1.25rem;
+}
+
+/* Minimal token-driven button used by the trigger and demo actions. */
+.micra-btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.55rem 1rem;
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border: 0;
+  border-radius: var(--micra-radius);
+}
+
+.micra-btn:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}

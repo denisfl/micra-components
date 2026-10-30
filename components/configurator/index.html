@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Configurator</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./configurator.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+    </div>
+
+    <!-- The config is seeded as a JSON prop; selections, the step, the rules and
+         the total are all owned by the component. Set currency/locale with
+         data-currency / data-locale. -->
+    <section
+      class="micra-configurator"
+      data-component="configurator"
+      data-currency="USD"
+      data-locale="en-US"
+      aria-label="Configure your laptop"
+    >
+      <!-- Stepper header. Each step is a button so the header is navigable; goTo
+           refuses to skip a required step. -->
+      <ol class="micra-configurator__stepper" aria-label="Steps">
+        <template data-each="steps()" data-key="id">
+          <li>
+            <button
+              type="button"
+              class="micra-configurator__step"
+              data-bind="data-state:stepState($index), aria-current:isCurrentStep($index) ? 'step' : 'false'"
+              @click="goTo($index)"
+            >
+              <span class="micra-configurator__step-badge" data-text="stepNumber($index)"></span>
+              <span data-text="item.title"></span>
+            </button>
+          </li>
+        </template>
+      </ol>
+
+      <!-- Current step's options (radio for single-select, checkbox for multi). -->
+      <div data-if="!isDone()">
+        <h2 class="micra-configurator__legend" data-text="currentStepTitle()"></h2>
+        <p class="micra-configurator__hint" data-if="currentIsMulti()">Pick any that apply.</p>
+        <p class="micra-configurator__hint" data-if="!currentIsMulti()">Pick one to continue.</p>
+
+        <div
+          class="micra-configurator__options"
+          data-bind="role:currentIsMulti() ? 'group' : 'radiogroup', aria-label:currentStepTitle()"
+        >
+          <template data-each="currentOptions()" data-key="id">
+            <!-- Inside this loop `item` is the OPTION. The owning step id comes
+                 from currentStepId(); select(stepId, opt.id) is a two-arg call,
+                 which @click handlers support. aria-checked / aria-disabled are
+                 bound as STRINGS. -->
+            <button
+              type="button"
+              class="micra-configurator__option"
+              data-bind="role:optionRole(), aria-checked:isSelected(item.id) ? 'true' : 'false', aria-disabled:isDisabled(item.id) ? 'true' : 'false'"
+              @click="select(currentStepId(), item.id)"
+            >
+              <span
+                class="micra-configurator__marker"
+                data-bind="data-shape:currentIsMulti() ? 'checkbox' : 'radio'"
+                aria-hidden="true"
+              ></span>
+              <span class="micra-configurator__option-body">
+                <span class="micra-configurator__option-label" data-text="item.label"></span>
+                <span
+                  class="micra-configurator__option-note"
+                  data-if="isDisabled(item.id)"
+                  data-text="disabledReason(item.id)"
+                ></span>
+              </span>
+              <span class="micra-configurator__option-price" data-text="optionPrice(item.price)"></span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Summary on the final step (and after commit): the chosen options + total. -->
+      <div data-if="isLastStep() || isDone()">
+        <h2 class="micra-configurator__legend" data-if="isDone()">Your configuration</h2>
+        <dl class="micra-configurator__summary" data-if="hasSelections()">
+          <template data-each="selectedItems()" data-key="id">
+            <div class="micra-configurator__summary-row">
+              <span class="micra-configurator__summary-label">
+                <span class="micra-configurator__summary-step" data-text="item.stepTitle"></span>
+                <span data-text="item.label"></span>
+              </span>
+              <span class="micra-configurator__summary-price" data-text="optionPrice(item.price)"></span>
+            </div>
+          </template>
+        </dl>
+        <p class="micra-configurator__summary-empty" data-if="!hasSelections()">Nothing selected yet.</p>
+      </div>
+
+      <!-- Live total — announced politely as selections change. -->
+      <div class="micra-configurator__total" aria-live="polite">
+        <span class="micra-configurator__total-label">Total</span>
+        <span class="micra-configurator__total-value" data-text="total()"></span>
+      </div>
+
+      <!-- Footer: Back / Next, then Done / Add to cart on the last step. -->
+      <div class="micra-configurator__footer">
+        <button
+          type="button"
+          class="micra-configurator__btn micra-configurator__btn--ghost"
+          data-if="!isFirstStep() && !isDone()"
+          @click="prev"
+        >
+          Back
+        </button>
+
+        <span class="micra-configurator__spacer"></span>
+
+        <button
+          type="button"
+          class="micra-configurator__btn"
+          data-if="!isLastStep() && !isDone()"
+          data-bind="aria-disabled:canAdvance() ? 'false' : 'true'"
+          @click="next"
+        >
+          Next
+        </button>
+
+        <button
+          type="button"
+          class="micra-configurator__btn"
+          data-if="isLastStep() && !isDone()"
+          data-bind="aria-disabled:allValid() ? 'false' : 'true'"
+          @click="done"
+        >
+          Add to cart
+        </button>
+
+        <button
+          type="button"
+          class="micra-configurator__btn micra-configurator__btn--ghost"
+          data-if="isDone()"
+          @click="reset"
+        >
+          Edit configuration
+        </button>
+      </div>
+
+      <!-- Polite live region for the commit confirmation. -->
+      <div class="micra-configurator__sr" aria-live="polite" data-text="isDone() ? 'Configuration added to cart.' : ''"></div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // The config. Seeded as a JSON prop on the root; the component parses it in
+      // onCreate. Option ids are GLOBALLY unique so requires/excludes resolve
+      // across steps.
+      //
+      // Dependency shown in action: the "4K" display EXCLUDES the "base" CPU
+      // (and base excludes 4K — the relation is mutual). Selecting 4K while base
+      // is chosen drops base; with base selected, 4K shows as disabled with a
+      // reason, and vice-versa. The "dock" extra REQUIRES "4K", so picking the
+      // dock auto-selects 4K (which in turn forces a non-base CPU).
+      const config = {
+        steps: [
+          {
+            id: 'cpu',
+            title: 'CPU',
+            options: [
+              { id: 'cpu-base', label: 'M-base — 8-core', price: 0 },
+              { id: 'cpu-pro', label: 'M-pro — 12-core', price: 300 },
+              { id: 'cpu-max', label: 'M-max — 16-core', price: 700 },
+            ],
+          },
+          {
+            id: 'display',
+            title: 'Display',
+            options: [
+              { id: 'disp-fhd', label: 'FHD — 1920x1200', price: 0 },
+              {
+                id: 'disp-4k',
+                label: '4K — 3840x2400',
+                price: 250,
+                excludes: ['cpu-base'],
+              },
+            ],
+          },
+          {
+            id: 'extras',
+            title: 'Extras',
+            multi: true,
+            options: [
+              { id: 'ex-warranty', label: '3-year warranty', price: 199 },
+              {
+                id: 'ex-dock',
+                label: 'Thunderbolt dock',
+                price: 149,
+                requires: ['disp-4k'],
+              },
+              { id: 'ex-sleeve', label: 'Leather sleeve', price: 49 },
+            ],
+          },
+        ],
+      };
+
+      // Seed the config as a JSON attribute before start() mounts the component.
+      const el = document.querySelector('[data-component="configurator"]');
+      el.setAttribute('data-config', JSON.stringify(config));
+
+      Micra.start();
+
+      // Wire the public events. The host owns the cart; the component only hands
+      // back the resolved configuration.
+      const cfg = Micra.instances().get(el);
+      if (cfg) {
+        cfg.on('configure', (payload) => {
+          console.log('[configurator] configure:', payload);
+        });
+        cfg.on('change', (payload) => {
+          console.log('[configurator] change:', payload);
+        });
+      }
+
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

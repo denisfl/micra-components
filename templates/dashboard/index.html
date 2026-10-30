@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra Dashboard — template</title>
+
+    <!-- Theme tokens, the component skins this template assembles, then layout. -->
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="../../components/charts/charts.css" />
+    <link rel="stylesheet" href="../../components/datatable/datatable.css" />
+    <link rel="stylesheet" href="../../components/commandpalette/commandpalette.css" />
+    <link rel="stylesheet" href="./dashboard.css" />
+  </head>
+
+  <body>
+    <micra-dashboard class="dash">
+      <!-- Mobile backdrop (under the off-canvas sidebar). -->
+      <div class="dash__backdrop" data-show="sidebarOpen" @click="closeSidebar"></div>
+
+      <!-- ── Sidebar ───────────────────────────────────────────────────────── -->
+      <aside class="dash__sidebar" data-class="is-open:sidebarOpen">
+        <div class="dash__brand">
+          <span class="dash__logo" aria-hidden="true">M</span>
+          <span>Micra</span>
+        </div>
+
+        <nav class="dash__nav" aria-label="Primary">
+          <button class="dash__nav-item" data-class="is-active:isNav('overview')" @click="go" data-nav="overview">
+            <i data-lucide="layout-dashboard"></i><span>Overview</span>
+          </button>
+          <button class="dash__nav-item" data-class="is-active:isNav('settings')" @click="go" data-nav="settings">
+            <i data-lucide="settings"></i><span>Settings</span>
+          </button>
+        </nav>
+
+        <div class="dash__user">
+          <span class="dash__avatar" aria-hidden="true">EC</span>
+          <div class="dash__user-meta">
+            <div class="dash__user-name">Eric Cartman</div>
+            <div class="dash__user-mail">eric@sp.ca</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ── Main ──────────────────────────────────────────────────────────── -->
+      <div class="dash__main">
+        <header class="dash__topbar">
+          <button class="dash__icon-btn dash__menu" @click="toggleSidebar" aria-label="Toggle menu">
+            <i data-lucide="menu"></i>
+          </button>
+          <h1 class="dash__page-title" data-text="viewTitle()"></h1>
+          <button class="dash__cmdk-trigger" @click="openPalette" aria-label="Open command palette">
+            <i data-lucide="search"></i>
+            <span>Search or jump to…</span>
+            <kbd class="dash__kbd">⌘K</kbd>
+          </button>
+          <span class="dash__spacer"></span>
+          <button class="dash__icon-btn" @click="toggleTheme" aria-label="Toggle theme">
+            <i data-lucide="sun-moon"></i>
+          </button>
+          <button class="dash__icon-btn" aria-label="Notifications">
+            <i data-lucide="bell"></i>
+          </button>
+        </header>
+
+        <main class="dash__content">
+          <!-- ===================== Overview ===================== -->
+          <section class="dash__view" data-show="isNav('overview')">
+          <!-- ===== Row 1 — KPI cards ===== -->
+          <div class="kpi-grid">
+            <template data-each="kpis" data-key="label">
+              <article class="kpi">
+                <div class="kpi__label" data-text="item.label"></div>
+                <div class="kpi__value" data-text="item.value"></div>
+                <div data-bind="class:deltaClass(item)">
+                  <span data-text="deltaText(item)"></span>
+                  <span class="kpi__sub" data-text="item.sub"></span>
+                </div>
+              </article>
+            </template>
+          </div>
+
+          <!-- ===== Row 2 — hero chart + plan mix ===== -->
+          <div class="dash-row dash-row--hero">
+            <section class="panel">
+              <div class="panel__head">
+                <h2 class="panel__title">Revenue &amp; signups</h2>
+                <div class="seg" role="group" aria-label="Period">
+                  <button class="seg__btn" type="button" data-class="is-active:isPeriod('7d')" @click="setPeriod" data-period="7d">7d</button>
+                  <button class="seg__btn" type="button" data-class="is-active:isPeriod('30d')" @click="setPeriod" data-period="30d">30d</button>
+                  <button class="seg__btn" type="button" data-class="is-active:isPeriod('12m')" @click="setPeriod" data-period="12m">12m</button>
+                </div>
+              </div>
+              <micra-charts class="micra-charts" data-type="mixed" id="hero-chart"
+                data-data='{"categories":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"series":[{"name":"Signups","kind":"bar","axis":"left","data":[180,210,240,220,280,300,290,340,360,390,410,412]},{"name":"MRR ($k)","kind":"line","axis":"right","data":[21,24,27,28,31,34,36,39,41,44,46,48.2]}]}'>
+                <div class="micra-charts__plot" role="img" data-bind="aria-label:ariaSummary(), data-state:plotState()" data-html="svg()"></div>
+                <ul class="micra-charts__legend">
+                  <template data-each="legend()" data-key="key">
+                    <li data-bind="data-hidden:item.hidden ? 'true' : 'false', data-toggle:item.toggle ? 'true' : 'false'" @click="toggle(item.index)">
+                      <span class="micra-charts__swatch" data-bind="style:swatchStyle(item.color)"></span>
+                      <span data-text="item.label"></span>
+                      <span class="micra-charts__legend-value" data-text="item.value"></span>
+                    </li>
+                  </template>
+                </ul>
+                <ul class="micra-charts__sr">
+                  <template data-each="dataList()" data-key="key">
+                    <li><span data-text="item.label"></span>: <span data-text="item.value"></span></li>
+                  </template>
+                </ul>
+              </micra-charts>
+            </section>
+
+            <section class="panel">
+              <div class="panel__head"><h2 class="panel__title">Plan mix</h2></div>
+              <micra-charts class="micra-charts" data-type="pie" id="plan-pie"
+                data-data='[{"label":"Free","value":1240},{"label":"Pro","value":760},{"label":"Team","value":318}]'>
+                <div class="micra-charts__plot" role="img" data-bind="aria-label:ariaSummary(), data-state:plotState()" data-html="svg()"></div>
+                <ul class="micra-charts__legend">
+                  <template data-each="legend()" data-key="key">
+                    <li data-bind="data-hidden:item.hidden ? 'true' : 'false', data-toggle:item.toggle ? 'true' : 'false'" @click="toggle(item.index)">
+                      <span class="micra-charts__swatch" data-bind="style:swatchStyle(item.color)"></span>
+                      <span data-text="item.label"></span>
+                      <span class="micra-charts__legend-value" data-text="item.value"></span>
+                    </li>
+                  </template>
+                </ul>
+                <ul class="micra-charts__sr">
+                  <template data-each="dataList()" data-key="key">
+                    <li><span data-text="item.label"></span>: <span data-text="item.value"></span></li>
+                  </template>
+                </ul>
+              </micra-charts>
+            </section>
+          </div>
+
+          <!-- ===== Row 3 — channel chart + recent activity ===== -->
+          <div class="dash-row dash-row--split">
+            <section class="panel">
+              <div class="panel__head"><h2 class="panel__title">Signups by channel</h2></div>
+              <micra-charts class="micra-charts" data-type="bar" data-stacked="true" id="channel-chart"
+                data-data='{"categories":["Jul","Aug","Sep","Oct","Nov","Dec"],"series":[{"name":"Organic","data":[160,180,150,210,230,240]},{"name":"Referral","data":[70,90,80,110,120,130]},{"name":"Ads","data":[60,70,60,80,90,100]}]}'>
+                <div class="micra-charts__plot" role="img" data-bind="aria-label:ariaSummary(), data-state:plotState()" data-html="svg()"></div>
+                <ul class="micra-charts__legend">
+                  <template data-each="legend()" data-key="key">
+                    <li data-bind="data-hidden:item.hidden ? 'true' : 'false', data-toggle:item.toggle ? 'true' : 'false'" @click="toggle(item.index)">
+                      <span class="micra-charts__swatch" data-bind="style:swatchStyle(item.color)"></span>
+                      <span data-text="item.label"></span>
+                      <span class="micra-charts__legend-value" data-text="item.value"></span>
+                    </li>
+                  </template>
+                </ul>
+                <ul class="micra-charts__sr">
+                  <template data-each="dataList()" data-key="key">
+                    <li><span data-text="item.label"></span>: <span data-text="item.value"></span></li>
+                  </template>
+                </ul>
+              </micra-charts>
+            </section>
+
+            <section class="panel">
+              <div class="panel__head"><h2 class="panel__title">Recent activity</h2></div>
+              <ul class="feed">
+                <template data-each="activity" data-key="id">
+                  <li class="feed__item">
+                    <span class="feed__avatar" aria-hidden="true" data-text="item.initials"></span>
+                    <div class="feed__body">
+                      <div class="feed__text"><strong data-text="item.who"></strong> <span data-text="item.action"></span></div>
+                      <div class="feed__time" data-text="item.time"></div>
+                    </div>
+                    <span class="feed__badge" data-bind="data-kind:item.kind" data-text="item.kind"></span>
+                  </li>
+                </template>
+              </ul>
+            </section>
+          </div>
+
+          <!-- ===== Row 4 — latest transactions (compact Data Table) ===== -->
+          <div class="dash-row">
+            <section class="panel">
+              <div class="panel__head"><h2 class="panel__title">Latest transactions</h2></div>
+              <micra-datatable class="micra-datatable" data-page-size="5" id="tx-table">
+                <div class="micra-datatable__scroll">
+                  <table class="micra-datatable__table" data-bind="aria-busy:loading ? 'true' : 'false'">
+                    <thead>
+                      <tr>
+                        <template data-each="columns" data-key="key">
+                          <th
+                            scope="col"
+                            data-bind="aria-sort:item.sortable ? sortState(item.key) : false, data-state:item.sortable ? columnSortState(item.key) : '', class:item.align === 'right' ? 'micra-datatable__cell--right' : '', style:colStyle(item)"
+                          >
+                            <button class="micra-datatable__sort" type="button" data-if="item.sortable" @click="toggleSort(item.key, $event)">
+                              <span data-text="item.label"></span>
+                              <span class="micra-datatable__sort-ind" aria-hidden="true" data-text="sortIndicator(item.key)"></span>
+                            </button>
+                            <span data-if="!item.sortable" data-text="item.label"></span>
+                          </th>
+                        </template>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template data-each="view()" data-key="id">
+                        <tr>
+                          <template data-each="item.cells" data-key="key">
+                            <td
+                              data-bind="class:item.align === 'right' ? 'micra-datatable__cell--right' : (item.align === 'center' ? 'micra-datatable__cell--center' : '')"
+                              data-text="item.text"
+                            ></td>
+                          </template>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                  <div class="micra-datatable__status" data-if="isEmpty()">No results</div>
+                </div>
+                <div class="micra-datatable__footer">
+                  <span data-text="rangeLabel()"></span>
+                  <nav class="micra-datatable__pager" aria-label="Pagination">
+                    <button class="micra-datatable__pagenav" type="button" @click="prevPage" data-bind="disabled:atFirstPage(), aria-disabled:atFirstPage() ? 'true' : 'false'">Prev</button>
+                    <template data-each="pages()" data-key="key">
+                      <button class="micra-datatable__page" type="button" data-if="item.type === 'page'" @click="goToPage(item.n)" data-text="item.n" data-bind="aria-current:isCurrentPage(item.n) ? 'page' : 'false'"></button>
+                      <span class="micra-datatable__gap" data-if="item.type === 'gap'" aria-hidden="true">&hellip;</span>
+                    </template>
+                    <button class="micra-datatable__pagenav" type="button" @click="nextPage" data-bind="disabled:atLastPage(), aria-disabled:atLastPage() ? 'true' : 'false'">Next</button>
+                  </nav>
+                </div>
+              </micra-datatable>
+            </section>
+          </div>
+          </section>
+
+          <!-- ===================== Settings ===================== -->
+          <section class="dash__view" data-show="isNav('settings')">
+            <div class="dash__view-head">
+              <div>
+                <h2 class="dash__view-title">Settings</h2>
+                <p class="dash__view-sub">Manage your account and preferences.</p>
+              </div>
+              <div class="set-save">
+                <span class="set-saved" data-show="saved"><i data-lucide="check"></i>Saved</span>
+                <button class="dash__btn dash__btn--primary" type="button" @click="save"><span>Save changes</span></button>
+              </div>
+            </div>
+
+            <div class="set-tabs" role="tablist" aria-label="Settings sections">
+              <button class="set-tab" type="button" role="tab" @click="setTab" data-tab="profile" data-class="is-active:isTab('profile')" data-bind="aria-selected:isTab('profile') ? 'true' : 'false'">Profile</button>
+              <button class="set-tab" type="button" role="tab" @click="setTab" data-tab="notifications" data-class="is-active:isTab('notifications')" data-bind="aria-selected:isTab('notifications') ? 'true' : 'false'">Notifications</button>
+              <button class="set-tab" type="button" role="tab" @click="setTab" data-tab="billing" data-class="is-active:isTab('billing')" data-bind="aria-selected:isTab('billing') ? 'true' : 'false'">Billing</button>
+            </div>
+
+            <form class="set-card" data-show="isTab('profile')" @submit.prevent="save">
+              <div class="set-field">
+                <label class="set-field__label" for="ds-name">Full name</label>
+                <input class="set-input" id="ds-name" type="text" data-model="settings.fullName" />
+              </div>
+              <div class="set-field">
+                <label class="set-field__label" for="ds-email">Email</label>
+                <input class="set-input" id="ds-email" type="email" data-model="settings.email" />
+              </div>
+              <div class="set-field">
+                <label class="set-field__label" for="ds-company">Company</label>
+                <input class="set-input" id="ds-company" type="text" data-model="settings.company" />
+              </div>
+              <div class="set-field">
+                <label class="set-field__label" for="ds-tz">Timezone</label>
+                <span class="set-select-wrap">
+                  <select class="set-select" id="ds-tz" data-model="settings.timezone">
+                    <option value="America/Los_Angeles">Pacific (US)</option>
+                    <option value="America/Denver">Mountain (US)</option>
+                    <option value="America/New_York">Eastern (US)</option>
+                    <option value="Europe/London">London</option>
+                  </select>
+                </span>
+              </div>
+            </form>
+
+            <div class="set-card" data-show="isTab('notifications')">
+              <div class="set-row">
+                <div class="set-row__text"><div class="set-row__title">Weekly digest</div><div class="set-row__desc">A summary of activity, every Monday.</div></div>
+                <button type="button" class="set-switch" role="switch" aria-label="Weekly digest" @click="toggleSetting" data-field="notifyDigest" data-bind="aria-checked:settings.notifyDigest ? 'true' : 'false'"><span class="set-switch__track"></span></button>
+              </div>
+              <div class="set-row">
+                <div class="set-row__text"><div class="set-row__title">Product updates</div><div class="set-row__desc">New features and changes.</div></div>
+                <button type="button" class="set-switch" role="switch" aria-label="Product updates" @click="toggleSetting" data-field="notifyProduct" data-bind="aria-checked:settings.notifyProduct ? 'true' : 'false'"><span class="set-switch__track"></span></button>
+              </div>
+              <div class="set-row">
+                <div class="set-row__text"><div class="set-row__title">Billing alerts</div><div class="set-row__desc">Invoices and failed payments.</div></div>
+                <button type="button" class="set-switch" role="switch" aria-label="Billing alerts" @click="toggleSetting" data-field="notifyBilling" data-bind="aria-checked:settings.notifyBilling ? 'true' : 'false'"><span class="set-switch__track"></span></button>
+              </div>
+            </div>
+
+            <div class="set-card" data-show="isTab('billing')">
+              <div class="set-row">
+                <div class="set-row__text"><div class="set-row__title">Current plan</div><div class="set-row__desc">Team — $299/mo, renews Jul 1.</div></div>
+                <button type="button" class="dash__btn">Change plan</button>
+              </div>
+              <div class="set-row">
+                <div class="set-row__text"><div class="set-row__title">Payment method</div><div class="set-row__desc">Visa ending 4242.</div></div>
+                <button type="button" class="dash__btn">Update card</button>
+              </div>
+              <div class="set-field set-field--row">
+                <label class="set-field__label" for="ds-billmail">Billing email</label>
+                <input class="set-input set-input--billmail" id="ds-billmail" type="email" data-model="settings.billingEmail" />
+              </div>
+              <div class="set-row">
+                <div class="set-row__text"><div class="set-row__title">Email receipts</div><div class="set-row__desc">Send a receipt for every charge.</div></div>
+                <button type="button" class="set-switch" role="switch" aria-label="Email receipts" @click="toggleSetting" data-field="emailReceipts" data-bind="aria-checked:settings.emailReceipts ? 'true' : 'false'"><span class="set-switch__track"></span></button>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <!-- ── Command palette (⌘K) ──────────────────────────────────────────── -->
+      <micra-commandpalette @keydown.escape.window="close" @keydown.tab.window="trapTab" @keydown.meta.k.window.prevent="toggle" @keydown.ctrl.k.window.prevent="toggle"
+        data-commands='[
+          {"id":"nav-overview","group":"Navigation","label":"Go to Overview","keywords":["dashboard","home","start"]},
+          {"id":"nav-settings","group":"Navigation","label":"Go to Settings","keywords":["preferences","account"]},
+          {"id":"toggle-theme","group":"Actions","label":"Toggle dark mode","keywords":["theme","appearance","light","dark"]}
+        ]'
+      >
+        <div class="micra-cmdk" data-bind="data-state:open ? 'open' : 'closed'" @click.self="close">
+          <div class="micra-cmdk__panel" role="dialog" aria-modal="true" aria-label="Command palette" data-ref="panel" tabindex="-1">
+            <input
+              class="micra-cmdk__input"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-controls="cmdk-listbox"
+              placeholder="Type a command or search…"
+              autocomplete="off"
+              data-ref="input"
+              data-model="query"
+              data-bind="aria-expanded:open ? 'true' : 'false', aria-activedescendant:activeDescendant()"
+              @input="onInput"
+              @keydown.down.prevent="next"
+              @keydown.up.prevent="prev"
+              @keydown.enter.prevent="run"
+              @keydown.escape="close"
+            />
+            <ul class="micra-cmdk__listbox" id="cmdk-listbox" role="listbox" aria-label="Commands">
+              <template data-each="filtered()" data-key="id">
+                <li class="micra-cmdk__row" role="presentation">
+                  <div class="micra-cmdk__group" role="presentation" data-if="firstInGroup(item)" data-text="item.group"></div>
+                  <div
+                    class="micra-cmdk__option"
+                    role="option"
+                    data-bind="id:'cmdk-option-' + item.id, aria-selected:item.id === activeId ? 'true' : 'false', data-state:item.id === activeId ? 'active' : ''"
+                    @click="choose(item.id)"
+                    @mousemove="setActive(item.id)"
+                  >
+                    <span class="micra-cmdk__label" data-text="item.label"></span>
+                    <span class="micra-cmdk__hint" data-if="item.hint" data-text="item.hint"></span>
+                  </div>
+                </li>
+              </template>
+              <li class="micra-cmdk__empty" role="presentation" data-if="noResults()">No commands</li>
+            </ul>
+          </div>
+        </div>
+      </micra-commandpalette>
+    </micra-dashboard>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="../../components/charts/define.js"></script>
+    <script src="../../components/datatable/define.js"></script>
+    <script src="../../components/commandpalette/define.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0/dist/umd/lucide.min.js"></script>
+
+    <script>
+      // Hero chart datasets, one per period. Signups are bars (left axis); MRR is
+      // a line (right axis) — the mixed/dual-axis showcase. Swap for your data.
+      const HERO = {
+        "7d": {
+          categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          series: [
+            { name: "Signups", kind: "bar", axis: "left", data: [14, 18, 12, 22, 26, 9, 7] },
+            { name: "MRR ($k)", kind: "line", axis: "right", data: [44.1, 44.6, 45.0, 45.9, 46.8, 47.2, 48.2] },
+          ],
+        },
+        "30d": {
+          categories: ["W1", "W2", "W3", "W4"],
+          series: [
+            { name: "Signups", kind: "bar", axis: "left", data: [86, 104, 98, 124] },
+            { name: "MRR ($k)", kind: "line", axis: "right", data: [42.8, 44.5, 46.1, 48.2] },
+          ],
+        },
+        "12m": {
+          categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+          series: [
+            { name: "Signups", kind: "bar", axis: "left", data: [180, 210, 240, 220, 280, 300, 290, 340, 360, 390, 410, 412] },
+            { name: "MRR ($k)", kind: "line", axis: "right", data: [21, 24, 27, 28, 31, 34, 36, 39, 41, 44, 46, 48.2] },
+          ],
+        },
+      };
+
+      // ── The dashboard shell: nav state, mobile sidebar, theme, ⌘K. ──────────
+      Micra.define("dashboard", {
+        state: {
+          nav: "overview",
+          sidebarOpen: false,
+          period: "12m",
+          // KPI row — plain seed data (swap for your metrics; see README).
+          kpis: [
+            { label: "MRR", value: "$48.2k", delta: "12.5%", dir: "up", good: true, sub: "vs last month" },
+            { label: "Active users", value: "2,318", delta: "4.1%", dir: "up", good: true, sub: "vs last month" },
+            { label: "New signups", value: "412", delta: "9.0%", dir: "up", good: true, sub: "last 30 days" },
+            { label: "Churn rate", value: "1.8%", delta: "0.3%", dir: "down", good: true, sub: "vs last month" },
+          ],
+          // Settings form (Profile / Notifications / Billing).
+          settingsTab: "profile",
+          saved: false,
+          settings: {
+            fullName: "Eric Cartman",
+            email: "eric@sp.ca",
+            company: "South Park Elementary",
+            timezone: "America/Denver",
+            notifyDigest: true,
+            notifyProduct: true,
+            notifyBilling: true,
+            billingEmail: "billing@sp.ca",
+            emailReceipts: true,
+          },
+          // Recent activity feed (swap for your event stream; see README).
+          activity: [
+            { id: 1, who: "Grace Hopper", action: "upgraded to Team", time: "2m ago", kind: "upgrade", initials: "GH" },
+            { id: 2, who: "Acme Inc", action: "paid invoice #1043", time: "1h ago", kind: "payment", initials: "AI" },
+            { id: 3, who: "Alan Turing", action: "signed up", time: "3h ago", kind: "signup", initials: "AT" },
+            { id: 4, who: "Globex", action: "cancelled subscription", time: "5h ago", kind: "churn", initials: "GX" },
+            { id: 5, who: "Ada Lovelace", action: "upgraded to Pro", time: "Yesterday", kind: "upgrade", initials: "AL" },
+            { id: 6, who: "Initech", action: "paid invoice #1041", time: "Yesterday", kind: "payment", initials: "IN" },
+          ],
+        },
+        onCreate() {
+          // Command palette routing (palette closes synchronously after 'run';
+          // a microtask defers our handler until after that).
+          this.on("run", (cmd) => queueMicrotask(() => this._runCommand(cmd)));
+        },
+        _runCommand(cmd) {
+          if (cmd.id === "toggle-theme") return this.toggleTheme();
+          if (cmd.id.startsWith("nav-")) this.state.nav = cmd.id.slice(4);
+        },
+        _palette() {
+          return Micra.instances().get(this.$el.querySelector('[data-component="commandpalette"]'));
+        },
+        openPalette() {
+          const p = this._palette();
+          if (p) p.open();
+        },
+        go(e) {
+          this.state.nav = e.currentTarget.dataset.nav;
+          this.state.sidebarOpen = false;
+        },
+        isNav(v) {
+          return this.state.nav === v;
+        },
+        viewTitle() {
+          return { overview: "Overview", settings: "Settings" }[this.state.nav] || "";
+        },
+        // ── Settings ──────────────────────────────────────────────────────────
+        setTab(e) {
+          this.state.settingsTab = e.currentTarget.dataset.tab;
+        },
+        isTab(t) {
+          return this.state.settingsTab === t;
+        },
+        toggleSetting(e) {
+          const k = e.currentTarget.dataset.field;
+          this.set("settings." + k, !this.state.settings[k]);
+        },
+        save() {
+          this.state.saved = true; // in a real app: POST this.state.settings
+        },
+        isPeriod(p) {
+          return this.state.period === p;
+        },
+        setPeriod(e) {
+          const p = e.currentTarget.dataset.period;
+          this.state.period = p;
+          const hero = Micra.instances().get(document.getElementById("hero-chart"));
+          if (hero) hero.setData(HERO[p]);
+        },
+        toggleSidebar() {
+          this.state.sidebarOpen = !this.state.sidebarOpen;
+        },
+        closeSidebar() {
+          this.state.sidebarOpen = false;
+        },
+        toggleTheme() {
+          const root = document.documentElement;
+          root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+        },
+        // KPI delta rendering — arrow by direction, colour by whether it's good.
+        deltaText(item) {
+          return (item.dir === "up" ? "▲ " : "▼ ") + item.delta;
+        },
+        deltaClass(item) {
+          return "kpi__delta " + (item.good ? "kpi__delta--good" : "kpi__delta--bad");
+        },
+      });
+
+      Micra.start();
+
+      // Seed the transactions table (swap for your server data — see README).
+      const TX_COLUMNS = [
+        { key: "customer", label: "Customer", sortable: true },
+        { key: "plan", label: "Plan", sortable: true },
+        { key: "amount", label: "Amount", sortable: true, align: "right", format: "currency" },
+        { key: "date", label: "Date", sortable: true, format: "date" },
+        { key: "status", label: "Status", sortable: true },
+      ];
+      const TRANSACTIONS = [
+        { id: 1, customer: "Grace Hopper", plan: "Team", amount: 299, date: "2026-06-24", status: "paid" },
+        { id: 2, customer: "Acme Inc", plan: "Pro", amount: 69, date: "2026-06-24", status: "paid" },
+        { id: 3, customer: "Alan Turing", plan: "Free", amount: 0, date: "2026-06-23", status: "trial" },
+        { id: 4, customer: "Globex", plan: "Pro", amount: 69, date: "2026-06-23", status: "failed" },
+        { id: 5, customer: "Ada Lovelace", plan: "Pro", amount: 69, date: "2026-06-22", status: "paid" },
+        { id: 6, customer: "Initech", plan: "Team", amount: 299, date: "2026-06-22", status: "paid" },
+        { id: 7, customer: "Hooli", plan: "Pro", amount: 69, date: "2026-06-21", status: "refunded" },
+        { id: 8, customer: "Soylent", plan: "Team", amount: 299, date: "2026-06-21", status: "paid" },
+        { id: 9, customer: "Stark Industries", plan: "Pro", amount: 69, date: "2026-06-20", status: "paid" },
+      ];
+      const tx = Micra.instances().get(document.getElementById("tx-table"));
+      if (tx) {
+        tx.state.columns = TX_COLUMNS;
+        tx.state.rows = TRANSACTIONS;
+      }
+
+      // Render lucide icons (replaces <i data-lucide> with inline SVG).
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

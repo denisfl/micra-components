@@ -1,0 +1,99 @@
+/*
+ * components/radiogroup/radiogroup.css — default skin for the Radio group.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The selected radio is marked
+ * with data-state="checked" via data-bind, so the indicator and border react to
+ * selection and Tailwind's data-[state=checked]: variants can target it too.
+ */
+
+micra-radiogroup {
+  display: block;
+}
+
+
+.micra-radiogroup {
+  width: min(28rem, 100%);
+  color: var(--micra-fg);
+}
+
+.micra-radiogroup__label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.micra-radiogroup__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.micra-radiogroup__radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.85rem 1rem;
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  transition: border-color var(--micra-duration) var(--micra-ease);
+}
+
+.micra-radiogroup__radio:hover {
+  border-color: var(--micra-muted);
+}
+
+.micra-radiogroup__radio[data-state='checked'] {
+  border-color: var(--micra-primary);
+}
+
+.micra-radiogroup__radio[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.micra-radiogroup__radio:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+/* The dot: an outlined ring that fills when the radio is checked. */
+.micra-radiogroup__indicator {
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.125rem;
+  border-radius: 50%;
+  border: 2px solid var(--micra-border);
+  transition: border-color var(--micra-duration) var(--micra-ease);
+}
+
+.micra-radiogroup__radio[data-state='checked'] .micra-radiogroup__indicator {
+  border-color: var(--micra-primary);
+  background:
+    radial-gradient(
+      circle,
+      var(--micra-primary) 0 38%,
+      transparent 42%
+    );
+}
+
+.micra-radiogroup__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.micra-radiogroup__title {
+  font-weight: 500;
+}
+
+.micra-radiogroup__description {
+  font-size: 0.875rem;
+  color: var(--micra-muted);
+}

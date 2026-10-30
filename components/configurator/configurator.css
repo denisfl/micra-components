@@ -1,0 +1,301 @@
+/*
+ * components/configurator/configurator.css — default skin for the Configurator.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The stepper shows
+ * done / current / upcoming off [data-state]; a selected option is outlined in
+ * --micra-primary; a disabled option is muted and shows a "why" note; the live
+ * total uses --micra-primary. All transitions run through --micra-duration, so
+ * prefers-reduced-motion zeroes them.
+ */
+
+.micra-configurator {
+  max-width: 38rem;
+  color: var(--micra-fg);
+}
+
+/* — stepper ———————————————————————————————————————————————————————— */
+.micra-configurator__stepper {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.micra-configurator__step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  text-align: center;
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0.25rem;
+  color: var(--micra-muted);
+  border-radius: var(--micra-radius);
+}
+.micra-configurator__step:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-configurator__step-badge {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--micra-border);
+  background: var(--micra-surface);
+  color: var(--micra-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition:
+    background var(--micra-duration) var(--micra-ease),
+    border-color var(--micra-duration) var(--micra-ease),
+    color var(--micra-duration) var(--micra-ease);
+}
+
+.micra-configurator__step[data-state='current'] {
+  color: var(--micra-fg);
+  font-weight: 600;
+}
+.micra-configurator__step[data-state='current'] .micra-configurator__step-badge {
+  border-color: var(--micra-primary);
+  color: var(--micra-primary);
+}
+.micra-configurator__step[data-state='done'] .micra-configurator__step-badge {
+  background: var(--micra-primary);
+  border-color: var(--micra-primary);
+  color: var(--micra-primary-fg);
+}
+
+/* — step body ——————————————————————————————————————————————————————— */
+.micra-configurator__legend {
+  margin: 0 0 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.micra-configurator__hint {
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
+  color: var(--micra-muted);
+}
+
+/* — option group ———————————————————————————————————————————————————— */
+.micra-configurator__options {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.micra-configurator__option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.85rem 1rem;
+  color: var(--micra-fg);
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  transition:
+    border-color var(--micra-duration) var(--micra-ease),
+    box-shadow var(--micra-duration) var(--micra-ease),
+    background var(--micra-duration) var(--micra-ease);
+}
+.micra-configurator__option:focus-visible {
+  outline: none;
+  border-color: var(--micra-ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-ring) 30%, transparent);
+}
+
+/* Selection marker — a circle (radio) or square (checkbox) filled when chosen. */
+.micra-configurator__marker {
+  flex-shrink: 0;
+  width: 1.15rem;
+  height: 1.15rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--micra-border);
+  background: var(--micra-bg);
+  transition:
+    border-color var(--micra-duration) var(--micra-ease),
+    background var(--micra-duration) var(--micra-ease);
+}
+.micra-configurator__marker[data-shape='radio'] {
+  border-radius: 999px;
+}
+.micra-configurator__marker[data-shape='checkbox'] {
+  border-radius: calc(var(--micra-radius) - 6px);
+}
+.micra-configurator__marker::after {
+  content: '';
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: inherit;
+  background: var(--micra-primary-fg);
+  transform: scale(0);
+  transition: transform var(--micra-duration) var(--micra-ease);
+}
+
+.micra-configurator__option-body {
+  flex: 1;
+  min-width: 0;
+}
+.micra-configurator__option-label {
+  display: block;
+  font-weight: 500;
+}
+.micra-configurator__option-note {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+  color: var(--micra-warning);
+}
+.micra-configurator__option-price {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--micra-muted);
+}
+
+/* Selected. */
+.micra-configurator__option[aria-checked='true'] {
+  border-color: var(--micra-primary);
+  box-shadow: inset 0 0 0 1px var(--micra-primary);
+}
+.micra-configurator__option[aria-checked='true'] .micra-configurator__marker {
+  border-color: var(--micra-primary);
+  background: var(--micra-primary);
+}
+.micra-configurator__option[aria-checked='true'] .micra-configurator__marker::after {
+  transform: scale(1);
+}
+.micra-configurator__option[aria-checked='true'] .micra-configurator__option-price {
+  color: var(--micra-fg);
+}
+
+/* Disabled (conflicts with a current selection). */
+.micra-configurator__option[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.55;
+  background: var(--micra-bg);
+}
+.micra-configurator__option[aria-disabled='true']:hover {
+  border-color: var(--micra-border);
+}
+
+/* — summary (final step) ———————————————————————————————————————————— */
+.micra-configurator__summary {
+  margin: 0;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+  overflow: hidden;
+}
+.micra-configurator__summary-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--micra-border);
+  font-size: 0.9rem;
+}
+.micra-configurator__summary-row:last-child {
+  border-bottom: 0;
+}
+.micra-configurator__summary-step {
+  color: var(--micra-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.micra-configurator__summary-label {
+  flex: 1;
+}
+.micra-configurator__summary-price {
+  font-variant-numeric: tabular-nums;
+  color: var(--micra-muted);
+}
+.micra-configurator__summary-empty {
+  padding: 0.9rem 1rem;
+  color: var(--micra-muted);
+  font-size: 0.9rem;
+}
+
+/* — total + footer —————————————————————————————————————————————————— */
+.micra-configurator__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--micra-border);
+}
+.micra-configurator__total-label {
+  font-size: 0.875rem;
+  color: var(--micra-muted);
+}
+.micra-configurator__total-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--micra-primary);
+}
+
+.micra-configurator__footer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+.micra-configurator__spacer {
+  flex: 1;
+}
+
+.micra-configurator__btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.55rem 1.1rem;
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border: 1px solid var(--micra-primary);
+  border-radius: var(--micra-radius);
+}
+.micra-configurator__btn--ghost {
+  color: var(--micra-fg);
+  background: none;
+  border-color: var(--micra-border);
+}
+.micra-configurator__btn:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+.micra-configurator__btn[disabled],
+.micra-configurator__btn[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Visually-hidden live region (announcements without layout impact). */
+.micra-configurator__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

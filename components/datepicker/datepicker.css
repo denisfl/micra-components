@@ -1,0 +1,177 @@
+/*
+ * components/datepicker/datepicker.css — default skin for the Date picker.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The popover is always in the
+ * DOM and shown/hidden via [data-state], so it fades in and out cleanly and stays
+ * non-interactive (and never flashes pre-mount) when closed. Day cells carry
+ * data-state (selected | today | outside) and aria-* so styling reacts to the
+ * selection, today, out-of-month padding, and roving focus.
+ */
+
+micra-datepicker {
+  display: block;
+}
+
+
+.micra-datepicker {
+  position: relative;
+  display: inline-block;
+  width: min(20rem, 100%);
+}
+
+.micra-datepicker__input {
+  font: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.75rem;
+  cursor: pointer;
+  color: var(--micra-fg);
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+}
+
+.micra-datepicker__input::placeholder {
+  color: var(--micra-muted);
+}
+
+.micra-datepicker__input:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-datepicker__popover {
+  position: absolute;
+  z-index: 50;
+  left: 0;
+  margin: 0.35rem 0 0;
+  padding: 0.75rem;
+  width: max-content;
+  max-width: 20rem;
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  box-shadow: var(--micra-shadow);
+
+  /* hidden + non-interactive until [data-state="open"] (never flashes pre-mount) */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px) scale(0.98);
+  transform-origin: top center;
+  transition:
+    opacity var(--micra-duration) var(--micra-ease),
+    visibility var(--micra-duration) var(--micra-ease),
+    transform var(--micra-duration) var(--micra-ease);
+}
+
+.micra-datepicker__popover[data-state='open'] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+.micra-datepicker__popover:focus {
+  outline: none; /* focus lives on the day cells, not the dialog container */
+}
+
+/* — header: prev / label / next — */
+.micra-datepicker__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.micra-datepicker__label {
+  font-weight: 600;
+  text-align: center;
+}
+
+.micra-datepicker__nav {
+  font: inherit;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  color: var(--micra-fg);
+  background: none;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  transition: background var(--micra-duration) var(--micra-ease);
+}
+
+.micra-datepicker__nav:hover {
+  background: var(--micra-border);
+}
+
+.micra-datepicker__nav:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+/* — weekday header row + week rows: shared 7-column grid — */
+.micra-datepicker__weekdays,
+.micra-datepicker__row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.micra-datepicker__weekday {
+  padding: 0.25rem 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--micra-muted);
+}
+
+/* — day cells — */
+.micra-datepicker__day {
+  font: inherit;
+  aspect-ratio: 1 / 1;
+  min-width: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--micra-fg);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--micra-radius);
+  transition: background var(--micra-duration) var(--micra-ease);
+}
+
+.micra-datepicker__day:hover {
+  background: var(--micra-border);
+}
+
+.micra-datepicker__day:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+/* Out-of-month padding days: muted but still clickable. */
+.micra-datepicker__day[data-state='outside'] {
+  color: var(--micra-muted);
+}
+
+/* Today: outlined ring, no fill (yields to selection below). */
+.micra-datepicker__day[data-state='today'] {
+  border-color: var(--micra-ring);
+}
+
+/* Selected: filled with the accent. */
+.micra-datepicker__day[data-state='selected'] {
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border-color: var(--micra-primary);
+}
+
+.micra-datepicker__day[data-state='selected']:hover {
+  background: var(--micra-primary);
+}

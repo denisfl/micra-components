@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Kanban</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./kanban.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+    </div>
+
+    <!-- A sales pipeline. data-columns seeds the board as JSON; the host could
+         also call setColumns([...]) instead. The "Proposal" column carries a WIP
+         limit of 2 so it flags when overloaded. -->
+    <micra-kanban
+      class="micra-kanban"
+      data-columns='[
+        {"id":"lead","title":"Lead","cards":[
+          {"id":"d1","title":"Northwind Traders","value":12000,"meta":"Inbound · SMB"},
+          {"id":"d2","title":"Globex Corp","value":8000,"meta":"Referral"},
+          {"id":"d3","title":"Initech","value":4500,"meta":"Event lead"}
+        ]},
+        {"id":"contacted","title":"Contacted","cards":[
+          {"id":"d4","title":"Soylent Inc","value":22000,"meta":"Call booked"},
+          {"id":"d5","title":"Umbrella LLC","value":15000,"meta":"Demo sent"},
+          {"id":"d6","title":"Wonka Industries","value":6000,"meta":"Email thread"}
+        ]},
+        {"id":"proposal","title":"Proposal","wip":2,"cards":[
+          {"id":"d7","title":"Stark Industries","value":48000,"meta":"Pricing review"},
+          {"id":"d8","title":"Wayne Enterprises","value":36000,"meta":"Legal redlines"},
+          {"id":"d9","title":"Acme Co","value":19000,"meta":"Awaiting sign-off"}
+        ]},
+        {"id":"won","title":"Won","cards":[
+          {"id":"d10","title":"Hooli","value":54000,"meta":"Closed Q2"},
+          {"id":"d11","title":"Pied Piper","value":27000,"meta":"Annual"}
+        ]}
+      ]'
+    >
+      <!-- Board summary: the forecast across every column. -->
+      <div class="micra-kanban__summary">
+        <span class="micra-kanban__forecast" data-text="forecastLabel()"></span>
+        <span class="micra-kanban__forecast-label">forecast</span>
+        <span class="micra-kanban__hint"
+          >Drag a card, or focus one and use arrow keys / the buttons to move it.</span
+        >
+      </div>
+
+      <!-- Horizontal row of columns. The OUTER data-each binds `item` to a column;
+           the INNER data-each (item.cards) rebinds `item` to each card, which is
+           why columnsView() pre-flattens columnId onto every card. -->
+      <div class="micra-kanban__board" role="list" aria-label="Sales pipeline board">
+        <template data-each="columnsView()" data-key="id">
+          <section
+            class="micra-kanban__column"
+            role="listitem"
+            data-bind="
+              aria-label:columnLabel(item),
+              data-state:columnState(item)
+            "
+            @dragover.prevent="onDragOver(item.id, $event)"
+            @drop.prevent="onDrop(item.id, $event)"
+          >
+            <header class="micra-kanban__col-head">
+              <h2 class="micra-kanban__col-title" data-text="item.title"></h2>
+              <span class="micra-kanban__col-count" data-text="item.count"></span>
+              <span class="micra-kanban__col-total" data-text="money(item.total)"></span>
+            </header>
+
+            <!-- WIP indicator: shown only when the column declares a limit; flags
+                 over the limit via data-state. -->
+            <span
+              class="micra-kanban__wip"
+              data-if="item.wip !== null"
+              data-text="wipLabel(item)"
+              data-bind="data-state:item.over ? 'over' : ''"
+            ></span>
+
+            <!-- Accent bar: this column's share of the forecast (width from a
+                 method-returned style object). -->
+            <div class="micra-kanban__accent" aria-hidden="true">
+              <span class="micra-kanban__accent-fill" data-bind="style:item.accent"></span>
+            </div>
+
+            <!-- The card list. data-col-list + data-col-id let the behavior query
+                 this column's card geometry for the drop index. -->
+            <ul
+              class="micra-kanban__cards"
+              data-col-list
+              data-bind="data-col-id:item.id"
+            >
+              <template data-each="item.cards" data-key="id">
+                <!-- A wrapper li so a placeholder can sit before each card. -->
+                <li>
+                  <div
+                    class="micra-kanban__placeholder"
+                    data-if="showPlaceholderAt(item.columnId, $index)"
+                    aria-hidden="true"
+                  ></div>
+
+                  <div
+                    class="micra-kanban__card"
+                    role="group"
+                    tabindex="0"
+                    draggable="true"
+                    data-bind="
+                      data-card-id:item.id,
+                      aria-label:item.title + ' — ' + valueOrDash(item) + '. Use arrow keys to move.'
+                    "
+                    @dragstart="onDragStart(item.id, item.columnId, $event)"
+                    @dragend="onDragEnd"
+                    @keydown="onCardKey(item.id, $event)"
+                  >
+                    <div class="micra-kanban__card-title" data-text="item.title"></div>
+                    <div
+                      class="micra-kanban__card-meta"
+                      data-if="item.meta"
+                      data-text="item.meta"
+                    ></div>
+                    <div
+                      class="micra-kanban__card-value"
+                      data-if="item.value !== null"
+                      data-text="item.valueLabel"
+                    ></div>
+
+                    <!-- Keyboard / pointer move controls. Each calls the same
+                         immutable moveCard() the drag path uses. -->
+                    <div class="micra-kanban__moves">
+                      <button
+                        class="micra-kanban__move"
+                        type="button"
+                        aria-label="Move to previous column"
+                        @click="moveCard(item.id, 'left')"
+                      >
+                        &#9664;
+                      </button>
+                      <button
+                        class="micra-kanban__move"
+                        type="button"
+                        aria-label="Move up"
+                        @click="moveCard(item.id, 'up')"
+                      >
+                        &#9650;
+                      </button>
+                      <button
+                        class="micra-kanban__move"
+                        type="button"
+                        aria-label="Move down"
+                        @click="moveCard(item.id, 'down')"
+                      >
+                        &#9660;
+                      </button>
+                      <button
+                        class="micra-kanban__move"
+                        type="button"
+                        aria-label="Move to next column"
+                        @click="moveCard(item.id, 'right')"
+                      >
+                        &#9654;
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              </template>
+
+              <!-- Trailing placeholder: when the drop index lands at the end. -->
+              <li
+                class="micra-kanban__placeholder"
+                data-if="showPlaceholderEnd(item)"
+                aria-hidden="true"
+              ></li>
+            </ul>
+          </section>
+        </template>
+      </div>
+
+      <!-- Polite live region: announces each move for screen readers. -->
+      <div class="micra-kanban__sr" aria-live="polite" data-text="liveMessage()"></div>
+    </micra-kanban>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      Micra.start();
+
+      // Wire the 'move' event — the host's hook. The component owns the board; the
+      // host decides what a move means (persist, notify, …). Here we just log it.
+      const root = document.querySelector('[data-component="kanban"]');
+      const board = Micra.instances().get(root);
+      if (board) {
+        board.on('move', ({ cardId, from, to, index }) => {
+          console.log('[kanban] move:', { cardId, from, to, index });
+        });
+      }
+
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const r = document.documentElement;
+        r.dataset.theme = r.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

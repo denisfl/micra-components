@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Accordion</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./accordion.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+    </div>
+
+    <micra-accordion class="micra-accordion">
+      <template data-each="items" data-key="id">
+        <div
+          class="micra-accordion__item"
+          data-bind="data-state:isOpen(item.id) ? 'open' : 'closed'"
+        >
+          <button
+            class="micra-accordion__header"
+            data-bind="id:item.id + '-h',
+                       aria-controls:item.id + '-p',
+                       aria-expanded:isOpen(item.id) ? 'true' : 'false'"
+            @click="toggle(item.id)"
+            @keydown.down.prevent="focusAt(index + 1)"
+            @keydown.up.prevent="focusAt(index - 1)"
+            @keydown.home.prevent="focusAt(0)"
+            @keydown.end.prevent="focusAt(-1)"
+          >
+            <span data-text="item.title"></span>
+            <svg
+              class="micra-accordion__icon"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 6l4 4 4-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+          <div
+            class="micra-accordion__panel"
+            role="region"
+            data-bind="id:item.id + '-p', aria-labelledby:item.id + '-h'"
+            data-show="isOpen(item.id)"
+          >
+            <p data-text="item.body"></p>
+          </div>
+        </div>
+      </template>
+    </micra-accordion>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

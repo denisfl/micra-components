@@ -1,0 +1,234 @@
+/*
+ * components/kanban/kanban.css — default skin for Kanban.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. Columns are surfaces with a
+ * header; cards are elevated, grabbable tiles; the drag-over column and the drop
+ * placeholder react to [data-state] / state classes; an over-WIP column is flagged
+ * with the warning/error tokens. The board scrolls horizontally for many columns.
+ */
+
+micra-kanban {
+  display: block;
+}
+
+
+.micra-kanban {
+  color: var(--micra-fg);
+}
+
+/* Board summary line: forecast + hint. */
+.micra-kanban__summary {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.micra-kanban__forecast {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.micra-kanban__forecast-label {
+  color: var(--micra-muted);
+  font-size: 0.875rem;
+}
+
+.micra-kanban__hint {
+  margin-left: auto;
+  color: var(--micra-muted);
+  font-size: 0.8125rem;
+}
+
+/* The scroll frame: a horizontal row of columns. */
+.micra-kanban__board {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+/* — Column ———————————————————————————————————————————————————— */
+.micra-kanban__column {
+  flex: 0 0 18rem;
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+  background: var(--micra-bg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+}
+
+/* Drag-over column: highlight the drop target. */
+.micra-kanban__column[data-state='over'] {
+  border-color: var(--micra-primary);
+  box-shadow: 0 0 0 2px var(--micra-primary) inset;
+}
+
+.micra-kanban__col-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.75rem 0.875rem 0.5rem;
+}
+
+.micra-kanban__col-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.micra-kanban__col-count {
+  color: var(--micra-muted);
+  font-size: 0.8125rem;
+}
+
+.micra-kanban__col-total {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--micra-muted);
+}
+
+/* WIP indicator pill. Over the limit flips to warning, then it's reinforced
+   below by the column accent. */
+.micra-kanban__wip {
+  display: inline-block;
+  padding: 0.0625rem 0.375rem;
+  margin: 0 0.875rem 0.5rem;
+  align-self: flex-start;
+  font-size: 0.75rem;
+  color: var(--micra-muted);
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: 999px;
+}
+
+.micra-kanban__wip[data-state='over'] {
+  color: var(--micra-primary-fg);
+  background: var(--micra-warning);
+  border-color: var(--micra-warning);
+}
+
+/* A thin accent bar showing the column's share of the forecast. */
+.micra-kanban__accent {
+  height: 3px;
+  margin: 0 0.875rem 0.5rem;
+  background: var(--micra-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.micra-kanban__accent-fill {
+  display: block;
+  height: 100%;
+  background: var(--micra-primary);
+  transition: width var(--micra-duration) var(--micra-ease);
+}
+
+.micra-kanban__column[data-state='over'] .micra-kanban__accent-fill,
+.micra-kanban__wip[data-state='over'] ~ .micra-kanban__accent .micra-kanban__accent-fill {
+  background: var(--micra-warning);
+}
+
+/* — Card list ————————————————————————————————————————————————— */
+.micra-kanban__cards {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0.875rem 0.875rem;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 3rem;
+}
+
+/* — Card ——————————————————————————————————————————————————————— */
+.micra-kanban__card {
+  position: relative;
+  padding: 0.625rem 0.75rem;
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  box-shadow: var(--micra-shadow);
+  cursor: grab;
+  user-select: none;
+}
+
+.micra-kanban__card:active {
+  cursor: grabbing;
+}
+
+.micra-kanban__card:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-kanban__card-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.micra-kanban__card-meta {
+  margin-top: 0.25rem;
+  color: var(--micra-muted);
+  font-size: 0.75rem;
+}
+
+.micra-kanban__card-value {
+  margin-top: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* — Card move controls (keyboard / pointer alternative to DnD) ——————— */
+.micra-kanban__moves {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.micra-kanban__move {
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.1875rem 0.375rem;
+  color: var(--micra-muted);
+  background: var(--micra-bg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+}
+
+.micra-kanban__move:hover {
+  color: var(--micra-fg);
+  border-color: var(--micra-primary);
+}
+
+.micra-kanban__move:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+/* — Drop placeholder ——————————————————————————————————————————— */
+.micra-kanban__placeholder {
+  height: 2.25rem;
+  border: 2px dashed var(--micra-primary);
+  border-radius: var(--micra-radius);
+  background: color-mix(in srgb, var(--micra-primary) 8%, transparent);
+}
+
+/* Screen-reader-only live region. */
+.micra-kanban__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

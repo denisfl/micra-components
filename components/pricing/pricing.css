@@ -1,0 +1,482 @@
+/*
+ * components/pricing/pricing.css — default skin for the Pricing / Quote builder.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. Plan cards show their selected
+ * state off [aria-checked='true']; add-on toggles off [aria-checked='true']; the
+ * billing buttons off [aria-pressed='true']. All transitions run through
+ * --micra-duration, so prefers-reduced-motion zeroes them.
+ *
+ * The @media print block at the bottom is the "print to PDF" view: it hides every
+ * control and prints only the quote summary, so the browser's "Save as PDF"
+ * produces a clean one-page quote.
+ */
+
+micra-pricing {
+  display: block;
+}
+
+
+.micra-pricing {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  max-width: 56rem;
+  color: var(--micra-fg);
+}
+
+@media (min-width: 48rem) {
+  .micra-pricing {
+    grid-template-columns: 1fr 20rem;
+    align-items: start;
+  }
+}
+
+/* — left column: the configurator ——————————————————————————————————— */
+.micra-pricing__config {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  min-width: 0;
+}
+
+.micra-pricing__section-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* — plan cards (role=radiogroup / role=radio) ——————————————————————— */
+.micra-pricing__plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.micra-pricing__plan {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  text-align: left;
+  cursor: pointer;
+  color: var(--micra-fg);
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  transition:
+    border-color var(--micra-duration) var(--micra-ease),
+    box-shadow var(--micra-duration) var(--micra-ease);
+}
+
+.micra-pricing__plan:hover {
+  border-color: var(--micra-primary);
+}
+
+.micra-pricing__plan[aria-checked='true'] {
+  border-color: var(--micra-primary);
+  box-shadow: 0 0 0 1px var(--micra-primary);
+}
+
+.micra-pricing__plan:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-pricing__plan-name {
+  font-weight: 600;
+}
+
+.micra-pricing__plan-price {
+  font-size: 0.875rem;
+  color: var(--micra-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.micra-pricing__plan-blurb {
+  font-size: 0.8125rem;
+  color: var(--micra-muted);
+}
+
+/* — seats stepper —————————————————————————————————————————————————— */
+.micra-pricing__stepper {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  overflow: hidden;
+  background: var(--micra-surface);
+}
+
+.micra-pricing__step-btn {
+  font: inherit;
+  cursor: pointer;
+  width: 2.5rem;
+  border: 0;
+  background: none;
+  color: var(--micra-fg);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.micra-pricing__step-btn:hover {
+  background: color-mix(in srgb, var(--micra-fg) 6%, transparent);
+}
+
+.micra-pricing__step-btn:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: -2px;
+}
+
+.micra-pricing__step-input {
+  width: 4rem;
+  font: inherit;
+  text-align: center;
+  border: 0;
+  border-left: 1px solid var(--micra-border);
+  border-right: 1px solid var(--micra-border);
+  background: var(--micra-bg);
+  color: var(--micra-fg);
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+
+.micra-pricing__step-input::-webkit-outer-spin-button,
+.micra-pricing__step-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.micra-pricing__step-input:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: -2px;
+}
+
+/* — add-on rows ————————————————————————————————————————————————————— */
+.micra-pricing__addons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.micra-pricing__addon {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+}
+
+.micra-pricing__addon-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.micra-pricing__addon-name {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.micra-pricing__addon-price {
+  font-size: 0.8125rem;
+  color: var(--micra-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.micra-pricing__addon-amount {
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--micra-muted);
+  white-space: nowrap;
+}
+
+/* Toggle control (role=checkbox) drawn as a switch. */
+.micra-pricing__toggle {
+  flex-shrink: 0;
+  position: relative;
+  width: 2.5rem;
+  height: 1.4rem;
+  padding: 0;
+  cursor: pointer;
+  border: 1px solid var(--micra-border);
+  border-radius: 999px;
+  background: var(--micra-border);
+  transition: background var(--micra-duration) var(--micra-ease);
+}
+
+.micra-pricing__toggle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0.15rem;
+  width: 1rem;
+  height: 1rem;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: var(--micra-surface);
+  transition: left var(--micra-duration) var(--micra-ease);
+}
+
+.micra-pricing__toggle[aria-checked='true'] {
+  background: var(--micra-primary);
+  border-color: var(--micra-primary);
+}
+
+.micra-pricing__toggle[aria-checked='true']::after {
+  left: calc(100% - 1.15rem);
+}
+
+.micra-pricing__toggle:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+/* — billing toggle (role=switch group, two role=radio buttons) ——————— */
+.micra-pricing__billing {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.micra-pricing__segment {
+  display: inline-flex;
+  padding: 0.2rem;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+}
+
+.micra-pricing__segment-btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.4rem 0.9rem;
+  border: 0;
+  border-radius: calc(var(--micra-radius) - 2px);
+  background: none;
+  color: var(--micra-muted);
+  transition:
+    background var(--micra-duration) var(--micra-ease),
+    color var(--micra-duration) var(--micra-ease);
+}
+
+.micra-pricing__segment-btn[aria-pressed='true'] {
+  background: var(--micra-primary);
+  color: var(--micra-primary-fg);
+}
+
+.micra-pricing__segment-btn:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-pricing__badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  color: var(--micra-success);
+  background: color-mix(in srgb, var(--micra-success) 14%, transparent);
+}
+
+/* — right column: the live quote ————————————————————————————————————— */
+.micra-pricing__quote {
+  position: sticky;
+  top: 1.5rem;
+  padding: 1.25rem;
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  box-shadow: var(--micra-shadow);
+}
+
+.micra-pricing__quote-head {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.micra-pricing__lines {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.micra-pricing__line {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0;
+  font-size: 0.875rem;
+}
+
+.micra-pricing__line-label {
+  color: var(--micra-fg);
+  min-width: 0;
+}
+
+.micra-pricing__line-amount {
+  color: var(--micra-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.micra-pricing__empty {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: var(--micra-muted);
+}
+
+.micra-pricing__divider {
+  height: 1px;
+  margin: 0.5rem 0;
+  background: var(--micra-border);
+}
+
+.micra-pricing__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0;
+  font-size: 0.875rem;
+  color: var(--micra-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.micra-pricing__row--discount {
+  color: var(--micra-success);
+}
+
+.micra-pricing__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--micra-border);
+}
+
+.micra-pricing__total-label {
+  font-weight: 600;
+}
+
+.micra-pricing__total-amount {
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.micra-pricing__period {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--micra-muted);
+  margin-left: 0.25rem;
+}
+
+/* — actions ————————————————————————————————————————————————————————— */
+.micra-pricing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+
+.micra-pricing__btn {
+  font: inherit;
+  cursor: pointer;
+  flex: 1;
+  padding: 0.6rem 1rem;
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border: 1px solid var(--micra-primary);
+  border-radius: var(--micra-radius);
+}
+
+.micra-pricing__btn--ghost {
+  color: var(--micra-fg);
+  background: none;
+  border-color: var(--micra-border);
+}
+
+.micra-pricing__btn:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+/* — email capture —————————————————————————————————————————————————— */
+.micra-pricing__email {
+  margin-top: 1rem;
+}
+
+.micra-pricing__email-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.micra-pricing__email-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  padding: 0.55rem 0.7rem;
+  color: var(--micra-fg);
+  background: var(--micra-bg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+}
+
+.micra-pricing__email-input[aria-invalid='true'] {
+  border-color: var(--micra-error);
+}
+
+.micra-pricing__email-input:focus-visible {
+  outline: none;
+  border-color: var(--micra-ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-ring) 30%, transparent);
+}
+
+.micra-pricing__email-error {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--micra-error);
+}
+
+/* Visually-hidden live region (announcements without layout impact). */
+.micra-pricing__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* — print view ("Save as PDF") ——————————————————————————————————————
+ * Hide the configurator and the action buttons; print only the quote summary as a
+ * clean, full-width block. The host can override this entirely.
+ */
+@media print {
+  .micra-pricing {
+    display: block;
+    max-width: none;
+  }
+  .micra-pricing__config,
+  .micra-pricing__actions,
+  .micra-pricing__email,
+  .micra-pricing__sr {
+    display: none !important;
+  }
+  .micra-pricing__quote {
+    position: static;
+    box-shadow: none;
+    border: 0;
+    padding: 0;
+  }
+}

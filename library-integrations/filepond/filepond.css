@@ -1,0 +1,103 @@
+/*
+ * filepond.css — Micra token skin for FilePond.
+ *
+ * Loads AFTER FilePond's own dist/filepond.min.css (and the image-preview
+ * plugin's CSS) and re-skins it with --micra-* tokens, so the upload area matches
+ * your theme and stays legible in dark mode. References only tokens — recolor by
+ * overriding them, or edit this file; you own it.
+ *
+ * FilePond paints its panels with an SVG-backed `.filepond--panel-*` sandwich
+ * (top / center / bottom) plus a flat fill via CSS variables it reads off the
+ * root (`--filepond-*`). We drive those variables from our tokens where FilePond
+ * exposes them, and override the structural panels directly where it doesn't.
+ */
+
+micra-filepond {
+  display: block;
+}
+
+
+/* ── Drop area / root ──────────────────────────────────────────────────────── */
+.filepond--root {
+  /* FilePond reads these custom props for its own internals; map them to tokens
+     so the drop circle, item text and error colors follow the theme. */
+  --filepond-drop-label-color: var(--micra-muted);
+  font-family: inherit;
+  margin-bottom: 0;
+}
+
+/* The outer drop panel (the dashed/filled box you drop onto). FilePond draws it
+   as three stacked `.filepond--panel-*` layers; flatten them to a single token
+   surface with our border + radius. */
+.filepond--panel-root {
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+}
+
+/* The drop label ("Drag & Drop your files or Browse"). */
+.filepond--drop-label {
+  color: var(--micra-muted);
+}
+.filepond--drop-label label {
+  color: var(--micra-muted);
+  font-size: 0.9rem;
+}
+
+/* The "Browse" action inside the label — make it the primary accent. */
+.filepond--label-action {
+  color: var(--micra-primary);
+  text-decoration-color: color-mix(in srgb, var(--micra-primary) 40%, transparent);
+  text-underline-offset: 2px;
+}
+
+/* ── File items ────────────────────────────────────────────────────────────── */
+/* Each added file gets an `.filepond--item` whose visible card is
+   `.filepond--item-panel`. Tint it with the primary so files read as "active". */
+.filepond--item-panel {
+  background: color-mix(in srgb, var(--micra-primary) 12%, var(--micra-surface));
+  border-radius: calc(var(--micra-radius) - 2px);
+}
+
+/* File name + size info text. */
+.filepond--file {
+  color: var(--micra-fg);
+}
+.filepond--file-info .filepond--file-info-main {
+  color: var(--micra-fg);
+}
+.filepond--file-info .filepond--file-info-sub {
+  color: var(--micra-muted);
+  opacity: 1;
+}
+
+/* Per-file action buttons (remove / retry / process). FilePond renders them as
+   round buttons with an SVG glyph; give them a readable token background. */
+.filepond--file-action-button {
+  background: color-mix(in srgb, var(--micra-fg) 18%, transparent);
+  color: var(--micra-primary-fg);
+}
+.filepond--file-action-button:hover,
+.filepond--file-action-button:focus {
+  background: color-mix(in srgb, var(--micra-fg) 30%, transparent);
+  box-shadow: 0 0 0 0.125em color-mix(in srgb, var(--micra-ring) 35%, transparent);
+}
+
+/* Status colors via FilePond's own variables, mapped to tokens. */
+.filepond--root {
+  --filepond-error-color: var(--micra-error);
+}
+
+/* The image-preview plugin's overlay/clip — keep the rounded corner consistent. */
+.filepond--image-preview-wrapper {
+  border-radius: calc(var(--micra-radius) - 2px);
+}
+.filepond--image-preview {
+  background: var(--micra-surface);
+}
+
+/* ── Focus ─────────────────────────────────────────────────────────────────── */
+.filepond--root:focus-within .filepond--panel-root {
+  border-color: var(--micra-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-ring) 25%, transparent);
+}

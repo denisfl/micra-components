@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra CRM — sales pipeline template</title>
+
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="../../components/kanban/kanban.css" />
+    <link rel="stylesheet" href="../../components/slideover/slideover.css" />
+    <link rel="stylesheet" href="./sales.css" />
+  </head>
+
+  <body>
+    <!-- The whole app is one component: it owns the toolbar stats (read off the
+         live board) and the deal slide-over; the Kanban board is nested and owns
+         drag-and-drop. They talk over the bus ('move') — see the script. -->
+    <micra-crm class="crm">
+      <header class="crm__topbar">
+        <span class="crm__brand"><span class="crm__logo" aria-hidden="true">M</span>Micra CRM</span>
+        <span class="crm__pipeline">Sales pipeline</span>
+        <span class="crm__spacer"></span>
+        <button class="crm__icon-btn" @click="toggleTheme" aria-label="Toggle theme"><i data-lucide="sun-moon"></i></button>
+      </header>
+
+      <!-- Board toolbar: the amoCRM-style summary. The "without a task" badge is
+           the signature — a deal with no next step is a problem, shown in warning. -->
+      <div class="crm__toolbar">
+        <div class="crm__stats">
+          <div class="crm__stat">
+            <span class="crm__stat-label">Pipeline value</span>
+            <span class="crm__stat-value" data-text="totalPipeline()"></span>
+          </div>
+          <div class="crm__stat">
+            <span class="crm__stat-label">Won this quarter</span>
+            <span class="crm__stat-value crm__stat-value--good" data-text="wonTotal()"></span>
+          </div>
+          <div class="crm__stat crm__stat--warn" data-show="hasNoTask()">
+            <i data-lucide="alarm-clock-off"></i>
+            <span data-text="noTaskLabel()"></span>
+          </div>
+        </div>
+        <button class="crm__btn crm__btn--primary" type="button" @click="newDeal">
+          <i data-lucide="plus"></i><span>New deal</span>
+        </button>
+      </div>
+
+      <!-- ── Pipeline board (Kanban) ────────────────────────────────────────── -->
+      <micra-kanban
+        class="micra-kanban crm__board"
+        data-columns='[
+          {"id":"initial","title":"Initial contact","cards":[
+            {"id":"d1","title":"Northwind Traders","value":12000,"contact":"Tom Reed","company":"Northwind","responsible":"AK","source":"Inbound","tags":[{"id":"hot","label":"Hot","tone":"hot"}],"task":{"state":"today","label":"Intro call today"}},
+            {"id":"d2","title":"Globex Corp","value":8000,"contact":"Jane Doe","company":"Globex","responsible":"ML","source":"Referral","tags":[],"task":{"state":"none","label":"No next task"}},
+            {"id":"d3","title":"Initech","value":4500,"contact":"Bill Lumbergh","company":"Initech","responsible":"AK","source":"Event","tags":[{"id":"smb","label":"SMB","tone":"cool"}],"task":{"state":"future","label":"Demo Fri"}}
+          ]},
+          {"id":"negotiation","title":"Negotiation","cards":[
+            {"id":"d4","title":"Soylent Inc","value":22000,"contact":"Sara Lin","company":"Soylent","responsible":"ML","source":"Web form","tags":[{"id":"ent","label":"Enterprise","tone":"warm"}],"task":{"state":"overdue","label":"Follow-up overdue"}},
+            {"id":"d5","title":"Umbrella LLC","value":15000,"contact":"Al Wesker","company":"Umbrella","responsible":"AK","source":"Referral","tags":[],"task":{"state":"today","label":"Send proposal"}},
+            {"id":"d6","title":"Wonka Industries","value":6000,"contact":"Willy Wonka","company":"Wonka","responsible":"ML","source":"Inbound","tags":[{"id":"hot","label":"Hot","tone":"hot"}],"task":{"state":"future","label":"Check in Mon"}}
+          ]},
+          {"id":"decision","title":"Decision making","cards":[
+            {"id":"d7","title":"Stark Industries","value":48000,"contact":"Pepper Potts","company":"Stark","responsible":"AK","source":"Outbound","tags":[{"id":"ent","label":"Enterprise","tone":"warm"}],"task":{"state":"overdue","label":"Pricing call overdue"}},
+            {"id":"d8","title":"Wayne Enterprises","value":36000,"contact":"Lucius Fox","company":"Wayne","responsible":"ML","source":"Referral","tags":[],"task":{"state":"today","label":"Legal review"}}
+          ]},
+          {"id":"contract","title":"Contract","cards":[
+            {"id":"d9","title":"Acme Co","value":19000,"contact":"Wile E. Coyote","company":"Acme","responsible":"AK","source":"Web form","tags":[{"id":"ren","label":"Renewal","tone":"cool"}],"task":{"state":"none","label":"No next task"}},
+            {"id":"d10","title":"Cyberdyne","value":29000,"contact":"Miles Dyson","company":"Cyberdyne","responsible":"ML","source":"Outbound","tags":[],"task":{"state":"future","label":"Sign-off Thu"}}
+          ]},
+          {"id":"won","title":"Won","cards":[
+            {"id":"d11","title":"Hooli","value":54000,"contact":"Gavin Belson","company":"Hooli","responsible":"AK","source":"Referral","tags":[],"task":{"state":"closed","label":"Closed"}},
+            {"id":"d12","title":"Pied Piper","value":27000,"contact":"Richard Hendricks","company":"Pied Piper","responsible":"ML","source":"Inbound","tags":[],"task":{"state":"closed","label":"Closed"}}
+          ]},
+          {"id":"lost","title":"Lost","cards":[
+            {"id":"d13","title":"Vehement Capital","value":17000,"contact":"Bobby Sweeney","company":"Vehement","responsible":"AK","source":"Outbound","tags":[],"task":{"state":"closed","label":"Closed"},"lossReason":"Chose competitor"}
+          ]}
+        ]'
+      >
+        <div class="micra-kanban__board" role="list" aria-label="Sales pipeline board">
+          <template data-each="columnsView()" data-key="id">
+            <section
+              class="micra-kanban__column"
+              role="listitem"
+              data-bind="aria-label:columnLabel(item), data-state:columnState(item), data-col:item.id"
+              @dragover.prevent="onDragOver(item.id, $event)"
+              @drop.prevent="onDrop(item.id, $event)"
+            >
+              <header class="micra-kanban__col-head">
+                <h2 class="micra-kanban__col-title" data-text="item.title"></h2>
+                <span class="micra-kanban__col-count" data-text="item.count"></span>
+                <span class="micra-kanban__col-total" data-text="money(item.total)"></span>
+              </header>
+
+              <ul class="micra-kanban__cards" data-col-list data-bind="data-col-id:item.id">
+                <template data-each="item.cards" data-key="id">
+                  <li>
+                    <div class="micra-kanban__placeholder" data-if="showPlaceholderAt(item.columnId, $index)" aria-hidden="true"></div>
+
+                    <div
+                      class="micra-kanban__card deal"
+                      role="group"
+                      tabindex="0"
+                      draggable="true"
+                      data-bind="data-card-id:item.id, data-task:item.task.state, aria-label:item.title + ' — ' + valueOrDash(item) + '. ' + item.task.label + '. Use arrow keys to move.'"
+                      @dragstart="onDragStart(item.id, item.columnId, $event)"
+                      @dragend="onDragEnd"
+                      @keydown="onCardKey(item.id, $event)"
+                    >
+                      <div class="deal__head">
+                        <span class="deal__light" aria-hidden="true"></span>
+                        <span class="deal__title" data-text="item.title"></span>
+                      </div>
+                      <div class="deal__value" data-text="item.valueLabel"></div>
+                      <div class="deal__who">
+                        <span data-text="item.contact"></span>
+                        <span class="deal__who-sep">·</span>
+                        <span class="deal__company" data-text="item.company"></span>
+                      </div>
+                      <ul class="deal__tags" data-if="item.tags.length">
+                        <template data-each="item.tags" data-key="id">
+                          <li class="deal__tag" data-bind="data-tone:item.tone" data-text="item.label"></li>
+                        </template>
+                      </ul>
+                      <div class="deal__foot">
+                        <span class="deal__task" data-text="item.task.label"></span>
+                        <span class="deal__avatar" data-text="item.responsible"></span>
+                      </div>
+                    </div>
+                  </li>
+                </template>
+                <li class="micra-kanban__placeholder" data-if="showPlaceholderEnd(item)" aria-hidden="true"></li>
+              </ul>
+            </section>
+          </template>
+        </div>
+
+        <div class="micra-kanban__sr" aria-live="polite" data-text="liveMessage()"></div>
+      </micra-kanban>
+
+      <!-- ── Deal detail (Slide-over) ───────────────────────────────────────────
+           Click a card → this opens with that deal. The shipped Slide-over owns
+           the chrome; a `dealdetail` component (defined here) holds the deal and
+           renders fields + linked contact + activity feed, and emits won/lost
+           back to the shell over the bus. -->
+      <micra-slideover id="deal-editor" @keydown.escape.window="close" @keydown.tab.window="trapTab" data-side="right" data-size="34rem">
+        <div class="micra-slideover" data-bind="data-state:open ? 'open' : 'closed', data-side:side()" @click.self="close">
+          <div class="micra-slideover__panel" role="dialog" aria-modal="true" aria-labelledby="deal-title" data-ref="panel" tabindex="-1" data-bind="data-side:side(), style:panelStyle()">
+            <micra-dealdetail>
+              <header class="micra-slideover__head dd__head">
+                <div class="dd__head-main">
+                  <div class="dd__company-sm" data-text="deal.company"></div>
+                  <h2 id="deal-title" class="dd__title" data-text="deal.title"></h2>
+                </div>
+                <button class="micra-slideover__close" @click="cancel" aria-label="Close">&times;</button>
+              </header>
+
+              <div class="micra-slideover__body dd__body">
+                <div class="dd__value" data-text="money(deal.value)"></div>
+                <div class="dd__topmeta">
+                  <span class="dd__badge" data-text="stageLabel()"></span>
+                  <span class="dd__owner">Owner <span class="dd__avatar" data-text="deal.responsible"></span></span>
+                </div>
+
+                <div class="dd__task" data-bind="data-task:deal.task.state">
+                  <span class="dd__task-dot"></span>
+                  <span data-text="deal.task.label"></span>
+                </div>
+
+                <dl class="dd__fields">
+                  <div><dt>Source</dt><dd data-text="deal.source"></dd></div>
+                  <div><dt>Tags</dt><dd>
+                    <span data-if="!deal.tags.length" class="dd__muted">None</span>
+                    <ul class="deal__tags" data-if="deal.tags.length">
+                      <template data-each="deal.tags" data-key="id">
+                        <li class="deal__tag" data-bind="data-tone:item.tone" data-text="item.label"></li>
+                      </template>
+                    </ul>
+                  </dd></div>
+                </dl>
+
+                <section class="dd__section">
+                  <h3 class="dd__h3">Primary contact</h3>
+                  <div class="dd__contact">
+                    <span class="dd__avatar dd__avatar--lg" data-text="contactInitials()"></span>
+                    <div class="dd__contact-info">
+                      <div class="dd__contact-name" data-text="deal.contact"></div>
+                      <div class="dd__contact-pos" data-text="contactPosition()"></div>
+                      <div class="dd__contact-row"><span class="dd__k">Phone</span><span data-text="contactPhone()"></span></div>
+                      <div class="dd__contact-row"><span class="dd__k">Email</span><span data-text="contactEmail()"></span></div>
+                      <div class="dd__contact-row"><span class="dd__k">Company</span><span data-text="deal.company"></span></div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="dd__section">
+                  <h3 class="dd__h3">Activity</h3>
+                  <ul class="dd__feed">
+                    <template data-each="feed()" data-key="id">
+                      <li class="dd__event">
+                        <span class="dd__event-dot" data-bind="data-kind:item.kind"></span>
+                        <div class="dd__event-body">
+                          <div class="dd__event-text" data-text="item.text"></div>
+                          <div class="dd__event-time" data-text="item.time"></div>
+                        </div>
+                      </li>
+                    </template>
+                  </ul>
+                </section>
+              </div>
+
+              <footer class="micra-slideover__foot dd__foot">
+                <!-- Default actions; "Mark lost" swaps in a loss-reason picker. -->
+                <div class="dd__actions" data-show="!losing">
+                  <button class="crm__btn" type="button" @click="startLost">Mark lost</button>
+                  <button class="crm__btn crm__btn--primary" type="button" @click="markWon">Mark won</button>
+                </div>
+                <div class="dd__lost" data-show="losing">
+                  <span class="set-select-wrap">
+                    <select class="set-select" aria-label="Loss reason" data-model="lossReason">
+                      <option value="Too expensive">Too expensive</option>
+                      <option value="Chose competitor">Chose competitor</option>
+                      <option value="No budget">No budget</option>
+                      <option value="No decision / timing">No decision / timing</option>
+                      <option value="Unresponsive">Unresponsive</option>
+                    </select>
+                  </span>
+                  <button class="crm__btn" type="button" @click="cancelLost">Cancel</button>
+                  <button class="crm__btn crm__btn--danger" type="button" @click="confirmLost">Confirm lost</button>
+                </div>
+              </footer>
+            </micra-dealdetail>
+          </div>
+        </div>
+      </micra-slideover>
+    </micra-crm>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="../../components/kanban/define.js"></script>
+    <script src="../../components/slideover/define.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0/dist/umd/lucide.min.js"></script>
+
+    <script>
+      // ── The CRM shell: toolbar stats (read off the live board) + theme. ─────
+      Micra.define("crm", {
+        state: { tick: 0 },
+        onCreate() {
+          // The board owns its data; a move changes the board's state, not ours,
+          // so bump a tick on every move to recompute the summary.
+          this.on("move", () => {
+            this.state.tick++;
+          });
+          // The board mounts after us (nested); recompute once it's seeded.
+          queueMicrotask(() => {
+            this.state.tick++;
+          });
+
+          // Click a card → open the deal detail (delegated; cards re-render on
+          // every board change, so we listen on the stable shell root).
+          this._onCardClick = (e) => {
+            if (e.target.closest(".micra-kanban__move")) return; // move arrows
+            const card = e.target.closest("[data-card-id]");
+            if (!card) return;
+            const deal = this._deals().find((d) => d.id === card.dataset.cardId);
+            if (!deal) return;
+            this.emit("deal:open", deal);
+            const ed = this._editor();
+            if (ed) ed.open();
+          };
+          this.$el.addEventListener("click", this._onCardClick);
+
+          // Detail emits won/lost → move the deal to the terminal column.
+          this.on("deal:close", ({ id, outcome, reason }) => {
+            const b = this._board();
+            if (!b) return;
+            let moved = null;
+            for (const c of b.state.columns) {
+              const f = (c.cards || []).find((card) => card.id === id);
+              if (f) moved = f;
+            }
+            if (!moved) return;
+            moved = { ...moved, task: { state: "closed", label: "Closed" } };
+            if (outcome === "lost" && reason) moved = { ...moved, lossReason: reason };
+            const target = outcome === "won" ? "won" : "lost";
+            const next = b.state.columns.map((c) => ({
+              ...c,
+              cards: c.id === target ? [moved, ...c.cards.filter((card) => card.id !== id)] : c.cards.filter((card) => card.id !== id),
+            }));
+            b.setColumns(next);
+            this.state.tick++;
+          });
+          this.on("editor:close", () => {
+            const ed = this._editor();
+            if (ed) ed.close();
+          });
+        },
+        onDestroy() {
+          this.$el.removeEventListener("click", this._onCardClick);
+        },
+        _editor() {
+          return Micra.instances().get(this.$el.querySelector("#deal-editor"));
+        },
+        _board() {
+          return Micra.instances().get(this.$el.querySelector('[data-component="kanban"]'));
+        },
+        _deals() {
+          const b = this._board();
+          if (!b) return [];
+          return b.state.columns.flatMap((c) => (c.cards || []).map((card) => ({ ...card, columnId: c.id })));
+        },
+        money(n) {
+          return "$" + (n || 0).toLocaleString("en-US");
+        },
+        totalPipeline() {
+          const open = this._deals().filter((d) => d.columnId !== "won" && d.columnId !== "lost");
+          return this.money(open.reduce((s, d) => s + (d.value || 0), 0));
+        },
+        wonTotal() {
+          const won = this._deals().filter((d) => d.columnId === "won");
+          return this.money(won.reduce((s, d) => s + (d.value || 0), 0));
+        },
+        noTaskCount() {
+          return this._deals().filter((d) => d.columnId !== "won" && d.columnId !== "lost" && d.task && d.task.state === "none").length;
+        },
+        hasNoTask() {
+          return this.noTaskCount() > 0;
+        },
+        noTaskLabel() {
+          const n = this.noTaskCount();
+          return n + (n === 1 ? " deal without a task" : " deals without a task");
+        },
+        newDeal() {
+          // A fresh deal enters the pipeline with NO task — so it lands in the
+          // first stage and immediately counts toward "deals without a task",
+          // the nudge to schedule a next step (amoCRM's core discipline).
+          const b = this._board();
+          if (!b) return;
+          const n = this._deals().length + 1;
+          const deal = { id: "n" + n + "-" + this.state.tick, title: "New deal " + n, value: 0, contact: "—", company: "—", responsible: "AK", source: "Manual", tags: [], task: { state: "none", label: "No next task" } };
+          const next = b.state.columns.map((c) => (c.id === "initial" ? { ...c, cards: [deal, ...c.cards] } : c));
+          b.setColumns(next);
+          this.state.tick++;
+        },
+        toggleTheme() {
+          const root = document.documentElement;
+          root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+        },
+      });
+
+      // ── Deal detail: holds the open deal, derives contact + activity feed. ──
+      const STAGES = { initial: "Initial contact", negotiation: "Negotiation", decision: "Decision making", contract: "Contract", won: "Won", lost: "Lost" };
+      const POSITIONS = ["Head of Procurement", "VP Operations", "CTO", "Founder", "Director of IT"];
+      const blankDeal = () => ({ id: "", title: "", company: "", value: 0, responsible: "", contact: "", source: "", tags: [], task: { state: "closed", label: "" }, columnId: "" });
+      Micra.define("dealdetail", {
+        state: { deal: blankDeal(), losing: false, lossReason: "Chose competitor" },
+        onCreate() {
+          this.on("deal:open", (d) => {
+            this.state.deal = { ...blankDeal(), ...d };
+            this.state.losing = false;
+          });
+        },
+        money(n) {
+          return "$" + (n || 0).toLocaleString("en-US");
+        },
+        stageLabel() {
+          return STAGES[this.state.deal.columnId] || "";
+        },
+        contactInitials() {
+          return (this.state.deal.contact || "").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+        },
+        contactPosition() {
+          const c = this.state.deal.contact || "";
+          let h = 0;
+          for (const ch of c) h = (h + ch.charCodeAt(0)) % POSITIONS.length;
+          return POSITIONS[h];
+        },
+        contactEmail() {
+          const d = this.state.deal;
+          if (!d.contact) return "";
+          const u = d.contact.toLowerCase().replace(/[^a-z ]/g, "").trim().split(/\s+/).join(".");
+          const dom = (d.company || "co").toLowerCase().replace(/[^a-z0-9]/g, "") || "co";
+          return u + "@" + dom + ".com";
+        },
+        contactPhone() {
+          let n = 0;
+          for (const ch of this.state.deal.id || "x") n += ch.charCodeAt(0);
+          return "+1 (555) " + String(100 + (n % 900)) + "-" + String(1000 + ((n * 7) % 9000)).slice(0, 4);
+        },
+        feed() {
+          const d = this.state.deal;
+          if (!d.id) return [];
+          const f = [];
+          let i = 1;
+          if (d.columnId === "won") f.push({ id: i++, kind: "won", text: "Deal won", time: "just now" });
+          if (d.columnId === "lost") f.push({ id: i++, kind: "lost", text: "Deal lost" + (d.lossReason ? " — " + d.lossReason : ""), time: "just now" });
+          f.push({ id: i++, kind: "stage", text: "Moved to " + this.stageLabel(), time: "2h ago" });
+          if (d.task && d.task.state !== "closed" && d.task.label) f.push({ id: i++, kind: "task", text: "Task: " + d.task.label, time: "today" });
+          f.push({ id: i++, kind: "call", text: "Logged a call with " + d.contact, time: "1d ago" });
+          f.push({ id: i++, kind: "note", text: "Source: " + d.source, time: "3d ago" });
+          f.push({ id: i++, kind: "created", text: "Deal created", time: "5d ago" });
+          return f;
+        },
+        cancel() {
+          this.emit("editor:close");
+        },
+        markWon() {
+          this.emit("deal:close", { id: this.state.deal.id, outcome: "won" });
+          this.emit("editor:close");
+        },
+        startLost() {
+          this.state.losing = true;
+        },
+        cancelLost() {
+          this.state.losing = false;
+        },
+        confirmLost() {
+          this.emit("deal:close", { id: this.state.deal.id, outcome: "lost", reason: this.state.lossReason });
+          this.emit("editor:close");
+        },
+      });
+
+      Micra.start();
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

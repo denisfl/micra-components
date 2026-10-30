@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Data Table</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./datatable.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-wrap {
+        max-width: 60rem;
+      }
+      .demo-status[hidden] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+    </div>
+
+    <div class="demo-wrap">
+      <micra-datatable class="micra-datatable" data-page-size="10">
+        <!-- Toolbar: search, bulk bar (selection only), export -->
+        <div class="micra-datatable__toolbar">
+          <input
+            class="micra-datatable__search"
+            type="search"
+            placeholder="Search…"
+            aria-label="Search the table"
+            data-ref="search"
+            @input="onSearch"
+          />
+
+          <div class="micra-datatable__actions">
+            <button class="micra-datatable__btn" type="button" @click="exportCSV">
+              Export CSV
+            </button>
+            <button class="micra-datatable__btn" type="button" @click="exportJSON">
+              Export JSON
+            </button>
+          </div>
+
+          <!-- Shown only when at least one row is selected. -->
+          <div class="micra-datatable__bulk" data-if="hasSelection()">
+            <span class="micra-datatable__bulk-count" data-text="selectedCount() + ' selected'"></span>
+            <button class="micra-datatable__btn" type="button" @click="clearSelection">
+              Clear
+            </button>
+            <span class="micra-datatable__bulk-spacer"></span>
+            <button class="micra-datatable__btn" type="button" @click="bulk('export')">
+              Export selected
+            </button>
+            <button class="micra-datatable__btn micra-datatable__btn--danger" type="button" @click="bulk('delete')">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <!-- The scroll frame keeps the sticky header pinned to its own top. -->
+        <div class="micra-datatable__scroll">
+          <table
+            class="micra-datatable__table"
+            data-bind="aria-busy:loading ? 'true' : 'false'"
+          >
+            <thead>
+              <tr>
+                <!-- Selection column: a tri-state header checkbox. -->
+                <th class="micra-datatable__select-col" scope="col">
+                  <button
+                    class="micra-datatable__check"
+                    type="button"
+                    role="checkbox"
+                    aria-label="Select all rows on this page"
+                    @click="toggleAllOnPage"
+                    @keydown.space.prevent="toggleAllOnPage"
+                    data-bind="aria-checked:selectionState(), data-state:headerBoxState()"
+                  >
+                    <span class="micra-datatable__box" aria-hidden="true"></span>
+                  </button>
+                </th>
+
+                <template data-each="columns" data-key="key">
+                  <th
+                    scope="col"
+                    data-bind="aria-sort:item.sortable ? sortState(item.key) : false, data-state:item.sortable ? columnSortState(item.key) : '', class:item.align === 'right' ? 'micra-datatable__cell--right' : '', style:colStyle(item)"
+                  >
+                    <!-- Sortable headers get a button; others render the label. -->
+                    <button
+                      class="micra-datatable__sort"
+                      type="button"
+                      data-if="item.sortable"
+                      @click="toggleSort(item.key, $event)"
+                    >
+                      <span data-text="item.label"></span>
+                      <span class="micra-datatable__sort-ind" aria-hidden="true" data-text="sortIndicator(item.key)"></span>
+                    </button>
+                    <span data-if="!item.sortable" data-text="item.label"></span>
+                  </th>
+                </template>
+              </tr>
+            </thead>
+
+            <tbody>
+              <!-- Rows are pre-flattened to { id, selected, cells[] }. Micra names
+                   every data-each scope variable `item`, so the OUTER item is the
+                   row; the selection cell (before the inner loop) still sees it as
+                   the row. The INNER data-each rebinds `item` to each cell, which
+                   is why the row is pre-flattened — the cell loop cannot reach back
+                   to the row once `item` is shadowed. -->
+              <template data-each="view()" data-key="id">
+                <tr data-bind="data-state:item.selected ? 'selected' : '', aria-selected:item.selected ? 'true' : 'false'">
+                  <td class="micra-datatable__select-col">
+                    <button
+                      class="micra-datatable__check"
+                      type="button"
+                      role="checkbox"
+                      aria-label="Select row"
+                      @click="toggleRow(item.id)"
+                      @keydown.space.prevent="toggleRow(item.id)"
+                      data-bind="aria-checked:item.selected ? 'true' : 'false', data-state:item.selected ? 'checked' : 'unchecked'"
+                    >
+                      <span class="micra-datatable__box" aria-hidden="true"></span>
+                    </button>
+                  </td>
+
+                  <template data-each="item.cells" data-key="key">
+                    <td
+                      data-bind="class:item.align === 'right' ? 'micra-datatable__cell--right' : (item.align === 'center' ? 'micra-datatable__cell--center' : '')"
+                      data-text="item.text"
+                    ></td>
+                  </template>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+
+          <!-- Status rows: loading / empty / error (outside <table> so they don't
+               need a colspan; the table above is empty in these states). -->
+          <div class="micra-datatable__status" data-if="loading" role="status">Loading…</div>
+          <div class="micra-datatable__status" data-if="isEmpty()">No results</div>
+          <div class="micra-datatable__status micra-datatable__status--error" data-if="error" role="alert" data-text="error"></div>
+        </div>
+
+        <!-- Footer: range label, page size, numbered pager. -->
+        <div class="micra-datatable__footer">
+          <span data-text="rangeLabel()"></span>
+
+          <label class="micra-datatable__pagesize">
+            Rows per page
+            <span class="micra-datatable__select-wrap">
+              <select aria-label="Rows per page" @change="setPageSize">
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+              </select>
+            </span>
+          </label>
+
+          <nav class="micra-datatable__pager" aria-label="Pagination">
+            <button
+              class="micra-datatable__pagenav"
+              type="button"
+              @click="prevPage"
+              data-bind="disabled:atFirstPage(), aria-disabled:atFirstPage() ? 'true' : 'false'"
+            >
+              Prev
+            </button>
+
+            <template data-each="pages()" data-key="key">
+              <button
+                class="micra-datatable__page"
+                type="button"
+                data-if="item.type === 'page'"
+                @click="goToPage(item.n)"
+                data-text="item.n"
+                data-bind="aria-current:isCurrentPage(item.n) ? 'page' : 'false'"
+              ></button>
+              <span class="micra-datatable__gap" data-if="item.type === 'gap'" aria-hidden="true">&hellip;</span>
+            </template>
+
+            <button
+              class="micra-datatable__pagenav"
+              type="button"
+              @click="nextPage"
+              data-bind="disabled:atLastPage(), aria-disabled:atLastPage() ? 'true' : 'false'"
+            >
+              Next
+            </button>
+          </nav>
+        </div>
+
+        <!-- Polite live region: announces range / loading / selection count. -->
+        <div class="micra-datatable__sr" aria-live="polite" data-text="liveMessage()"></div>
+      </micra-datatable>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // Demo data — 32 orders. Realistic enough to exercise sort/search/export.
+      const NAMES = [
+        'Ada Lovelace', 'Alan Turing', 'Grace Hopper', 'Edsger Dijkstra',
+        'Donald Knuth', 'Barbara Liskov', 'John McCarthy', 'Margaret Hamilton',
+        'Ken Thompson', 'Dennis Ritchie', 'Linus Torvalds', 'Tim Berners-Lee',
+        'Radia Perlman', 'Vint Cerf', 'Leslie Lamport', 'Frances Allen',
+        'Bjarne Stroustrup', 'Guido van Rossum', 'Anita Borg', 'Brian Kernighan',
+        'Carol Shaw', 'Hedy Lamarr', 'Claude Shannon', 'Katherine Johnson',
+        'Adele Goldberg', 'Niklaus Wirth', 'Sophie Wilson', 'Joan Clarke',
+        'Robert Tarjan', 'Shafi Goldwasser', 'Andrew Yao', 'Jean Bartik',
+      ];
+      const ROLES = ['Admin', 'Editor', 'Viewer'];
+      const STATUSES = ['active', 'pending', 'churned'];
+
+      const orders = NAMES.map((name, i) => {
+        const first = name.split(' ')[0].toLowerCase();
+        const day = String((i % 28) + 1).padStart(2, '0');
+        return {
+          id: 1000 + i,
+          name,
+          email: first + '@example.com',
+          role: ROLES[i % ROLES.length],
+          amount: Math.round((40 + ((i * 37) % 960)) * 100) / 100,
+          date: '2026-03-' + day,
+          status: STATUSES[i % STATUSES.length],
+        };
+      });
+
+      // Columns config. Formatters set here as real functions (currency / date);
+      // align:right on the numeric column. (Columns seeded from a data-columns
+      // JSON attribute would instead carry a string format name like 'currency'.)
+      const columns = [
+        { key: 'id', label: 'ID', sortable: true, width: '5rem' },
+        { key: 'name', label: 'Name', sortable: true },
+        { key: 'email', label: 'Email', sortable: true },
+        { key: 'role', label: 'Role', sortable: true },
+        { key: 'amount', label: 'Amount', sortable: true, align: 'right', format: 'currency' },
+        { key: 'date', label: 'Date', sortable: true, format: 'date' },
+        { key: 'status', label: 'Status', sortable: true },
+      ];
+
+      Micra.start();
+
+      // Seed the instance with JS-side columns + rows (richer than JSON props:
+      // these columns carry real formatter functions / string names). Reach the
+      // live instance via Micra.instances() — a read-only Map keyed by root el.
+      const root = document.querySelector('[data-component="datatable"]');
+      const table = Micra.instances().get(root);
+      if (table) {
+        table.state.columns = columns;
+        table.state.rows = orders;
+        // Bulk actions are the host's job — log what the table hands back.
+        table.on('bulk', ({ action, ids }) => {
+          console.log('[datatable] bulk action:', action, 'ids:', ids);
+        });
+      }
+
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+
+      // — Switching to SERVER mode (commented; not active) ———————————————
+      //
+      // The same markup drives a backend-paged table. Two ways to feed it:
+      //
+      // 1) Let the component fetch. Add data-server and data-url to the root and
+      //    point it at an endpoint that reads ?sort=&search=&page=&pageSize= and
+      //    returns { rows: [...currentPage], total: <fullCount> }:
+      //
+      //      <div class="micra-datatable" data-component="datatable"
+      //           data-server data-url="/api/orders" data-page-size="10">
+      //
+      // 2) Answer the 'query' event yourself (no data-url). The component emits
+      //    on every sort/search/page/size change; you reply via setData():
+      //
+      //      <div ... data-server data-page-size="10">
+      //      const t = Micra.instances().get(document.querySelector('[data-component="datatable"]'));
+      //      t.state.columns = columns;
+      //      t.on('query', async ({ sort, search, page, pageSize }) => {
+      //        const res = await loadPage({ sort, search, page, pageSize });
+      //        t.setData(res.rows, res.total); // replaces rows + total, clears loading
+      //      });
+      //
+      // In server mode filtered()/sorted() pass rows through untouched — the
+      // backend owns filtering, sorting, and paging; the component owns selection,
+      // export, the tri-state header, and the UI.
+    </script>
+  </body>
+</html>

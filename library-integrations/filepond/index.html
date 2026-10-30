@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — FilePond integration</title>
+
+    <!-- Tokens, FilePond's own stylesheets (core + free image-preview plugin),
+         then the Micra token skin over them. Order matters: our skin must win. -->
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/filepond@4/dist/filepond.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4/dist/filepond-plugin-image-preview.min.css" />
+    <link rel="stylesheet" href="./filepond.css" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem 1.5rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-wrap {
+        max-width: 40rem;
+        margin: 0 auto;
+      }
+      .demo-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.5rem 0.9rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-h1 {
+        font-size: 1.4rem;
+        margin: 0 0 0.25rem;
+      }
+      .demo-sub {
+        margin: 0 0 1.75rem;
+        color: var(--micra-muted);
+      }
+      /* The reactive readout: a meta bar + a custom file list, both from state. */
+      .pond-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1.25rem;
+        font-size: 0.85rem;
+      }
+      .pond-meta__count {
+        font-weight: 600;
+      }
+      .pond-meta__size {
+        color: var(--micra-muted);
+      }
+      .pond-meta__spacer {
+        flex: 1;
+      }
+      .demo-btn {
+        font: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+        padding: 0.45rem 0.8rem;
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+        background: var(--micra-surface);
+        color: var(--micra-fg);
+      }
+      .demo-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      /* The custom, state-driven file list — proof state.files is real reactive
+         data, separate from FilePond's own list above. */
+      .file-list {
+        margin-top: 1.5rem;
+      }
+      .file-list__label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--micra-muted);
+        margin-bottom: 0.5rem;
+      }
+      .file-list__rows {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .file-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0.8rem;
+        background: var(--micra-surface);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .file-row__name {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .file-row__size {
+        flex: none;
+        font-size: 0.8rem;
+        color: var(--micra-muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .file-row__remove {
+        flex: none;
+        font: inherit;
+        font-size: 0.8rem;
+        cursor: pointer;
+        padding: 0.2rem 0.55rem;
+        border: 1px solid var(--micra-border);
+        border-radius: calc(var(--micra-radius) - 4px);
+        background: none;
+        color: var(--micra-error);
+      }
+      .file-row__remove:hover {
+        background: color-mix(in srgb, var(--micra-error) 10%, transparent);
+      }
+      .file-empty {
+        padding: 0.9rem;
+        border: 1px dashed var(--micra-border);
+        border-radius: var(--micra-radius);
+        color: var(--micra-muted);
+        font-size: 0.85rem;
+        text-align: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="demo-wrap">
+      <div class="demo-bar">
+        <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+        <span style="color: var(--micra-muted); font-size: 0.85rem">FilePond is MIT — loaded from a CDN. The wrapper is the Micra glue.</span>
+      </div>
+
+      <h1 class="demo-h1">File upload, reactively bound</h1>
+      <p class="demo-sub">FilePond owns the drop area and previews; Micra mirrors its file list into state — so the count, the total size, and the custom list below all react. The files are real reactive state, not just FilePond's DOM. (Demo runs client-only — no upload server.)</p>
+
+      <!-- The wrapper. data-seed pre-populates FilePond with two sample files from
+           tiny inline data-URI SVGs (no network, so they render in the sandbox).
+           type:"local" marks them as already-uploaded. -->
+      <micra-filepond
+        data-seed='[{"source":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNDAiIGhlaWdodD0iMTYwIj48cmVjdCB3aWR0aD0iMjQwIiBoZWlnaHQ9IjE2MCIgZmlsbD0iIzRmNDZlNSIvPjxjaXJjbGUgY3g9IjcwIiBjeT0iNjAiIHI9IjMwIiBmaWxsPSIjZmJiZjI0Ii8+PHBvbHlnb24gcG9pbnRzPSIyMCwxNjAgMTAwLDcwIDE4MCwxNjAiIGZpbGw9IiMxNmEzNGEiLz48L3N2Zz4=","options":{"type":"local","file":{"name":"landscape.svg","size":612,"type":"image/svg+xml"}}},{"source":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzE4MTgxYSIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iNjAiIGZpbGw9IiNkYzI2MjYiLz48L3N2Zz4=","options":{"type":"local","file":{"name":"badge.svg","size":420,"type":"image/svg+xml"}}}]'
+      >
+        <input data-ref="input" type="file" multiple aria-label="Upload files" />
+
+        <div class="pond-meta">
+          <span class="pond-meta__count" data-text="count() + (count() === 1 ? ' file' : ' files')"></span>
+          <span class="pond-meta__size" data-text="totalSize()"></span>
+          <span class="pond-meta__spacer"></span>
+          <button class="demo-btn" type="button" @click="clear" data-bind="disabled:isEmpty()">Clear all</button>
+        </div>
+
+        <div class="file-list">
+          <div class="file-list__label">Live list (state.files)</div>
+
+          <!-- Custom, state-driven list — each row has its own remove button that
+               calls pond.removeFile(id) through the wrapper. -->
+          <ul class="file-list__rows" data-show="!isEmpty()">
+            <template data-each="files" data-key="id">
+              <li class="file-row">
+                <span class="file-row__name" data-text="item.filename"></span>
+                <span class="file-row__size" data-text="formatSize(item.fileSize)"></span>
+                <button class="file-row__remove" type="button" @click="remove(item.id)">Remove</button>
+              </li>
+            </template>
+          </ul>
+
+          <!-- Empty-state — shown when state.files is empty. -->
+          <div class="file-empty" data-show="isEmpty()">No files yet. Drop one above, or click Browse.</div>
+        </div>
+      </micra-filepond>
+    </div>
+
+    <!-- FilePond core + the free MIT image-preview plugin, then Micra, then the
+         wrapper. FilePond must run before Micra.start() so the global exists. -->
+    <script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4/dist/filepond-plugin-image-preview.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/filepond@4/dist/filepond.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // Register the free image-preview plugin (MIT). Doka/Pintura are paid and
+      // intentionally NOT used.
+      if (window.FilePond && window.FilePondPluginImagePreview) {
+        FilePond.registerPlugin(FilePondPluginImagePreview);
+      }
+
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const el = document.documentElement;
+        el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

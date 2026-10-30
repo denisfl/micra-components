@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — GLightbox integration</title>
+
+    <!-- Tokens, GLightbox's own stylesheet, then the Micra token skin over it. -->
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox@3/dist/css/glightbox.min.css" />
+    <link rel="stylesheet" href="./glightbox.css" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem 1.5rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-wrap {
+        max-width: 44rem;
+        margin: 0 auto;
+      }
+      .demo-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.5rem 0.9rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-h1 {
+        font-size: 1.4rem;
+        margin: 0 0 0.25rem;
+      }
+      .demo-sub {
+        margin: 0 0 1.75rem;
+        color: var(--micra-muted);
+      }
+      /* The reactive readout above the grid. */
+      .gallery-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+        font-size: 0.85rem;
+      }
+      .gallery-meta__status {
+        font-weight: 600;
+      }
+      .gallery-meta__status[data-open='true'] {
+        color: var(--micra-primary);
+      }
+      .gallery-meta__spacer {
+        flex: 1;
+      }
+      .demo-btn {
+        font: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+        padding: 0.45rem 0.8rem;
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+        background: var(--micra-surface);
+        color: var(--micra-fg);
+      }
+      .demo-btn--primary {
+        background: var(--micra-primary);
+        color: var(--micra-primary-fg);
+        border-color: var(--micra-primary);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="demo-wrap">
+      <div class="demo-bar">
+        <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+        <span style="color: var(--micra-muted); font-size: 0.85rem">GLightbox is MIT — loaded from a CDN. The wrapper is the Micra glue.</span>
+      </div>
+
+      <h1 class="demo-h1">A lightbox gallery, reactively bound</h1>
+      <p class="demo-sub">GLightbox owns the overlay and navigation; Micra owns the data. The grid renders from state, and the lightbox mirrors its open/closed and current-slide state back — so the readout below ("Viewing image X of N") reacts as you click through. The demo images are inline SVG, so nothing loads from the network.</p>
+
+      <!-- The wrapper. The grid is rendered from state.images via data-each — the
+           single source of truth. data-seed is JSON of inline-SVG data-URI images;
+           href and thumb point at the SAME self-contained SVG so nothing leaves the
+           page. data-type="image" tells GLightbox to treat the data: URL as an image. -->
+      <micra-glightbox id="gallery">
+        <div class="gallery-meta">
+          <span
+            class="gallery-meta__status"
+            data-text="viewing()"
+            data-bind="data-open:isOpen() ? 'true' : 'false'"
+          ></span>
+          <span class="gallery-meta__spacer"></span>
+          <button class="demo-btn demo-btn--primary" type="button" @click="openGallery">Open gallery</button>
+        </div>
+
+        <div class="micra-glightbox-grid" data-ref="grid">
+          <template data-each="images" data-key="id">
+            <a
+              class="glightbox micra-glightbox-grid__item"
+              data-type="image"
+              data-gallery="micra-demo"
+              data-bind="href:item.href, data-title:item.title, data-description:item.description"
+            >
+              <img class="micra-glightbox-grid__img" data-bind="src:item.thumb, alt:item.title" />
+            </a>
+          </template>
+        </div>
+      </micra-glightbox>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/glightbox@3/dist/js/glightbox.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // Build the demo gallery from inline SVG "photos" — fully self-contained,
+      // no network. Each is a colored card with a big number and a caption; the
+      // SAME SVG is used as the thumbnail and the full-size lightbox image.
+      // title + caption + a concrete hue. data: SVGs can't read CSS vars, so the
+      // hues are literal hex (a token-ish palette echoing --micra-primary & friends).
+      const SWATCHES = [
+        { hue: '#4f46e5', title: 'Aurora', desc: 'Inline SVG · slide 1' },
+        { hue: '#0ea5e9', title: 'Harbour', desc: 'Inline SVG · slide 2' },
+        { hue: '#d97706', title: 'Canyon', desc: 'Inline SVG · slide 3' },
+        { hue: '#16a34a', title: 'Meadow', desc: 'Inline SVG · slide 4' },
+        { hue: '#db2777', title: 'Dusk', desc: 'Inline SVG · slide 5' },
+        { hue: '#0d9488', title: 'Tide', desc: 'Inline SVG · slide 6' },
+      ];
+
+      function svgPhoto(n, hue, title) {
+        // A 1200×800 "photo": flat fill, a soft diagonal band, a big number, a caption.
+        const svg = [
+          '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">',
+          '<rect width="1200" height="800" fill="', hue, '"/>',
+          '<rect width="1200" height="800" fill="#ffffff" opacity="0.06"/>',
+          '<polygon points="0,800 1200,200 1200,800" fill="#ffffff" opacity="0.10"/>',
+          '<circle cx="980" cy="180" r="120" fill="#ffffff" opacity="0.14"/>',
+          '<text x="80" y="560" font-family="system-ui,-apple-system,sans-serif" font-size="420" font-weight="800" fill="#ffffff" opacity="0.92">', n, '</text>',
+          '<text x="84" y="690" font-family="system-ui,-apple-system,sans-serif" font-size="72" font-weight="600" fill="#ffffff" opacity="0.85">', title, '</text>',
+          '</svg>',
+        ].join('');
+        // encodeURIComponent keeps the data: URL valid (no base64 needed).
+        return 'data:image/svg+xml,' + encodeURIComponent(svg);
+      }
+
+      const images = SWATCHES.map((s, i) => {
+        const url = svgPhoto(i + 1, s.hue, s.title);
+        return { id: i + 1, href: url, thumb: url, title: s.title, description: s.desc };
+      });
+
+      // Seed state before Micra.start() so the grid renders the anchors that
+      // GLightbox binds to in onCreate.
+      document.getElementById('gallery').setAttribute('data-seed', JSON.stringify(images));
+
+      Micra.start();
+
+      // The host can observe the lightbox via the component instance.
+      const root = document.getElementById('gallery');
+      const lb = Micra.instances().get(root);
+      if (lb) {
+        lb.on('open', () => console.log('[glightbox] opened'));
+      }
+
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const el = document.documentElement;
+        el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

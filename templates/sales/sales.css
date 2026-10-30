@@ -1,0 +1,644 @@
+/*
+ * sales.css — layout for the Micra CRM (sales pipeline) template.
+ *
+ * Token-driven (only --micra-* from theme/theme.css); no Tailwind. The Kanban and
+ * Slide-over skins are loaded separately and styled by the same tokens; this file
+ * adds the shell, the toolbar summary, and the rich deal-card content.
+ */
+
+micra-dealdetail {
+  display: block;
+}
+
+
+micra-crm {
+  display: block;
+}
+
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--micra-bg);
+  color: var(--micra-fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.crm {
+  /* Flatter elevation for the whole pipeline (cards, columns, slide-over) —
+     overrides the theme token, so every shadow in this template follows. */
+  --micra-shadow: 0 1px 0px rgb(0 0 0 / 0.12);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ── Topbar ─────────────────────────────────────────────────────────────────── */
+.crm__topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  height: 3.5rem;
+  padding: 0 1.25rem;
+  background: var(--micra-surface);
+  border-bottom: 1px solid var(--micra-border);
+  flex: none;
+}
+.crm__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 600;
+}
+.crm__logo {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 7px;
+  background: var(--micra-primary);
+  color: var(--micra-primary-fg);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.crm__pipeline {
+  padding-left: 0.85rem;
+  margin-left: 0.25rem;
+  border-left: 1px solid var(--micra-border);
+  color: var(--micra-muted);
+  font-size: 0.9rem;
+}
+.crm__spacer {
+  flex: 1;
+}
+.crm__icon-btn {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: var(--micra-radius);
+  background: none;
+  color: var(--micra-muted);
+  cursor: pointer;
+}
+.crm__icon-btn:hover {
+  background: color-mix(in srgb, var(--micra-fg) 6%, transparent);
+  color: var(--micra-fg);
+}
+.crm__icon-btn svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+/* ── Toolbar (board summary) ────────────────────────────────────────────────── */
+.crm__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--micra-border);
+  flex: none;
+}
+.crm__stats {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  flex: 1;
+  min-width: 0;
+}
+.crm__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.crm__stat-label {
+  font-size: 0.72rem;
+  color: var(--micra-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.crm__stat {
+  flex: none;
+}
+.crm__stat-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.crm__stat-value--good {
+  color: var(--micra-success);
+}
+/* The signature amoCRM idea: deals with no next task are a problem, surfaced. */
+.crm__stat--warn {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--micra-warning);
+  background: color-mix(in srgb, var(--micra-warning) 14%, transparent);
+}
+.crm__stat--warn svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+.crm__stat--warn span {
+  white-space: nowrap;
+}
+.crm__stat--warn[hidden] {
+  display: none;
+}
+
+.crm__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.crm__btn svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+.crm__btn--primary {
+  background: var(--micra-primary);
+  color: var(--micra-primary-fg);
+  border-color: var(--micra-primary);
+}
+.crm__btn--primary:hover {
+  background: color-mix(in srgb, var(--micra-primary) 88%, #000);
+}
+
+/* Small screens: the toolbar can't fit the stats and the button on one line.
+   Reflow — stats become a horizontally scrollable row, the button drops to its
+   own full-width line below. Labels/badge already stay on one line (nowrap). */
+@media (max-width: 48rem) {
+  .crm__toolbar {
+    flex-wrap: wrap;
+    row-gap: 0.85rem;
+  }
+  .crm__stats {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+  }
+  .crm__btn--primary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Board fills all remaining height; columns are full-height with their own
+   card scroll, and the row scrolls horizontally (amoCRM-style). ─────────────── */
+.crm__board {
+  flex: 1;
+  min-height: 0;
+  padding: 1rem 1.25rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.crm__board .micra-kanban__board {
+  flex: 1;
+  min-height: 0;
+  align-items: stretch; /* columns stretch to the board's full height */
+}
+.crm__board .micra-kanban__column {
+  max-height: none; /* drop the component's 70vh cap — fill the height instead */
+}
+
+/* Won / Lost column headers carry a semantic tint. */
+.micra-kanban__column[data-col="won"] .micra-kanban__col-title {
+  color: var(--micra-success);
+}
+.micra-kanban__column[data-col="lost"] .micra-kanban__col-title {
+  color: var(--micra-muted);
+}
+
+/* ── Rich deal card ─────────────────────────────────────────────────────────── */
+.deal {
+  position: relative;
+}
+.deal__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+/* Task traffic-light: colour driven by the card's data-task. */
+.deal__light {
+  width: 0.6rem;
+  height: 0.6rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--micra-muted);
+}
+.deal[data-task="overdue"] .deal__light {
+  background: var(--micra-error);
+}
+.deal[data-task="today"] .deal__light,
+.deal[data-task="future"] .deal__light {
+  background: var(--micra-success);
+}
+.deal[data-task="none"] .deal__light {
+  background: var(--micra-warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-warning) 25%, transparent);
+}
+.deal[data-task="closed"] .deal__light {
+  background: color-mix(in srgb, var(--micra-fg) 25%, transparent);
+}
+.deal__title {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.deal__value {
+  margin: 0.4rem 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.deal__who {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--micra-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.deal__who-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: none;
+}
+.deal__company {
+  color: var(--micra-fg);
+}
+.deal__tags {
+  list-style: none;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.deal__tag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  color: var(--micra-muted);
+  background: color-mix(in srgb, var(--micra-fg) 8%, transparent);
+}
+.deal__tag[data-tone="hot"] {
+  color: var(--micra-error);
+  background: color-mix(in srgb, var(--micra-error) 14%, transparent);
+}
+.deal__tag[data-tone="warm"] {
+  color: var(--micra-primary);
+  background: color-mix(in srgb, var(--micra-primary) 14%, transparent);
+}
+.deal__tag[data-tone="cool"] {
+  color: var(--micra-success);
+  background: color-mix(in srgb, var(--micra-success) 14%, transparent);
+}
+.deal__foot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--micra-border);
+}
+.deal__task {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--micra-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.deal[data-task="overdue"] .deal__task {
+  color: var(--micra-error);
+}
+.deal[data-task="today"] .deal__task,
+.deal[data-task="future"] .deal__task {
+  color: var(--micra-success);
+}
+.deal[data-task="none"] .deal__task {
+  color: var(--micra-warning);
+}
+.deal__avatar {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--micra-primary) 16%, var(--micra-surface));
+  color: var(--micra-primary);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.deal {
+  cursor: pointer;
+}
+
+.crm__btn--danger {
+  color: var(--micra-error);
+  border-color: color-mix(in srgb, var(--micra-error) 40%, var(--micra-border));
+}
+.crm__btn--danger:hover {
+  background: color-mix(in srgb, var(--micra-error) 10%, transparent);
+}
+
+/* ── Deal detail (slide-over content) ───────────────────────────────────────── */
+.dd__head {
+  align-items: flex-start;
+}
+.dd__company-sm {
+  font-size: 0.78rem;
+  color: var(--micra-muted);
+}
+.dd__title {
+  margin: 0.1rem 0 0;
+  font-size: 1.2rem;
+}
+.dd__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+.dd__value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.dd__topmeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: -0.6rem;
+}
+.dd__badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  color: var(--micra-primary);
+  background: color-mix(in srgb, var(--micra-primary) 12%, transparent);
+}
+.dd__owner {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--micra-muted);
+}
+.dd__avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--micra-primary) 16%, var(--micra-surface));
+  color: var(--micra-primary);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+.dd__avatar--lg {
+  width: 2.6rem;
+  height: 2.6rem;
+  font-size: 0.85rem;
+  flex: none;
+}
+
+.dd__task {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--micra-radius);
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: var(--micra-bg);
+  border: 1px solid var(--micra-border);
+}
+.dd__task-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--micra-muted);
+  flex: none;
+}
+.dd__task[data-task="overdue"] {
+  color: var(--micra-error);
+}
+.dd__task[data-task="overdue"] .dd__task-dot {
+  background: var(--micra-error);
+}
+.dd__task[data-task="today"],
+.dd__task[data-task="future"] {
+  color: var(--micra-success);
+}
+.dd__task[data-task="today"] .dd__task-dot,
+.dd__task[data-task="future"] .dd__task-dot {
+  background: var(--micra-success);
+}
+.dd__task[data-task="none"] {
+  color: var(--micra-warning);
+}
+.dd__task[data-task="none"] .dd__task-dot {
+  background: var(--micra-warning);
+}
+
+.dd__fields {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.dd__fields > div {
+  display: grid;
+  grid-template-columns: 5rem 1fr;
+  align-items: start;
+  gap: 0.75rem;
+}
+.dd__fields dt {
+  font-size: 0.8rem;
+  color: var(--micra-muted);
+}
+.dd__fields dd {
+  margin: 0;
+  font-size: 0.875rem;
+}
+.dd__muted {
+  color: var(--micra-muted);
+}
+
+.dd__section {
+  border-top: 1px solid var(--micra-border);
+  padding-top: 1rem;
+}
+.dd__h3 {
+  margin: 0 0 0.7rem;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--micra-muted);
+}
+.dd__contact {
+  display: flex;
+  gap: 0.85rem;
+}
+.dd__contact-name {
+  font-weight: 600;
+}
+.dd__contact-pos {
+  font-size: 0.82rem;
+  color: var(--micra-muted);
+  margin-bottom: 0.5rem;
+}
+.dd__contact-row {
+  display: flex;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  padding: 0.15rem 0;
+}
+.dd__k {
+  width: 4rem;
+  flex: none;
+  color: var(--micra-muted);
+}
+
+.dd__feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.dd__event {
+  display: flex;
+  gap: 0.7rem;
+  padding-bottom: 0.9rem;
+  position: relative;
+}
+.dd__event:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 0.29rem;
+  top: 0.9rem;
+  bottom: 0;
+  width: 1px;
+  background: var(--micra-border);
+}
+.dd__event-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-top: 0.2rem;
+  border-radius: 50%;
+  flex: none;
+  background: var(--micra-muted);
+  z-index: 1;
+}
+.dd__event-dot[data-kind="won"] {
+  background: var(--micra-success);
+}
+.dd__event-dot[data-kind="lost"] {
+  background: var(--micra-error);
+}
+.dd__event-dot[data-kind="stage"] {
+  background: var(--micra-primary);
+}
+.dd__event-dot[data-kind="task"] {
+  background: var(--micra-warning);
+}
+.dd__event-text {
+  font-size: 0.85rem;
+}
+.dd__event-time {
+  font-size: 0.75rem;
+  color: var(--micra-muted);
+  margin-top: 0.1rem;
+}
+
+.dd__foot {
+  flex-direction: column;
+}
+.dd__actions,
+.dd__lost {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  width: 100%;
+}
+.dd__lost {
+  align-items: center;
+}
+.dd__lost .set-select-wrap {
+  margin-right: auto;
+}
+
+/* Token-tinted select caret (shared pattern). */
+.set-select-wrap {
+  position: relative;
+  display: inline-block;
+}
+.set-select {
+  padding: 0.5rem 2rem 0.5rem 0.7rem;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--micra-fg);
+  background: var(--micra-bg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+.set-select-wrap::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0.6rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+  background-color: var(--micra-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23fff' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 8 10 12 14 8'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23fff' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 8 10 12 14 8'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* The detail <div> is the panel's only child — carry the flex column so the
+   footer pins to the bottom. */
+.micra-slideover__panel > [data-component="dealdetail"] {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}

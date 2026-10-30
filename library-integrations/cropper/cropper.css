@@ -1,0 +1,66 @@
+/*
+ * cropper.css — Micra token skin for Cropper.js v2.
+ *
+ * Loads alongside Cropper's web components. Cropper v2 renders each element
+ * (<cropper-selection>, <cropper-handle>, <cropper-grid>, <cropper-crosshair>)
+ * in its own shadow DOM, and those internals read a single inherited CSS custom
+ * property — `--theme-color` — for the selection outline, the move/resize
+ * handles, the grid lines, and the crosshair. We set `--theme-color` to
+ * `--micra-primary` on the canvas so it cascades into every part; the shadow
+ * roots only override it when an element's `theme-color` attribute is non-empty
+ * (which is why index.html sets `theme-color=""` on the handles — so the token
+ * wins). The canvas, the surrounding card, and the controls are styled with the
+ * same --micra-* tokens. References only tokens — recolor by overriding them, or
+ * edit this file; you own it. Works in light and dark because it's all tokens.
+ */
+
+micra-cropper {
+  display: block;
+}
+
+
+/* ── Canvas (the cropping surface) ────────────────────────────────────────────
+   --theme-color cascades from here into every Cropper shadow root (selection
+   outline, handles, grid, crosshair). The `background` attribute on the element
+   paints Cropper's built-in checkerboard; we set the host background to a token
+   so the surround reads in light and dark, and frame it like a card. */
+cropper-canvas {
+  --theme-color: var(--micra-primary);
+
+  display: block;
+  width: 100%;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-bg);
+  overflow: hidden;
+}
+
+/* ── Image ────────────────────────────────────────────────────────────────────
+   The image element fills the canvas; no color to theme here. */
+cropper-image {
+  display: block;
+}
+
+/* ── Shade (the dimmed area outside the selection) ────────────────────────────
+   Cropper's shade defaults to a translucent black. Map it to the Micra overlay
+   token so the dim matches the theme (it darkens further in dark mode because
+   --micra-overlay does). The shade reads its own --theme-color. */
+cropper-shade {
+  --theme-color: var(--micra-overlay);
+}
+
+/* ── Selection outline, handles, grid, crosshair ──────────────────────────────
+   These inherit --theme-color from the canvas above (= --micra-primary). The
+   handles in index.html carry theme-color="" so they don't inject their own
+   color and the token applies — the outline + resize handles read as primary.
+
+   EXCEPT the move handle, which fills the whole selection: Cropper's default
+   expects a translucent theme-color, so our opaque --micra-primary would paint
+   the crop area solid. Keep the move area see-through (still draggable) so you
+   can see what you're cropping; the outline + corner handles show the box. */
+cropper-selection cropper-handle[action="move"] {
+  background-color: transparent;
+}
+
+/* ── Demo card spacing only ───────────────────────────────────────────────────
+   (Controls/preview live in index.html's inline styles, all token-driven.) */

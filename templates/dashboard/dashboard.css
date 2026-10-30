@@ -1,0 +1,695 @@
+/*
+ * dashboard.css — layout for the Micra Dashboard template.
+ *
+ * Token-driven (only --micra-* from theme/theme.css); no Tailwind. Re-skin by
+ * overriding the theme tokens, or edit this file — it's yours. The component
+ * skins (charts.css, commandpalette.css) are loaded separately and styled by
+ * the same tokens.
+ */
+
+micra-dashboard {
+  display: block;
+}
+
+
+* {
+  box-sizing: border-box;
+}
+html {
+  min-height: 100%;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--micra-bg);
+  color: var(--micra-fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.dash {
+  --dash-sidebar: 16rem;
+}
+
+/* ── Sidebar (off-canvas on mobile, fixed on desktop) ───────────────────────── */
+.dash__sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--dash-sidebar);
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0.75rem;
+  background: var(--micra-surface);
+  border-right: 1px solid var(--micra-border);
+  z-index: 40;
+  transform: translateX(-100%);
+  transition: transform var(--micra-duration) var(--micra-ease);
+}
+.dash__sidebar.is-open {
+  transform: translateX(0);
+  box-shadow: var(--micra-shadow);
+}
+
+.dash__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.6rem 1rem;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.dash__logo {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 8px;
+  background: var(--micra-primary);
+  color: var(--micra-primary-fg);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.dash__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.dash__nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 0;
+  border-radius: var(--micra-radius);
+  background: none;
+  color: var(--micra-fg);
+  font: inherit;
+  font-size: 0.925rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--micra-duration) var(--micra-ease);
+}
+.dash__nav-item:hover {
+  background: color-mix(in srgb, var(--micra-fg) 6%, transparent);
+}
+.dash__nav-item.is-active {
+  background: color-mix(in srgb, var(--micra-primary) 12%, transparent);
+  color: var(--micra-primary);
+}
+.dash__nav-item svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: none;
+}
+
+.dash__user {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.4rem 0.2rem;
+  border-top: 1px solid var(--micra-border);
+}
+.dash__avatar {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--micra-primary) 18%, var(--micra-surface));
+  color: var(--micra-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.dash__user-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.dash__user-mail {
+  font-size: 0.78rem;
+  color: var(--micra-muted);
+}
+
+/* ── Main column ────────────────────────────────────────────────────────────── */
+.dash__main {
+  margin-left: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dash__topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 3.5rem;
+  padding: 0 1.25rem;
+  background: color-mix(in srgb, var(--micra-bg) 85%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--micra-border);
+}
+.dash__page-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.dash__spacer {
+  flex: 1;
+}
+
+.dash__cmdk-trigger {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 1rem;
+  min-width: 16rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-bg);
+  color: var(--micra-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color var(--micra-duration) var(--micra-ease);
+}
+.dash__cmdk-trigger:hover {
+  border-color: var(--micra-muted);
+}
+.dash__cmdk-trigger svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+.dash__cmdk-trigger span {
+  flex: 1;
+  text-align: left;
+}
+.dash__kbd {
+  flex: none;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--micra-border);
+  border-radius: 6px;
+  background: var(--micra-surface);
+  font-size: 0.75rem;
+  font-family: inherit;
+  color: var(--micra-muted);
+}
+@media (min-width: 48rem) {
+  .dash__cmdk-trigger {
+    display: inline-flex;
+  }
+}
+
+.dash__icon-btn {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: var(--micra-radius);
+  background: none;
+  color: var(--micra-muted);
+  cursor: pointer;
+  transition:
+    background var(--micra-duration) var(--micra-ease),
+    color var(--micra-duration) var(--micra-ease);
+}
+.dash__icon-btn:hover {
+  background: color-mix(in srgb, var(--micra-fg) 6%, transparent);
+  color: var(--micra-fg);
+}
+.dash__icon-btn svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.dash__menu {
+  display: grid;
+}
+
+.dash__content {
+  flex: 1;
+  padding: 1.5rem 1.25rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Row 1: KPI cards ────────────────────────────────────────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+}
+.kpi {
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  padding: 1.1rem 1.25rem;
+}
+.kpi__label {
+  font-size: 0.82rem;
+  color: var(--micra-muted);
+}
+.kpi__value {
+  margin: 0.35rem 0 0.5rem;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.kpi__delta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.kpi__delta--good {
+  color: var(--micra-success);
+}
+.kpi__delta--bad {
+  color: var(--micra-error);
+}
+.kpi__sub {
+  font-weight: 400;
+  color: var(--micra-muted);
+}
+
+/* ── Panels (shared card for chart / list rows) ─────────────────────────────── */
+.panel {
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  padding: 1.1rem 1.25rem 1.25rem;
+}
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.panel__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* Segmented control (period switch). */
+.seg {
+  display: inline-flex;
+  padding: 0.15rem;
+  gap: 0.1rem;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-bg);
+}
+.seg__btn {
+  padding: 0.25rem 0.7rem;
+  border: 0;
+  border-radius: calc(var(--micra-radius) - 3px);
+  background: none;
+  color: var(--micra-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--micra-duration) var(--micra-ease);
+}
+.seg__btn:hover {
+  color: var(--micra-fg);
+}
+.seg__btn.is-active {
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  box-shadow: var(--micra-shadow);
+}
+
+/* ── Row 2: hero chart (wide) + plan mix (narrow) ───────────────────────────── */
+.dash-row--hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+@media (min-width: 64rem) {
+  .dash-row--hero {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* ── Row 3: two equal columns (channel chart | activity feed) ───────────────── */
+.dash-row--split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+@media (min-width: 64rem) {
+  .dash-row--split {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ── Activity feed ──────────────────────────────────────────────────────────── */
+.feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.feed__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--micra-border);
+}
+.feed__item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.feed__avatar {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--micra-primary) 16%, var(--micra-surface));
+  color: var(--micra-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.feed__body {
+  flex: 1;
+  min-width: 0;
+}
+.feed__text {
+  font-size: 0.875rem;
+}
+.feed__time {
+  font-size: 0.78rem;
+  color: var(--micra-muted);
+  margin-top: 0.1rem;
+}
+.feed__badge {
+  flex: none;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  color: var(--micra-muted);
+  background: color-mix(in srgb, var(--micra-fg) 8%, transparent);
+}
+.feed__badge[data-kind="signup"] {
+  color: var(--micra-primary);
+  background: color-mix(in srgb, var(--micra-primary) 14%, transparent);
+}
+.feed__badge[data-kind="upgrade"] {
+  color: var(--micra-success);
+  background: color-mix(in srgb, var(--micra-success) 14%, transparent);
+}
+.feed__badge[data-kind="payment"] {
+  color: var(--micra-success);
+  background: color-mix(in srgb, var(--micra-success) 14%, transparent);
+}
+.feed__badge[data-kind="churn"] {
+  color: var(--micra-error);
+  background: color-mix(in srgb, var(--micra-error) 14%, transparent);
+}
+
+/* ── Views (one per nav item, toggled by data-show) ─────────────────────────── */
+.dash__view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.dash__view-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.dash__view-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+.dash__view-sub {
+  margin: 0.25rem 0 0;
+  color: var(--micra-muted);
+  font-size: 0.9rem;
+}
+
+.dash__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dash__btn svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+.dash__btn--primary {
+  background: var(--micra-primary);
+  color: var(--micra-primary-fg);
+  border-color: var(--micra-primary);
+}
+.dash__btn--primary:hover {
+  background: color-mix(in srgb, var(--micra-primary) 88%, #000);
+}
+
+/* ── Settings: tabs + flat form (shared with the Admin template) ─────────────── */
+.set-save {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.set-saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--micra-success);
+}
+.set-saved svg {
+  width: 1rem;
+  height: 1rem;
+}
+.set-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--micra-border);
+}
+.set-tab {
+  padding: 0.6rem 0.85rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  color: var(--micra-muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--micra-duration) var(--micra-ease);
+}
+.set-tab:hover {
+  color: var(--micra-fg);
+}
+.set-tab.is-active {
+  color: var(--micra-primary);
+  border-bottom-color: var(--micra-primary);
+}
+.set-card {
+  max-width: 36rem;
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  padding: 1.25rem 1.5rem;
+}
+.set-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--micra-border);
+}
+.set-field:first-child {
+  padding-top: 0;
+}
+.set-field:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.set-field--row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.set-field__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.set-input {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--micra-fg);
+  background: var(--micra-bg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  transition: border-color var(--micra-duration) var(--micra-ease);
+}
+.set-input:focus-visible {
+  outline: none;
+  border-color: var(--micra-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-ring) 25%, transparent);
+}
+.set-input--billmail {
+  width: 16rem;
+}
+.set-select-wrap {
+  position: relative;
+  display: inline-block;
+}
+.set-select {
+  padding: 0.5rem 2rem 0.5rem 0.7rem;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--micra-fg);
+  background: var(--micra-bg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+.set-select:focus-visible {
+  outline: none;
+  border-color: var(--micra-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-ring) 25%, transparent);
+}
+.set-select-wrap::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0.6rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+  background-color: var(--micra-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23fff' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 8 10 12 14 8'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23fff' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 8 10 12 14 8'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--micra-border);
+}
+.set-row:first-child {
+  padding-top: 0;
+}
+.set-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.set-row__title {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.set-row__desc {
+  font-size: 0.8rem;
+  color: var(--micra-muted);
+  margin-top: 0.15rem;
+}
+.set-switch {
+  position: relative;
+  flex: none;
+  width: 2.5rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  cursor: pointer;
+}
+.set-switch:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+.set-switch__track {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--micra-border);
+  transition: background var(--micra-duration) var(--micra-ease);
+}
+.set-switch__track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1.4rem - 4px);
+  height: calc(1.4rem - 4px);
+  border-radius: 50%;
+  background: var(--micra-surface);
+  transition: transform var(--micra-duration) var(--micra-ease);
+}
+.set-switch[aria-checked="true"] .set-switch__track {
+  background: var(--micra-primary);
+}
+.set-switch[aria-checked="true"] .set-switch__track::after {
+  transform: translateX(1.1rem);
+}
+
+.dash__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  background: var(--micra-overlay);
+}
+
+/* ── Desktop: pin the sidebar, drop the off-canvas chrome ───────────────────── */
+@media (min-width: 64rem) {
+  .dash__sidebar {
+    transform: none;
+    box-shadow: none;
+  }
+  .dash__main {
+    margin-left: var(--dash-sidebar);
+  }
+  .dash__menu {
+    display: none;
+  }
+  .dash__backdrop {
+    display: none;
+  }
+}

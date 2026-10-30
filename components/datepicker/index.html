@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Date picker</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./datepicker.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-selected {
+        margin-top: 1.25rem;
+        color: var(--micra-muted);
+      }
+      .demo-selected strong {
+        color: var(--micra-fg);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+    </div>
+
+    <micra-datepicker @pointerdown.outside="close" data-value="2026-06-19">
+      <!-- .micra-datepicker is the positioning context: it must wrap ONLY the
+           input and the popover, so the popover anchors under the input. Sibling
+           content (like the status line below) lives outside it. -->
+      <div class="micra-datepicker">
+        <input
+          class="micra-datepicker__input"
+          role="combobox"
+          aria-haspopup="dialog"
+          aria-controls="dp-popover"
+          placeholder="Pick a date"
+          readonly
+          data-ref="input"
+          data-bind="value:displayValue(), aria-expanded:open ? 'true' : 'false'"
+          @click="toggle"
+          @keydown.down.prevent="open"
+          @keydown.escape="close"
+        />
+
+        <div
+          class="micra-datepicker__popover"
+          id="dp-popover"
+          role="dialog"
+          aria-label="Choose date"
+          data-ref="popover"
+          tabindex="-1"
+          data-bind="data-state:open ? 'open' : 'closed'"
+        >
+          <div class="micra-datepicker__header">
+            <button
+              class="micra-datepicker__nav"
+              type="button"
+              aria-label="Previous month"
+              @click="prevMonth"
+            >
+              <span aria-hidden="true">‹</span>
+            </button>
+            <div
+              class="micra-datepicker__label"
+              id="dp-label"
+              aria-live="polite"
+              data-text="monthLabel()"
+            ></div>
+            <button
+              class="micra-datepicker__nav"
+              type="button"
+              aria-label="Next month"
+              @click="nextMonth"
+            >
+              <span aria-hidden="true">›</span>
+            </button>
+          </div>
+
+          <!-- Weekday header: Monday-first (the grid is Monday-start). Decorative. -->
+          <div class="micra-datepicker__weekdays" aria-hidden="true">
+            <span class="micra-datepicker__weekday">Mon</span>
+            <span class="micra-datepicker__weekday">Tue</span>
+            <span class="micra-datepicker__weekday">Wed</span>
+            <span class="micra-datepicker__weekday">Thu</span>
+            <span class="micra-datepicker__weekday">Fri</span>
+            <span class="micra-datepicker__weekday">Sat</span>
+            <span class="micra-datepicker__weekday">Sun</span>
+          </div>
+
+          <!-- The grid carries all keyboard navigation. Outer data-each item is the
+               WEEK; the nested data-each item is the DAY. -->
+          <div
+            class="micra-datepicker__grid"
+            role="grid"
+            aria-labelledby="dp-label"
+            @keydown.left.prevent="moveLeft"
+            @keydown.right.prevent="moveRight"
+            @keydown.up.prevent="moveUp"
+            @keydown.down.prevent="moveDown"
+            @keydown.home.prevent="moveWeekStart"
+            @keydown.end.prevent="moveWeekEnd"
+            @keydown.pageup.prevent="movePrevMonth"
+            @keydown.pagedown.prevent="moveNextMonth"
+            @keydown.enter.prevent="chooseFocused"
+            @keydown.space.prevent="chooseFocused"
+            @keydown.escape="close"
+          >
+            <template data-each="weeks()" data-key="key">
+              <div class="micra-datepicker__row" role="row">
+                <template data-each="item.days" data-key="iso">
+                  <button
+                    class="micra-datepicker__day"
+                    type="button"
+                    role="gridcell"
+                    data-text="item.day"
+                    data-bind="
+                      tabindex:item.iso === focusedISO ? 0 : -1,
+                      aria-selected:isSelected(item.iso) ? 'true' : 'false',
+                      aria-current:item.today ? 'date' : 'false',
+                      data-state:cellState(item)
+                    "
+                    @click="selectDay(item.iso)"
+                  ></button>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <p class="demo-selected">Selected: <strong data-text="displayValue() || '—'"></strong></p>
+    </micra-datepicker>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

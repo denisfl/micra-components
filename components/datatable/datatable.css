@@ -1,0 +1,428 @@
+/*
+ * components/datatable/datatable.css — default skin for the Data Table.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. State lives in attributes set
+ * via data-bind (aria-sort, aria-checked, data-state), so both this skin and
+ * Tailwind's native variants can target it.
+ *
+ * The scroll wrapper (.micra-datatable__scroll) gives the sticky <thead> a frame
+ * to stick within: a max-height + overflow:auto box, with the header pinned to
+ * its top so rows scroll under it.
+ */
+
+micra-datatable {
+  display: block;
+}
+
+
+.micra-datatable {
+  width: 100%;
+  color: var(--micra-fg);
+  font: inherit;
+}
+
+/* — toolbar (search + bulk bar + export) ———————————————————————— */
+.micra-datatable__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.micra-datatable__search {
+  font: inherit;
+  flex: 1 1 14rem;
+  min-width: 10rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--micra-fg);
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+}
+
+.micra-datatable__search:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 1px;
+  border-color: var(--micra-primary);
+}
+
+.micra-datatable__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* The bulk-actions bar — appears only when rows are selected. Uses the surface
+   tokens + elevation so it reads as a contextual overlay strip. */
+.micra-datatable__bulk {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 100%;
+  padding: 0.5rem 0.75rem;
+  color: var(--micra-fg);
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  box-shadow: var(--micra-shadow);
+}
+
+.micra-datatable__bulk-count {
+  font-weight: 600;
+}
+
+.micra-datatable__bulk-spacer {
+  margin-left: auto;
+}
+
+/* — buttons (shared geometry; ghost + primary variants) ————————— */
+.micra-datatable__btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.45rem 0.85rem;
+  color: var(--micra-fg);
+  background: none;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  transition:
+    color var(--micra-duration) var(--micra-ease),
+    background var(--micra-duration) var(--micra-ease),
+    border-color var(--micra-duration) var(--micra-ease);
+}
+
+.micra-datatable__btn:hover {
+  border-color: var(--micra-primary);
+  color: var(--micra-primary);
+}
+
+.micra-datatable__btn:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-datatable__btn--primary {
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border-color: var(--micra-primary);
+}
+
+.micra-datatable__btn--primary:hover {
+  color: var(--micra-primary-fg);
+  filter: brightness(1.05);
+}
+
+.micra-datatable__btn--danger {
+  color: var(--micra-error);
+  border-color: var(--micra-error);
+}
+
+.micra-datatable__btn--danger:hover {
+  color: var(--micra-primary-fg);
+  background: var(--micra-error);
+  border-color: var(--micra-error);
+}
+
+/* — scroll frame + table ——————————————————————————————————————— */
+.micra-datatable__scroll {
+  position: relative;
+  max-height: 28rem;
+  overflow: auto;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+}
+
+.micra-datatable__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.micra-datatable__table th,
+.micra-datatable__table td {
+  padding: 0.625rem 0.875rem;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--micra-border);
+}
+
+/* Sticky header: pins to the top of the scroll frame, with a surface fill and a
+   bottom border so the rows scroll cleanly underneath it. */
+.micra-datatable__table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--micra-surface);
+  color: var(--micra-muted);
+  font-weight: 600;
+  border-bottom: 2px solid var(--micra-border);
+}
+
+/* A sorted column header reads in the accent color. */
+.micra-datatable__table thead th[data-state='sorted'] {
+  color: var(--micra-primary);
+}
+
+/* The sort trigger fills its header cell so the whole cell is clickable. */
+.micra-datatable__sort {
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0;
+  color: inherit;
+  background: none;
+  border: 0;
+}
+
+.micra-datatable__sort:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+  border-radius: calc(var(--micra-radius) / 2);
+}
+
+/* The arrow + multi-sort priority badge. */
+.micra-datatable__sort-ind {
+  color: var(--micra-primary);
+  font-size: 0.8125rem;
+  min-width: 1.25rem;
+}
+
+/* Alignment overrides. Scoped under the table so they outrank the th/td default
+   ('th, td { text-align: left }'), which is set with the same table prefix. */
+.micra-datatable__table .micra-datatable__cell--right {
+  text-align: right;
+}
+
+.micra-datatable__table .micra-datatable__cell--center {
+  text-align: center;
+}
+
+/* Row hover + the selected-row tint. */
+.micra-datatable__table tbody tr:hover {
+  background: color-mix(in srgb, var(--micra-border) 35%, transparent);
+}
+
+/* Selected-row tint: a translucent wash of the accent, derived from the token so
+   it follows any re-theme (no hardcoded hue). */
+.micra-datatable__table tbody tr[data-state='selected'] {
+  background: color-mix(in srgb, var(--micra-primary) 12%, transparent);
+}
+
+/* — the selection checkbox (header tri-state + per-row) ————————— */
+.micra-datatable__select-col {
+  width: 1px; /* shrink to the checkbox */
+}
+
+.micra-datatable__check {
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  padding: 0;
+  background: none;
+  border: 0;
+  vertical-align: middle;
+}
+
+.micra-datatable__check:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+  border-radius: calc(var(--micra-radius) / 2);
+}
+
+/* The box: an outlined square that fills when checked or mixed, with a check or a
+   dash glyph drawn from tokens (mirrors checkbox.css — no images). */
+.micra-datatable__box {
+  position: relative;
+  display: inline-block;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 2px solid var(--micra-border);
+  border-radius: calc(var(--micra-radius) / 2.5);
+  transition:
+    background var(--micra-duration) var(--micra-ease),
+    border-color var(--micra-duration) var(--micra-ease);
+}
+
+.micra-datatable__check[data-state='checked'] .micra-datatable__box,
+.micra-datatable__check[data-state='mixed'] .micra-datatable__box {
+  background: var(--micra-primary);
+  border-color: var(--micra-primary);
+}
+
+/* Checkmark — a rotated rectangle with two visible borders. */
+.micra-datatable__check[data-state='checked'] .micra-datatable__box::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 0.28rem;
+  height: 0.52rem;
+  border: solid var(--micra-primary-fg);
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -55%) rotate(45deg);
+}
+
+/* Dash — the indeterminate "mixed" glyph: a single horizontal bar. */
+.micra-datatable__check[data-state='mixed'] .micra-datatable__box::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.55rem;
+  height: 2px;
+  background: var(--micra-primary-fg);
+  border-radius: 1px;
+  transform: translate(-50%, -50%);
+}
+
+/* — status rows (loading / empty / error) ——————————————————————— */
+.micra-datatable__status {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--micra-muted);
+}
+
+.micra-datatable__status--error {
+  color: var(--micra-error);
+}
+
+/* The table dims slightly while a server request is in flight. */
+.micra-datatable__table[aria-busy='true'] tbody {
+  opacity: 0.6;
+  transition: opacity var(--micra-duration) var(--micra-ease);
+}
+
+/* — footer pager ——————————————————————————————————————————————— */
+.micra-datatable__footer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+  color: var(--micra-muted);
+  font-size: 0.9375rem;
+}
+
+.micra-datatable__pagesize {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Drop the native button (its square corner pokes past the radius). */
+.micra-datatable__pagesize select {
+  font: inherit;
+  padding: 0.35rem 1.5rem 0.35rem 0.5rem;
+  color: var(--micra-fg);
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Caret: an SVG mask tinted with --micra-muted (shape from the SVG, colour from a
+   token — no hardcoded colour). Wraps the select. */
+.micra-datatable__select-wrap {
+  position: relative;
+  display: inline-block;
+}
+.micra-datatable__select-wrap::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0.4rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+  background-color: var(--micra-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23fff' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 8 10 12 14 8'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23fff' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 8 10 12 14 8'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.micra-datatable__pager {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.micra-datatable__page,
+.micra-datatable__pagenav {
+  font: inherit;
+  cursor: pointer;
+  min-width: 2.1rem;
+  height: 2.1rem;
+  padding: 0 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--micra-fg);
+  background: none;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  transition:
+    color var(--micra-duration) var(--micra-ease),
+    background var(--micra-duration) var(--micra-ease),
+    border-color var(--micra-duration) var(--micra-ease);
+}
+
+.micra-datatable__page:hover,
+.micra-datatable__pagenav:hover {
+  color: var(--micra-primary);
+  border-color: var(--micra-primary);
+}
+
+/* Current page — driven by aria-current, so it stays marked regardless of hover. */
+.micra-datatable__page[aria-current='page'] {
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border-color: var(--micra-primary);
+}
+
+.micra-datatable__page:focus-visible,
+.micra-datatable__pagenav:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-datatable__pagenav:disabled {
+  cursor: not-allowed;
+  color: var(--micra-muted);
+  border-color: var(--micra-border);
+}
+
+.micra-datatable__pagenav:disabled:hover {
+  color: var(--micra-muted);
+  border-color: var(--micra-border);
+}
+
+.micra-datatable__gap {
+  min-width: 2.1rem;
+  height: 2.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--micra-muted);
+  user-select: none;
+}
+
+/* Visually-hidden text for screen-reader-only labels and the live region. */
+.micra-datatable__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

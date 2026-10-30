@@ -1,0 +1,148 @@
+# Micra components — LLM context (llms-components.txt)
+
+> Ready-made components for Micra.js: primitives, advanced components, finished
+> templates, and library integrations. All MIT. This file is an **addendum** — it
+> assumes the core reference. For the core (directives, component shape, the 12 recipes, anti-patterns)
+> read llms-full.txt first:
+> https://github.com/denisfl/micra.js/blob/master/llms-full.txt
+>
+> Use this file when generating code that USES a component, RE-SKINS it via
+> tokens, COMPOSES components into a screen, or WRAPS a third-party library as a
+> Micra integration.
+
+CDN (no build step), major range so you always get the latest compatible 2.x:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+```
+
+## The model in one line
+
+Every component is two parts: **headless behavior** (`define.js` — focus
+management, keyboard, ARIA, data logic; this is the value) and a **default skin**
+(`<name>.css` — plain CSS that reads only `--micra-*` design tokens). You re-skin by
+overriding tokens, not by rewriting CSS. Plain HTML + JS + CSS, no build step.
+
+## The token contract (the whole skin system)
+
+Skins reference ONLY these custom properties. **Never hardcode a color, radius,
+shadow, or duration** — set or reuse a token. Re-skinning = overriding tokens.
+
+```
+--micra-bg --micra-surface --micra-fg --micra-muted --micra-border
+--micra-primary --micra-primary-fg --micra-ring
+--micra-success --micra-warning --micra-error
+--micra-overlay --micra-radius --micra-shadow --micra-duration --micra-ease
+```
+
+Re-skin globally:
+
+```css
+:root { --micra-primary: #0ea5e9; --micra-radius: 6px; }
+```
+
+Re-skin one instance/area — set the token on a wrapper:
+
+```css
+.my-panel { --micra-shadow: 0 1px 0 rgb(0 0 0 / 0.12); }
+```
+
+Dark mode = the same tokens with different values, applied via `[data-theme="dark"]`
+on `<html>` (or any ancestor) and `@media (prefers-color-scheme: dark)` unless
+`data-theme="light"` is set. `prefers-reduced-motion` zeroes `--micra-duration`, so
+token-driven transitions stop with no per-component code.
+
+## Using a component
+
+Load order: tokens, the component skin, Micra, then the component's `define.js`.
+Then drop in the markup from that component's README and call `Micra.start()` once.
+
+```html
+<link rel="stylesheet" href="theme/theme.css" />
+<link rel="stylesheet" href="components/datatable/datatable.css" />
+<script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+<script src="components/datatable/define.js"></script>
+<!-- …component markup… -->
+<script>Micra.start()</script>
+```
+
+Seed a component with richer data than HTML attributes allow by reaching the live
+instance — `Micra.instances()` is a read-only Map keyed by the root element:
+
+```js
+const table = Micra.instances().get(document.querySelector('[data-component="datatable"]'));
+table.state.columns = columns;   // replace top-level state (shallow proxy)
+table.state.rows = rows;
+table.on('bulk', ({ action, ids }) => { /* host handles it */ });
+```
+
+## Composing components into a screen (templates)
+
+A screen = several components assembled. They communicate over Micra's **event
+bus** — `this.emit(name, payload)` / `this.on(name, cb)` — which is global and
+auto-cleaned. They never reach into each other's `state`.
+
+**Critical:** a nested `[data-component]` is a hard scope boundary. A parent
+component never processes a child's directives, and bindings inside a child resolve
+against the child, not the parent. So:
+
+- A shell that wants a nested component's data (e.g. a summary off a board) reads it
+  via `Micra.instances().get(childEl)` and re-renders by bumping its OWN state on the
+  child's event (e.g. `this.on('move', () => this.state.tick++)`).
+- A form inside a slide-over is its own nested component; it hands data back to the
+  shell with `this.emit('save', data)`, and the shell applies it.
+
+## Wrapping a third-party library (an integration)
+
+Pattern: mount the library in `onCreate`, mirror its events into Micra `state`, tear
+the listeners down in `onDestroy` (so `Micra.autoCleanup()` can clean up on swap). A
+token skin layers over the lib's own CSS. The lib loads from a CDN. We sell the glue
++ the skin, not a fork.
+
+```js
+Micra.define('editor', {
+  state: { html: '' },
+  onCreate() {
+    this._el = this.$el.querySelector('trix-editor');
+    this._onChange = () => { this.state.html = this._el.value || ''; };
+    this._el.addEventListener('trix-change', this._onChange);
+    // Web-component libs (Trix, Swiper, Cropper) initialize on connect — BEFORE
+    // Micra.start(). If already ready, run init inline; else the listener catches it.
+    if (this._el.editor) this.state.html = this._el.value || '';
+  },
+  onDestroy() {
+    this._el.removeEventListener('trix-change', this._onChange);
+  },
+  wordCount() { return (this.state.html.replace(/<[^>]*>/g, ' ').trim().match(/\S+/g) || []).length; },
+});
+```
+
+The on-element/library listener added in `onCreate` and removed in `onDestroy` is the
+ONE sanctioned exception to "no `addEventListener` in methods."
+
+## Gotchas (what an LLM gets wrong — these are the corrections)
+
+- **ARIA state via `data-bind` must be the literal string `'true'`/`'false'`.**
+  `data-bind` on a boolean does `setAttribute(attr, '')`, which ARIA treats as
+  invalid. Write: `data-bind="aria-expanded:open ? 'true' : 'false'"`.
+- **`prop('x')` for a bare `data-x` is `''` (falsy), not `true`.** For a boolean flag
+  use `data-x="true"` or `this.prop('x', false) !== false`.
+- **`data-model` on a native checkbox does NOT sync `.checked`** (it only writes
+  `.value`). For a state-controlled toggle use a `role="switch"` BUTTON with
+  `data-bind="aria-checked:flag ? 'true' : 'false'"` + a `toggle()` method, and key
+  the CSS off `[aria-checked="true"]`.
+- **Seed a charts component via the `data-data` attribute, not a post-`Micra.start()`
+  `setData()`** — on a freshly-mounted instance the immediate `setData` may not stick.
+  (A Data Table's `table.state.rows = […]` right after `start()` IS fine.)
+- **To defer a handler until after an emitter's synchronous teardown** (e.g. a command
+  palette that emits `run` and then closes itself), use `queueMicrotask`, not
+  `requestAnimationFrame`.
+- **`data-text="fn"` renders `[native code]`** — call the method: `data-text="fn()"`.
+  Bare state fields need no parens (`data-text="count"`).
+- **Derived values are methods, not state fields.** `total() { return this.state.items.length }`,
+  never a `state.total` you keep in sync.
+- **Replace top-level state, never write nested paths.** `state.user = { ...state.user, name }`
+  or `this.set('user.name', name)` — not `state.user.name = x`.
+- **A component carrying domain data on list items** (e.g. a Kanban card with
+  `{ id, title, value, contact, company, tags }`) needs those fields to reach the card
+  template — the view layer should spread the item, not pick a fixed subset.

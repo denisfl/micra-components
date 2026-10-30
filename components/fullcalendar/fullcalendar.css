@@ -1,0 +1,432 @@
+/*
+ * components/fullcalendar/fullcalendar.css — default skin for the Full Calendar.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. State lives in attributes set
+ * via data-bind (data-state, aria-pressed, aria-current), so both this skin and
+ * Tailwind's native variants can target it.
+ *
+ * Two layouts share one root:
+ *   MONTH — a 7-column CSS grid; each cell stacks its date label and event chips.
+ *   WEEK  — a time grid: a left hour rail plus seven day columns. The columns paint
+ *           an hour-line background so absolutely-positioned event blocks line up;
+ *           block placement (top/height/left/width) comes from the inline style the
+ *           component sets, so this file only styles the chrome.
+ */
+
+micra-fullcalendar {
+  display: block;
+}
+
+
+.micra-fullcalendar {
+  width: 100%;
+  color: var(--micra-fg);
+  font: inherit;
+}
+
+/* — toolbar: nav, title, view toggle, export ——————————————————— */
+.micra-fullcalendar__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.micra-fullcalendar__nav-group {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+.micra-fullcalendar__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  min-width: 12rem;
+}
+
+.micra-fullcalendar__spacer {
+  flex: 1 1 auto;
+}
+
+.micra-fullcalendar__btn {
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  color: var(--micra-fg);
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  transition: background var(--micra-duration) var(--micra-ease);
+}
+
+.micra-fullcalendar__btn:hover {
+  background: var(--micra-border);
+}
+
+.micra-fullcalendar__btn:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-fullcalendar__nav {
+  width: 2.25rem;
+  padding-inline: 0;
+}
+
+/* — view toggle (segmented Month / Week) ———————————————————————— */
+.micra-fullcalendar__toggle {
+  display: inline-flex;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  overflow: hidden;
+}
+
+.micra-fullcalendar__toggle-btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.45rem 0.85rem;
+  color: var(--micra-fg);
+  background: var(--micra-surface);
+  border: 0;
+  transition: background var(--micra-duration) var(--micra-ease);
+}
+
+.micra-fullcalendar__toggle-btn + .micra-fullcalendar__toggle-btn {
+  border-left: 1px solid var(--micra-border);
+}
+
+.micra-fullcalendar__toggle-btn:hover {
+  background: var(--micra-border);
+}
+
+.micra-fullcalendar__toggle-btn:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: -2px;
+}
+
+/* The pressed view fills with the accent (aria-pressed is the source of truth). */
+.micra-fullcalendar__toggle-btn[aria-pressed='true'] {
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+}
+
+.micra-fullcalendar__toggle-btn[aria-pressed='true']:hover {
+  background: var(--micra-primary);
+}
+
+/* — shared frame ———————————————————————————————————————————————— */
+.micra-fullcalendar__view {
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  overflow: hidden;
+  background: var(--micra-surface);
+}
+
+/* ============================================================= MONTH */
+.micra-fullcalendar__weekday-row,
+.micra-fullcalendar__week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.micra-fullcalendar__weekday {
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--micra-muted);
+  border-bottom: 1px solid var(--micra-border);
+}
+
+.micra-fullcalendar__day {
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  /* Grid items default to min-width:auto, so a no-wrap chip would force the
+     column wider than its 1fr share. min-width:0 lets the cell hold its track
+     width and the chip title ellipsis instead. */
+  min-width: 0;
+  min-height: 6.5rem;
+  padding: 0.35rem;
+  color: var(--micra-fg);
+  background: var(--micra-surface);
+  border: 0;
+  border-top: 1px solid var(--micra-border);
+  border-left: 1px solid var(--micra-border);
+  transition: background var(--micra-duration) var(--micra-ease);
+}
+
+/* The first column of each week has no left border doubling. */
+.micra-fullcalendar__week > .micra-fullcalendar__day:first-child {
+  border-left: 0;
+}
+
+.micra-fullcalendar__day:hover {
+  background: color-mix(in srgb, var(--micra-primary) 6%, var(--micra-surface));
+}
+
+.micra-fullcalendar__day:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: -2px;
+}
+
+/* Out-of-month padding days read muted. */
+.micra-fullcalendar__day[data-state='outside'] {
+  color: var(--micra-muted);
+  background: color-mix(in srgb, var(--micra-border) 25%, var(--micra-surface));
+}
+
+.micra-fullcalendar__daynum {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  min-width: 1.6rem;
+  text-align: center;
+  border-radius: 999px;
+}
+
+/* Today's date number gets the accent pill. */
+.micra-fullcalendar__day[data-state='today'] .micra-fullcalendar__daynum {
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+}
+
+/* — month event chips ——————————————————————————————————————————— */
+.micra-fullcalendar__chips {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.micra-fullcalendar__chip {
+  font: inherit;
+  font-size: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.1rem 0.35rem;
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border: 0;
+  border-radius: calc(var(--micra-radius) / 2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* All-day chips read as a quieter, outlined token. */
+.micra-fullcalendar__chip[data-state='allday'] {
+  color: var(--micra-fg);
+  background: color-mix(in srgb, var(--micra-primary) 14%, var(--micra-surface));
+  border: 1px solid color-mix(in srgb, var(--micra-primary) 35%, transparent);
+}
+
+/* A conflicting chip is tinted with the warning accent. */
+.micra-fullcalendar__chip[data-state='conflict'] {
+  background: var(--micra-warning);
+  color: var(--micra-primary-fg);
+}
+
+.micra-fullcalendar__chip:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 1px;
+}
+
+.micra-fullcalendar__chip-time {
+  flex: none; /* keep the time intact; the title yields space */
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.micra-fullcalendar__chip-title {
+  flex: 1;
+  min-width: 0; /* allow the title to shrink so ellipsis kicks in */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.micra-fullcalendar__more {
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: left;
+  cursor: default;
+  color: var(--micra-muted);
+  background: none;
+  border: 0;
+  padding: 0 0.35rem;
+}
+
+/* ============================================================== WEEK */
+.micra-fullcalendar__week-head,
+.micra-fullcalendar__week-body {
+  display: grid;
+  /* a fixed hour rail + seven equal day columns */
+  grid-template-columns: 3.5rem repeat(7, 1fr);
+}
+
+.micra-fullcalendar__week-head {
+  border-bottom: 1px solid var(--micra-border);
+}
+
+.micra-fullcalendar__rail-spacer {
+  border-right: 1px solid var(--micra-border);
+}
+
+.micra-fullcalendar__col-head {
+  padding: 0.4rem;
+  text-align: center;
+  border-left: 1px solid var(--micra-border);
+}
+
+.micra-fullcalendar__col-name {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--micra-muted);
+}
+
+.micra-fullcalendar__col-num {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.8;
+  display: inline-block;
+  min-width: 1.9rem;
+  border-radius: 999px;
+}
+
+.micra-fullcalendar__col-head[data-state='today'] .micra-fullcalendar__col-num {
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+}
+
+/* All-day band: a row above the time grid, one cell per column. */
+.micra-fullcalendar__allday-row {
+  display: grid;
+  grid-template-columns: 3.5rem repeat(7, 1fr);
+  border-bottom: 1px solid var(--micra-border);
+  min-height: 1.75rem;
+}
+
+.micra-fullcalendar__allday-label {
+  font-size: 0.68rem;
+  color: var(--micra-muted);
+  padding: 0.25rem;
+  text-align: right;
+  border-right: 1px solid var(--micra-border);
+}
+
+.micra-fullcalendar__allday-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.15rem;
+  border-left: 1px solid var(--micra-border);
+}
+
+/* — week body: hour rail + positioned columns ———————————————————— */
+.micra-fullcalendar__week-body {
+  position: relative;
+  max-height: 32rem;
+  overflow-y: auto;
+}
+
+.micra-fullcalendar__hours {
+  /* the rail sits in the first grid column */
+}
+
+.micra-fullcalendar__hour {
+  height: 3rem;
+  font-size: 0.7rem;
+  color: var(--micra-muted);
+  text-align: right;
+  padding-right: 0.35rem;
+  border-right: 1px solid var(--micra-border);
+  box-sizing: border-box;
+}
+
+/* Each day column is a positioning context; events are placed by % top/height. */
+.micra-fullcalendar__col {
+  position: relative;
+  border-left: 1px solid var(--micra-border);
+  /* hour lines: one repeating gradient stop per hour (matches .__hour height) */
+  background-image: linear-gradient(
+    to bottom,
+    var(--micra-border) 0,
+    var(--micra-border) 1px,
+    transparent 1px
+  );
+  background-size: 100% 3rem;
+}
+
+/* A transparent click layer so empty-slot clicks reach the column handler even
+   where no event sits. Sized to the band; the column's @click reads the hour. */
+.micra-fullcalendar__col-slots {
+  position: absolute;
+  inset: 0;
+}
+
+.micra-fullcalendar__event {
+  position: absolute;
+  box-sizing: border-box;
+  overflow: hidden;
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: left;
+  cursor: pointer;
+  padding: 0.15rem 0.35rem;
+  margin: 0 1px;
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border: 1px solid color-mix(in srgb, black 12%, var(--micra-primary));
+  border-radius: calc(var(--micra-radius) / 2);
+}
+
+.micra-fullcalendar__event:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 1px;
+}
+
+/* Overlapping (conflicting) blocks switch to the warning accent. */
+.micra-fullcalendar__event[data-state='conflict'] {
+  background: var(--micra-warning);
+  border-color: color-mix(in srgb, black 12%, var(--micra-warning));
+  z-index: 2;
+}
+
+.micra-fullcalendar__event-time {
+  display: block;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+}
+
+.micra-fullcalendar__event-title {
+  display: block;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Visually-hidden helper for screen-reader-only labels. */
+.micra-fullcalendar__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

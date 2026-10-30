@@ -1,0 +1,54 @@
+/*
+ * theme/theme.tailwind.css — optional Tailwind v4 bridge for Micra components.
+ *
+ * Bonus, never required. Micra components are styled by plain CSS that reads
+ * the --micra-* tokens from theme.css; Tailwind is only one of several stacks they
+ * support. This file maps those same tokens into Tailwind v4's @theme so you can
+ * style with token-backed utilities (bg-micra-surface, text-micra-fg,
+ * border-micra-border, ring-micra-ring, rounded-micra, shadow-micra, ease-micra)
+ * instead of — or alongside — the default skins.
+ *
+ * Usage (Tailwind v4): load theme.css first (it defines the runtime tokens and
+ * dark-mode swap), then import Tailwind and this file in your entry CSS:
+ *
+ *   @import "tailwindcss";
+ *   @import "./theme/theme.tailwind.css";
+ *   // theme.css is loaded separately (a plain <link> or @import) so the --micra-*
+ *   // variables exist at runtime for the utilities below to resolve.
+ *
+ * Each utility resolves to var(--micra-*), so dark mode ([data-theme="dark"]) and
+ * token overrides keep working through the utilities — they are NOT frozen to the
+ * light values. Caveat: because the colors are var() references, Tailwind's alpha
+ * modifiers (e.g. bg-micra-primary/50) can't inject opacity; use a dedicated token
+ * or an explicit rgb()/color-mix() if you need translucency.
+ *
+ * The Micra components already set data-state="open|closed|active|checked|…" and
+ * string aria-* attributes, so Tailwind's native variants apply with no extra
+ * config: data-[state=open]:opacity-100, aria-[selected=true]:font-semibold,
+ * aria-expanded:rotate-180, etc.
+ */
+
+@theme {
+  /* Colors → bg-*, text-*, border-*, ring-*, etc. */
+  --color-micra-bg: var(--micra-bg);
+  --color-micra-surface: var(--micra-surface);
+  --color-micra-fg: var(--micra-fg);
+  --color-micra-muted: var(--micra-muted);
+  --color-micra-border: var(--micra-border);
+  --color-micra-primary: var(--micra-primary);
+  --color-micra-primary-fg: var(--micra-primary-fg);
+  --color-micra-ring: var(--micra-ring);
+  --color-micra-success: var(--micra-success);
+  --color-micra-warning: var(--micra-warning);
+  --color-micra-error: var(--micra-error);
+  --color-micra-overlay: var(--micra-overlay);
+
+  /* Radius → rounded-micra */
+  --radius-micra: var(--micra-radius);
+
+  /* Shadow → shadow-micra */
+  --shadow-micra: var(--micra-shadow);
+
+  /* Easing → ease-micra (pair with the duration token used directly in CSS) */
+  --ease-micra: var(--micra-ease);
+}

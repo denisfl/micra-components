@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Chart.js integration</title>
+
+    <!-- Tokens, then the card skin. Chart colors are JS (read from tokens). -->
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./chartjs.css" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem 1.5rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-wrap {
+        max-width: 48rem;
+        margin: 0 auto;
+      }
+      .demo-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.5rem 0.9rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-h1 {
+        font-size: 1.4rem;
+        margin: 0 0 0.25rem;
+      }
+      .demo-sub {
+        margin: 0 0 1.75rem;
+        color: var(--micra-muted);
+      }
+      .demo-note {
+        color: var(--micra-muted);
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="demo-wrap">
+      <div class="demo-bar">
+        <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+        <span class="demo-note">Chart.js is MIT — loaded from a CDN. The wrapper is the Micra glue + the theming.</span>
+      </div>
+
+      <h1 class="demo-h1">Chart.js, reactively bound and theme-aware</h1>
+      <p class="demo-sub">
+        The escape hatch beyond Micra's native SVG Charts: a real <strong>time x-axis</strong> (Date values),
+        <strong>drag-to-zoom + wheel/pan</strong>, and a <strong>scatter</strong> overlay. Chart.js has no theme
+        awareness — the wrapper reads your <code>--micra-*</code> tokens and re-themes the canvas live on the toggle above.
+      </p>
+
+      <!-- The wrapper. data-kind chooses the primary dataset's initial type. -->
+      <micra-chartjs data-kind="line" class="micra-chartcard">
+        <div class="micra-chart-bar">
+          <!-- Line / bar switch — active state from Micra via data-bind. -->
+          <div class="micra-seg" role="group" aria-label="Chart type">
+            <button
+              class="micra-seg__btn"
+              type="button"
+              @click="toggleLine"
+              data-bind="data-active:kind === 'line' ? 'true' : 'false'"
+            >
+              Line
+            </button>
+            <button
+              class="micra-seg__btn"
+              type="button"
+              @click="toggleBar"
+              data-bind="data-active:kind === 'bar' ? 'true' : 'false'"
+            >
+              Bar
+            </button>
+          </div>
+
+          <button class="micra-chart-btn" type="button" @click="toggleScatter">
+            <span data-text="showScatter ? 'Hide anomalies' : 'Show anomalies'"></span>
+          </button>
+
+          <span class="micra-chart-bar__spacer"></span>
+
+          <button class="micra-chart-btn" type="button" @click="resetZoom" data-bind="disabled:!isZoomed()">
+            Reset zoom
+          </button>
+        </div>
+
+        <!-- Chart.js needs this sized, position:relative parent (see chartjs.css). -->
+        <div class="micra-chart">
+          <canvas data-ref="canvas" aria-label="Sessions over time with anomaly markers" role="img"></canvas>
+        </div>
+
+        <div class="micra-chart-readout">
+          <span data-text="pointCount() + ' points plotted'"></span>
+          <span>·</span>
+          <span data-text="kindLabel() + ' chart'"></span>
+          <span class="micra-chart-bar__spacer"></span>
+          <span
+            class="micra-chart-readout__badge"
+            data-text="isZoomed() ? 'Zoomed in' : 'Full range'"
+            data-bind="data-zoomed:isZoomed() ? 'true' : 'false'"
+          ></span>
+        </div>
+      </micra-chartjs>
+
+      <p class="demo-note" style="margin-top: 1.5rem">
+        Drag across the chart to zoom, scroll to zoom, drag to pan when zoomed. Native Micra Charts cover stacked,
+        legend-toggle, crosshair tooltips and dual-axis — this is for the time axis, zoom/pan and scatter they don't do.
+      </p>
+    </div>
+
+    <!--
+      Load order matters: Chart.js first, THEN the time adapter (self-registers)
+      and the zoom plugin (we register it), THEN Micra and the wrapper, so the
+      Chart global and plugins exist before Micra.start() builds the chart.
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2/dist/chartjs-plugin-zoom.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script>
+      // Register the zoom plugin. The UMD build exposes the plugin as a global;
+      // the name has varied across builds, so resolve it defensively. The
+      // date-fns adapter self-registers, so it needs no Chart.register() call.
+      (function registerZoom() {
+        var zoom =
+          window.ChartZoom ||
+          window['chartjs-plugin-zoom'] ||
+          window.chartjsPluginZoom;
+        if (zoom && window.Chart) Chart.register(zoom);
+      })();
+
+      // The host owns the data. The wrapper calls window.chartjsSeries(root) in
+      // onCreate to fetch the series for that chart — so one component, any data.
+      window.chartjsSeries = function () {
+        var day = 24 * 60 * 60 * 1000;
+        var start = Date.UTC(2026, 0, 1);
+        var time = [];
+        var scatter = [];
+        var v = 120;
+        for (var i = 0; i < 120; i++) {
+          // A noisy upward walk for the line/bar series.
+          v += Math.round((Math.random() - 0.45) * 18);
+          if (v < 20) v = 20;
+          var t = start + i * day;
+          time.push({ x: t, y: v });
+          // Sparse anomaly points for the scatter overlay.
+          if (Math.random() < 0.12) {
+            scatter.push({ x: t, y: v + Math.round(Math.random() * 60 + 30) });
+          }
+        }
+        return { time: time, scatter: scatter };
+      };
+    </script>
+    <script src="./define.js"></script>
+    <script>
+      Micra.start();
+
+      var root = document.querySelector('[data-component="chartjs"]');
+      var inst = Micra.instances().get(root);
+
+      // Demo chrome — light/dark switch. Chart.js has no theme awareness, so we
+      // flip the token theme AND tell the wrapper to re-read tokens + update().
+      document.getElementById('theme-toggle').addEventListener('click', function () {
+        var el = document.documentElement;
+        el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+        if (inst) inst.applyTheme();
+      });
+    </script>
+  </body>
+</html>

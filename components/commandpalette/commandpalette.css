@@ -1,0 +1,164 @@
+/*
+ * components/commandpalette/commandpalette.css — default skin for the Command palette.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The overlay is always in the
+ * DOM and shown/hidden via [data-state] (not data-show), so it fades cleanly and
+ * never flashes before Micra mounts. The active option is marked with [data-state].
+ */
+
+micra-commandpalette {
+  display: block;
+}
+
+
+.micra-cmdk {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  align-items: start;
+  justify-items: center;
+  padding: 12vh 1rem 1rem;
+  background: var(--micra-overlay);
+
+  /* hidden + non-interactive until [data-state="open"] */
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--micra-duration) var(--micra-ease),
+    visibility var(--micra-duration) var(--micra-ease);
+}
+
+.micra-cmdk[data-state='open'] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.micra-cmdk__panel {
+  display: flex;
+  flex-direction: column;
+  width: min(36rem, 100%);
+  max-height: 70vh;
+  overflow: hidden;
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  box-shadow: var(--micra-shadow);
+
+  transform: translateY(-8px) scale(0.98);
+  transition: transform var(--micra-duration) var(--micra-ease);
+}
+
+.micra-cmdk[data-state='open'] .micra-cmdk__panel {
+  transform: none;
+}
+
+.micra-cmdk__input {
+  font: inherit;
+  font-size: 1.05rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1rem 1.1rem;
+  color: var(--micra-fg);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--micra-border);
+  border-radius: 0;
+}
+
+.micra-cmdk__input::placeholder {
+  color: var(--micra-muted);
+}
+
+.micra-cmdk__input:focus {
+  outline: none;
+}
+
+.micra-cmdk__listbox {
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  overflow: auto;
+  flex: 1 1 auto;
+}
+
+.micra-cmdk__group {
+  padding: 0.6rem 0.65rem 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--micra-muted);
+}
+
+.micra-cmdk__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: var(--micra-radius);
+  cursor: pointer;
+}
+
+.micra-cmdk__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.micra-cmdk__hint {
+  flex: none;
+  font-size: 0.8rem;
+  color: var(--micra-muted);
+  border: 1px solid var(--micra-border);
+  border-radius: calc(var(--micra-radius) - 4px);
+  padding: 0.1rem 0.4rem;
+}
+
+/* Active = keyboard/pointer highlight. */
+.micra-cmdk__option[data-state='active'] {
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+}
+
+.micra-cmdk__option[data-state='active'] .micra-cmdk__hint {
+  color: var(--micra-primary-fg);
+  border-color: color-mix(in srgb, var(--micra-primary-fg) 45%, transparent);
+}
+
+.micra-cmdk__empty {
+  padding: 1.25rem 0.65rem;
+  text-align: center;
+  color: var(--micra-muted);
+}
+
+/* Minimal token-driven button used by the demo trigger. */
+.micra-btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.55rem 1rem;
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border: 0;
+  border-radius: var(--micra-radius);
+}
+
+.micra-btn:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+/* Keyboard-shortcut chip — also reused for the trigger's "Cmd/Ctrl+K" hint. */
+.micra-kbd {
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--micra-muted);
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: calc(var(--micra-radius) - 4px);
+  padding: 0.1rem 0.4rem;
+}

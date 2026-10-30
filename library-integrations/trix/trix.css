@@ -1,0 +1,122 @@
+/*
+ * trix.css — Micra token skin for Trix.
+ *
+ * Loads AFTER Trix's own dist/trix.css and re-skins it with --micra-* tokens, so
+ * the editor matches your theme (and stays legible in dark mode, which Trix's
+ * default stylesheet does not handle). References only tokens — recolor by
+ * overriding them, or edit this file; you own it.
+ */
+
+micra-trix {
+  display: block;
+}
+
+
+/* ── Toolbar ────────────────────────────────────────────────────────────────── */
+trix-toolbar .trix-button-row {
+  gap: 0.4rem;
+}
+trix-toolbar .trix-button-group {
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+  overflow: hidden;
+}
+trix-toolbar .trix-button {
+  border-bottom: 0;
+  background: transparent;
+  color: var(--micra-fg);
+}
+trix-toolbar .trix-button:not(:first-child) {
+  border-left: 1px solid var(--micra-border);
+}
+trix-toolbar .trix-button:hover {
+  background: color-mix(in srgb, var(--micra-fg) 8%, transparent);
+}
+trix-toolbar .trix-button.trix-active {
+  background: color-mix(in srgb, var(--micra-primary) 14%, transparent);
+  color: var(--micra-primary);
+}
+trix-toolbar .trix-button:disabled {
+  opacity: 0.4;
+}
+/* Trix paints its button glyphs as fixed dark background-images; in dark mode
+   invert them so they stay visible on the dark toolbar. */
+[data-theme='dark'] trix-toolbar .trix-button::before,
+[data-theme='dark'] trix-toolbar .trix-button.trix-active::before {
+  filter: invert(1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) trix-toolbar .trix-button::before {
+    filter: invert(1);
+  }
+}
+
+/* The link / file dialogs Trix pops over the toolbar. */
+trix-toolbar .trix-dialog {
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  box-shadow: var(--micra-shadow);
+  color: var(--micra-fg);
+}
+trix-toolbar .trix-input--dialog {
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-bg);
+  color: var(--micra-fg);
+  padding: 0.4rem 0.55rem;
+}
+trix-toolbar .trix-button--dialog {
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+}
+
+/* ── Editor surface ─────────────────────────────────────────────────────────── */
+trix-editor {
+  min-height: 11rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-bg);
+  color: var(--micra-fg);
+}
+trix-editor:focus {
+  outline: none;
+  border-color: var(--micra-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-ring) 25%, transparent);
+}
+trix-editor:empty:not(:focus)::before {
+  color: var(--micra-muted);
+}
+
+/* ── Content typography (shared by the editor and any .trix-content preview) ──── */
+.trix-content {
+  color: var(--micra-fg);
+  line-height: 1.6;
+}
+.trix-content a {
+  color: var(--micra-primary);
+}
+.trix-content h1 {
+  font-size: 1.25em;
+  font-weight: 700;
+  margin: 0 0 0.5em;
+}
+.trix-content blockquote {
+  border-left: 3px solid var(--micra-border);
+  color: var(--micra-muted);
+  margin: 0.5em 0;
+  padding-left: 0.9em;
+}
+.trix-content pre {
+  background: color-mix(in srgb, var(--micra-fg) 6%, transparent);
+  border-radius: var(--micra-radius);
+  padding: 0.7em 0.9em;
+  font-size: 0.9em;
+}
+.trix-content figure.attachment {
+  border-radius: var(--micra-radius);
+}

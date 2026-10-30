@@ -1,0 +1,91 @@
+/*
+ * components/popover/popover.css — default skin for the Popover.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The panel is always in the DOM
+ * and shown/hidden via [data-state], so it fades in and out cleanly and stays
+ * non-interactive when closed.
+ */
+
+micra-popover {
+  display: block;
+}
+
+
+.micra-popover {
+  position: relative;
+  display: inline-block;
+}
+
+.micra-popover__trigger {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.55rem 1rem;
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border: 0;
+  border-radius: var(--micra-radius);
+}
+
+.micra-popover__trigger:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-popover__panel {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: 18rem;
+  max-height: 22rem;
+  overflow: auto;
+  padding: 1rem;
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  box-shadow: var(--micra-shadow);
+
+  /* hidden + non-interactive until [data-state="open"] */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px) scale(0.98);
+  transform-origin: top left;
+  transition:
+    opacity var(--micra-duration) var(--micra-ease),
+    visibility var(--micra-duration) var(--micra-ease),
+    transform var(--micra-duration) var(--micra-ease);
+}
+
+.micra-popover__panel[data-state='open'] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+.micra-popover__panel:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-popover__title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+/* Minimal token-driven button used by the demo actions (e.g. Apply). */
+.micra-btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.55rem 1rem;
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border: 0;
+  border-radius: var(--micra-radius);
+}
+
+.micra-btn:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}

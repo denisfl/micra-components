@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Pricing</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./pricing.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+    </div>
+
+    <!-- The catalog (plans / add-ons / yearly discount / currency) is seeded as a
+         JSON prop on the root; the selection and all the pricing math are owned by
+         the component. -->
+    <micra-pricing class="micra-pricing">
+      <div class="micra-pricing__config">
+        <!-- Plans: a radiogroup of cards. Each card is role=radio with a string
+             aria-checked; click or Enter/Space selects it. -->
+        <section>
+          <h2 class="micra-pricing__section-title" id="plans-label">Plan</h2>
+          <div class="micra-pricing__plans" role="radiogroup" aria-labelledby="plans-label">
+            <template data-each="planList()" data-key="id">
+              <button
+                type="button"
+                class="micra-pricing__plan"
+                role="radio"
+                data-bind="aria-checked:planSelected(item.id) ? 'true' : 'false'"
+                @click="selectPlan(item.id)"
+                @keydown.enter.prevent="selectPlan(item.id)"
+                @keydown.space.prevent="selectPlan(item.id)"
+              >
+                <span class="micra-pricing__plan-name" data-text="item.name"></span>
+                <span class="micra-pricing__plan-blurb" data-text="item.blurb || ''"></span>
+              </button>
+            </template>
+          </div>
+        </section>
+
+        <!-- Seats: a − / number / + stepper. The number input reads @input (clamped
+             in setSeats) and normalises on blur — data-model would fight a focused
+             field on re-render. -->
+        <section>
+          <h2 class="micra-pricing__section-title" id="seats-label">Seats</h2>
+          <div class="micra-pricing__stepper">
+            <button
+              type="button"
+              class="micra-pricing__step-btn"
+              aria-label="Remove a seat"
+              @click="decSeats"
+            >
+              &minus;
+            </button>
+            <input
+              class="micra-pricing__step-input"
+              type="number"
+              min="1"
+              inputmode="numeric"
+              aria-labelledby="seats-label"
+              data-bind="value:seats"
+              @input="setSeats($event)"
+              @blur="normalizeSeats($event)"
+            />
+            <button
+              type="button"
+              class="micra-pricing__step-btn"
+              aria-label="Add a seat"
+              @click="incSeats"
+            >
+              +
+            </button>
+          </div>
+        </section>
+
+        <!-- Add-ons: each row is either a toggle (role=checkbox, string aria-checked)
+             or a qty stepper (its own − / value / +). -->
+        <section>
+          <h2 class="micra-pricing__section-title">Add-ons</h2>
+          <ul class="micra-pricing__addons">
+            <template data-each="addonList()" data-key="id">
+              <li class="micra-pricing__addon">
+                <div class="micra-pricing__addon-main">
+                  <span class="micra-pricing__addon-name" data-text="item.name"></span>
+                  <span class="micra-pricing__addon-price" data-text="addonPriceLabel(item)"></span>
+                </div>
+
+                <!-- Selected line amount (0 when off). -->
+                <span class="micra-pricing__addon-amount" data-text="addonRowAmount(item.id)"></span>
+
+                <!-- Toggle add-on. -->
+                <button
+                  type="button"
+                  class="micra-pricing__toggle"
+                  role="checkbox"
+                  data-if="isToggleAddon(item)"
+                  data-bind="aria-checked:addonOn(item.id) ? 'true' : 'false', aria-label:item.name"
+                  @click="toggleAddon(item.id)"
+                ></button>
+
+                <!-- Quantity add-on. -->
+                <span class="micra-pricing__stepper" data-if="isQtyAddon(item)">
+                  <button
+                    type="button"
+                    class="micra-pricing__step-btn"
+                    data-bind="aria-label:'Less ' + item.name"
+                    @click="decAddon(item.id)"
+                  >
+                    &minus;
+                  </button>
+                  <input
+                    class="micra-pricing__step-input"
+                    type="text"
+                    readonly
+                    tabindex="-1"
+                    data-bind="value:addonQty(item.id), aria-label:item.name + ' quantity'"
+                  />
+                  <button
+                    type="button"
+                    class="micra-pricing__step-btn"
+                    data-bind="aria-label:'More ' + item.name"
+                    @click="incAddon(item.id)"
+                  >
+                    +
+                  </button>
+                </span>
+              </li>
+            </template>
+          </ul>
+        </section>
+
+        <!-- Billing: two role=radio buttons in a role=switch group, string
+             aria-pressed. The yearly badge shows the discount. -->
+        <section>
+          <h2 class="micra-pricing__section-title" id="billing-label">Billing</h2>
+          <div class="micra-pricing__billing">
+            <div class="micra-pricing__segment" role="radiogroup" aria-labelledby="billing-label">
+              <button
+                type="button"
+                class="micra-pricing__segment-btn"
+                role="radio"
+                data-bind="aria-pressed:!isYearly() ? 'true' : 'false', aria-checked:!isYearly() ? 'true' : 'false'"
+                @click="setBilling('monthly')"
+              >
+                Monthly
+              </button>
+              <button
+                type="button"
+                class="micra-pricing__segment-btn"
+                role="radio"
+                data-bind="aria-pressed:isYearly() ? 'true' : 'false', aria-checked:isYearly() ? 'true' : 'false'"
+                @click="setBilling('yearly')"
+              >
+                Yearly
+              </button>
+            </div>
+            <span class="micra-pricing__badge" data-text="discountBadge()"></span>
+          </div>
+        </section>
+      </div>
+
+      <!-- The live quote. Line items come from lineItems(); the total lives in a
+           polite live region so it is announced as the selection changes. -->
+      <aside class="micra-pricing__quote" aria-label="Quote summary">
+        <h2 class="micra-pricing__quote-head">
+          Your quote
+          <span data-text="planName()"></span>
+        </h2>
+
+        <ul class="micra-pricing__lines">
+          <template data-each="lineItems()" data-key="id">
+            <li class="micra-pricing__line">
+              <span class="micra-pricing__line-label" data-text="item.label"></span>
+              <span class="micra-pricing__line-amount" data-text="money(item.amount)"></span>
+            </li>
+          </template>
+        </ul>
+
+        <div class="micra-pricing__row">
+          <span>Subtotal</span>
+          <span data-text="subtotalText()"></span>
+        </div>
+
+        <div class="micra-pricing__row micra-pricing__row--discount" data-if="hasDiscount()">
+          <span data-text="discountBadge()"></span>
+          <span data-text="'-' + discountText()"></span>
+        </div>
+
+        <!-- Total in a polite live region. -->
+        <div class="micra-pricing__total" aria-live="polite">
+          <span class="micra-pricing__total-label">Total</span>
+          <span>
+            <span class="micra-pricing__total-amount" data-text="totalText()"></span>
+            <span class="micra-pricing__period" data-text="periodLabel()"></span>
+          </span>
+        </div>
+
+        <div class="micra-pricing__actions">
+          <button type="button" class="micra-pricing__btn" @click="requestQuote">
+            Request quote
+          </button>
+          <button type="button" class="micra-pricing__btn micra-pricing__btn--ghost" @click="printQuote">
+            Print / Save PDF
+          </button>
+        </div>
+
+        <!-- Optional: email the quote. Validated before it emits. -->
+        <div class="micra-pricing__email">
+          <div class="micra-pricing__email-row">
+            <input
+              class="micra-pricing__email-input"
+              type="email"
+              placeholder="you@company.com"
+              aria-label="Email the quote"
+              data-bind="aria-invalid:hasEmailError() ? 'true' : 'false'"
+              @input="onEmail($event)"
+            />
+            <button type="button" class="micra-pricing__btn micra-pricing__btn--ghost" @click="emailQuote">
+              Email me
+            </button>
+          </div>
+          <p class="micra-pricing__email-error" data-text="emailErrorText()"></p>
+        </div>
+      </aside>
+    </micra-pricing>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // The catalog. Seeded as a JSON attribute on the root; the component parses
+      // it in onCreate. Three plans (base + per-seat), a flat toggle add-on, and a
+      // per-quantity add-on; 20% off on yearly billing.
+      const config = {
+        plans: [
+          { id: 'starter', name: 'Starter', base: 0, perSeat: 8, blurb: 'For small teams' },
+          { id: 'pro', name: 'Pro', base: 49, perSeat: 12, blurb: 'Growing teams' },
+          { id: 'business', name: 'Business', base: 199, perSeat: 16, blurb: 'Scale + support' },
+        ],
+        addons: [
+          { id: 'priority', name: 'Priority support', price: 29, type: 'toggle' },
+          { id: 'storage', name: 'Extra storage', price: 2, type: 'qty', unit: 'GB' },
+        ],
+        yearlyDiscount: 0.2,
+        currency: 'USD',
+        locale: 'en-US',
+      };
+
+      // Seed the catalog as a JSON attribute before start() mounts the component.
+      const el = document.querySelector('[data-component="pricing"]');
+      el.setAttribute('data-config', JSON.stringify(config));
+      el.setAttribute('data-plan', 'pro');
+      el.setAttribute('data-seats', '3');
+
+      Micra.start();
+
+      // Wire the public event. The host owns turning the quote into a real PDF or
+      // an email; the component only hands back the selection + computed figures.
+      const pricing = Micra.instances().get(el);
+      if (pricing) {
+        pricing.on('quote', (quote) => {
+          console.log('[pricing] quote:', quote);
+        });
+      }
+
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

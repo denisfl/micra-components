@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Modal</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./modal.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+    </div>
+
+    <micra-modal @keydown.escape.window="close" @keydown.tab.window="trapTab" data-title="Delete project?">
+      <button class="micra-btn" @click="open">Delete project…</button>
+
+      <div
+        class="micra-modal"
+        data-bind="data-state:isOpen ? 'open' : 'closed'"
+        @click.self="close"
+      >
+        <div
+          class="micra-modal__dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+          data-ref="dialog"
+          tabindex="-1"
+        >
+          <header class="micra-modal__head">
+            <h2 id="modal-title" data-text="title"></h2>
+            <button class="micra-modal__close" @click="close" aria-label="Close">&times;</button>
+          </header>
+          <div class="micra-modal__body">
+            <p>This permanently deletes the project and all of its data.</p>
+            <button class="micra-btn" @click="close">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </micra-modal>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

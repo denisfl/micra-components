@@ -1,0 +1,89 @@
+/*
+ * components/combobox/combobox.css — default skin for the Combobox.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The listbox is shown/hidden
+ * via data-show (display), and the active option is marked with [data-state].
+ */
+
+micra-combobox {
+  display: block;
+}
+
+
+.micra-combobox {
+  position: relative;
+  display: inline-block;
+  width: min(22rem, 100%);
+}
+
+.micra-combobox__input {
+  font: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.75rem;
+  color: var(--micra-fg);
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+}
+
+.micra-combobox__input:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-combobox__listbox {
+  position: absolute;
+  z-index: 40;
+  left: 0;
+  right: 0;
+  margin: 0.35rem 0 0;
+  padding: 0.35rem;
+  list-style: none;
+  max-height: 16rem;
+  overflow: auto;
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  box-shadow: var(--micra-shadow);
+
+  /* hidden + non-interactive until [data-state="open"]. Default-hidden in CSS
+     (not via data-show) so the list never flashes before Micra mounts. */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px) scale(0.98);
+  transform-origin: top center;
+  transition:
+    opacity var(--micra-duration) var(--micra-ease),
+    visibility var(--micra-duration) var(--micra-ease),
+    transform var(--micra-duration) var(--micra-ease);
+}
+
+.micra-combobox__listbox[data-state='open'] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+.micra-combobox__option {
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--micra-radius);
+  cursor: pointer;
+}
+
+/* Active = keyboard/pointer highlight. Selected = the committed choice. */
+.micra-combobox__option[data-state='active'] {
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+}
+
+.micra-combobox__option[aria-selected='true'] {
+  font-weight: 600;
+}
+
+.micra-combobox__empty {
+  padding: 0.5rem 0.65rem;
+  color: var(--micra-muted);
+}

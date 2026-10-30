@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Cropper.js integration</title>
+
+    <!-- Tokens, then the Micra token skin. Cropper's web components carry their
+         own internal styles (shadow DOM); cropper.css maps tokens onto the parts
+         it exposes. -->
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./cropper.css" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem 1.5rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-wrap {
+        max-width: 44rem;
+        margin: 0 auto;
+      }
+      .demo-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.5rem 0.9rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-h1 {
+        font-size: 1.4rem;
+        margin: 0 0 0.25rem;
+      }
+      .demo-sub {
+        margin: 0 0 1.75rem;
+        color: var(--micra-muted);
+      }
+      /* Cropper → state glue: a reactive readout + the Micra-built controls. */
+      .crop-meta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+      }
+      .crop-meta__readout {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .crop-meta__spacer {
+        flex: 1;
+      }
+      .ratio-group {
+        display: inline-flex;
+        gap: 0.4rem;
+      }
+      .demo-btn {
+        font: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+        padding: 0.45rem 0.8rem;
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+        background: var(--micra-surface);
+        color: var(--micra-fg);
+        transition: border-color var(--micra-duration) var(--micra-ease),
+          color var(--micra-duration) var(--micra-ease),
+          background var(--micra-duration) var(--micra-ease);
+      }
+      .demo-btn:hover {
+        border-color: var(--micra-primary);
+      }
+      .demo-btn:focus-visible {
+        outline: none;
+        border-color: var(--micra-primary);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-ring) 25%, transparent);
+      }
+      .demo-btn[data-active='true'] {
+        border-color: var(--micra-primary);
+        background: var(--micra-primary);
+        color: var(--micra-primary-fg);
+      }
+      .demo-btn--primary {
+        background: var(--micra-primary);
+        color: var(--micra-primary-fg);
+        border-color: var(--micra-primary);
+      }
+      /* Cropped output preview. */
+      .preview {
+        margin-top: 2rem;
+      }
+      .preview__label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--micra-muted);
+        margin-bottom: 0.5rem;
+      }
+      .preview__body {
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+        padding: 1rem;
+        background: var(--micra-surface);
+        min-height: 4rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .preview__img {
+        max-width: 100%;
+        max-height: 14rem;
+        border-radius: var(--micra-radius);
+        display: block;
+      }
+      .preview__empty {
+        color: var(--micra-muted);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="demo-wrap">
+      <div class="demo-bar">
+        <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+        <span style="color: var(--micra-muted); font-size: 0.85rem"
+          >Cropper.js is MIT — loaded from a CDN. The wrapper is the Micra glue.</span
+        >
+      </div>
+
+      <h1 class="demo-h1">Image cropping, reactively bound</h1>
+      <p class="demo-sub">
+        Cropper.js owns the cropper — drag, resize, pan, zoom, handles. Micra mirrors the
+        selection geometry into state, so the live readout below reacts as you drag, and the
+        "Crop" button turns the current selection into a PNG preview. Pick an aspect ratio to
+        constrain the box.
+      </p>
+
+      <!-- The wrapper. Cropper's elements (declared below) own the interaction;
+           the reactive UI underneath is Micra.
+
+           The image source is an INLINE SVG data URI — fully self-contained, no
+           remote URL — so it works in a sandbox that blocks external images. -->
+      <micra-cropper>
+        <cropper-canvas background style="height: 22rem" aria-label="Image to crop">
+          <cropper-image
+            src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='640'%20height='400'%20viewBox='0%200%20640%20400'%3E%3Cdefs%3E%3ClinearGradient%20id='sky'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%234f46e5'/%3E%3Cstop%20offset='1'%20stop-color='%2306b6d4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='640'%20height='400'%20fill='url(%23sky)'/%3E%3Ccircle%20cx='505'%20cy='90'%20r='46'%20fill='%23fde68a'/%3E%3Cpath%20d='M0%20300%20L120%20210%20L230%20290%20L360%20180%20L470%20270%20L560%20205%20L640%20255%20L640%20400%20L0%20400%20Z'%20fill='%23166534'/%3E%3Cpath%20d='M0%20330%20L160%20255%20L300%20330%20L440%20250%20L580%20320%20L640%20300%20L640%20400%20L0%20400%20Z'%20fill='%2322c55e'%20opacity='0.85'/%3E%3Ctext%20x='28'%20y='62'%20font-family='system-ui,sans-serif'%20font-size='30'%20font-weight='700'%20fill='%23ffffff'%3ECrop%20me%3C/text%3E%3C/svg%3E"
+            rotatable
+            scalable
+            translatable
+          ></cropper-image>
+          <cropper-shade hidden></cropper-shade>
+          <cropper-handle action="select" plain></cropper-handle>
+          <cropper-selection
+            initial-coverage="0.5"
+            movable
+            resizable
+            outlined
+          >
+            <cropper-grid role="grid" covered></cropper-grid>
+            <cropper-crosshair centered></cropper-crosshair>
+            <!-- theme-color="" clears each handle's built-in default color so it
+                 inherits the page's --theme-color (mapped to --micra-primary in
+                 cropper.css). Cropper injects :host{--theme-color: …} only when
+                 theme-color is non-empty, so an empty value lets the token win. -->
+            <cropper-handle action="move" theme-color=""></cropper-handle>
+            <cropper-handle action="n-resize" theme-color=""></cropper-handle>
+            <cropper-handle action="e-resize" theme-color=""></cropper-handle>
+            <cropper-handle action="s-resize" theme-color=""></cropper-handle>
+            <cropper-handle action="w-resize" theme-color=""></cropper-handle>
+            <cropper-handle action="ne-resize" theme-color=""></cropper-handle>
+            <cropper-handle action="nw-resize" theme-color=""></cropper-handle>
+            <cropper-handle action="se-resize" theme-color=""></cropper-handle>
+            <cropper-handle action="sw-resize" theme-color=""></cropper-handle>
+          </cropper-selection>
+        </cropper-canvas>
+
+        <div class="crop-meta">
+          <span class="crop-meta__readout" data-text="readout()"></span>
+          <span class="crop-meta__spacer"></span>
+
+          <span class="ratio-group" role="group" aria-label="Aspect ratio">
+            <button class="demo-btn" type="button" @click="setRatio('free')"
+              data-bind="data-active:isRatio('free') ? 'true' : 'false'">Free</button>
+            <button class="demo-btn" type="button" @click="setRatio('1')"
+              data-bind="data-active:isRatio('1') ? 'true' : 'false'">1:1</button>
+            <button class="demo-btn" type="button" @click="setRatio('16:9')"
+              data-bind="data-active:isRatio('16:9') ? 'true' : 'false'">16:9</button>
+            <button class="demo-btn" type="button" @click="setRatio('4:3')"
+              data-bind="data-active:isRatio('4:3') ? 'true' : 'false'">4:3</button>
+          </span>
+
+          <button class="demo-btn demo-btn--primary" type="button" @click="crop">Crop</button>
+        </div>
+
+        <div class="preview">
+          <div class="preview__label">Cropped output (state.output)</div>
+          <div class="preview__body">
+            <img class="preview__img" alt="Cropped result" data-show="hasOutput()" data-bind="src:output" />
+            <span class="preview__empty" data-show="!hasOutput()">Drag a selection, then press Crop.</span>
+          </div>
+        </div>
+      </micra-cropper>
+    </div>
+
+    <!-- Cropper.js v2 ships as an ES module; importing it registers the custom
+         elements (<cropper-canvas>, <cropper-image>, <cropper-selection>, …).
+         A type="module" script is deferred, so it may run AFTER the classic
+         scripts + Micra.start() below — define.js handles that race (it attaches
+         the 'change' listener regardless, and seeds state if already upgraded). -->
+    <script type="module">
+      // Cropper v2 self-registers all custom elements as a side effect of import.
+      // We point at the explicit ESM dist file: the package's bare entry (and the
+      // jsdelivr field) resolve to the UMD build (dist/cropper.js), which also
+      // registers the elements when imported, but the ESM bundle is the intended
+      // module entry and avoids relying on UMD's global-detection fallthrough.
+      import 'https://cdn.jsdelivr.net/npm/cropperjs@2/dist/cropper.esm.js';
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const el = document.documentElement;
+        el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

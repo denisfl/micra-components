@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Form Kit</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./formkit.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-review dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: 8rem 1fr;
+        gap: 0.4rem 1rem;
+        font-size: 0.9rem;
+      }
+      .demo-review dt {
+        color: var(--micra-muted);
+      }
+      .demo-review dd {
+        margin: 0;
+        word-break: break-word;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+    </div>
+
+    <!-- The schema is seeded as a JSON prop; values, errors, steps, uploads and
+         autosave are all owned by the component. -->
+    <form
+      class="micra-formkit"
+      data-component="formkit"
+      data-autosave-key="formkit-demo"
+      novalidate
+      @submit.prevent="submit"
+    >
+      <!-- Stepper header -->
+      <ol class="micra-formkit__stepper" aria-label="Progress">
+        <template data-each="steps()" data-key="title">
+          <li
+            class="micra-formkit__step"
+            data-bind="data-state:stepState($index), aria-current:isCurrentStep($index) ? 'step' : 'false'"
+          >
+            <span class="micra-formkit__step-badge" data-text="stepNumber($index)"></span>
+            <span data-text="item.title"></span>
+          </li>
+        </template>
+      </ol>
+
+      <div class="micra-formkit__progress" aria-hidden="true">
+        <div class="micra-formkit__progress-fill" data-bind="style:progressStyle()"></div>
+      </div>
+
+      <!-- Current step's fields. The legend is the current step's title. -->
+      <fieldset class="micra-formkit__fieldset">
+        <legend class="micra-formkit__legend" data-text="currentStepTitle()"></legend>
+
+        <template data-each="currentFields()" data-key="name">
+          <div class="micra-formkit__field">
+            <!-- text / email / number / password -->
+            <div data-if="isText(item)">
+              <label
+                class="micra-formkit__label"
+                data-bind="for:fieldId(item.name)"
+              >
+                <span data-text="item.label"></span>
+                <span class="micra-formkit__req" data-if="item.required" aria-hidden="true">*</span>
+              </label>
+              <input
+                class="micra-formkit__input"
+                data-bind="id:fieldId(item.name), type:item.type, name:item.name, placeholder:item.placeholder || '', value:fieldValue(item.name), aria-required:item.required ? 'true' : 'false', aria-invalid:hasError(item.name) ? 'true' : 'false', aria-describedby:describedBy(item)"
+                @input="onInput(item.name, $event)"
+                @blur="onBlur(item.name)"
+              />
+              <p
+                class="micra-formkit__help"
+                data-if="item.help"
+                data-bind="id:fieldId(item.name) + '-help'"
+                data-text="item.help"
+              ></p>
+              <p
+                class="micra-formkit__error"
+                data-bind="id:fieldId(item.name) + '-err'"
+                data-text="errorFor(item.name)"
+              ></p>
+            </div>
+
+            <!-- textarea -->
+            <div data-if="isTextarea(item)">
+              <label class="micra-formkit__label" data-bind="for:fieldId(item.name)">
+                <span data-text="item.label"></span>
+                <span class="micra-formkit__req" data-if="item.required" aria-hidden="true">*</span>
+              </label>
+              <textarea
+                class="micra-formkit__textarea"
+                data-bind="id:fieldId(item.name), name:item.name, placeholder:item.placeholder || '', value:fieldValue(item.name), aria-required:item.required ? 'true' : 'false', aria-invalid:hasError(item.name) ? 'true' : 'false', aria-describedby:describedBy(item)"
+                @input="onInput(item.name, $event)"
+                @blur="onBlur(item.name)"
+              ></textarea>
+              <p class="micra-formkit__help" data-if="item.help" data-bind="id:fieldId(item.name) + '-help'" data-text="item.help"></p>
+              <p class="micra-formkit__error" data-bind="id:fieldId(item.name) + '-err'" data-text="errorFor(item.name)"></p>
+            </div>
+
+            <!-- select -->
+            <div data-if="isSelect(item)">
+              <label class="micra-formkit__label" data-bind="for:fieldId(item.name)">
+                <span data-text="item.label"></span>
+                <span class="micra-formkit__req" data-if="item.required" aria-hidden="true">*</span>
+              </label>
+              <div class="micra-formkit__select-wrap">
+                <select
+                  class="micra-formkit__select"
+                  data-bind="id:fieldId(item.name), name:item.name, value:fieldValue(item.name), aria-required:item.required ? 'true' : 'false', aria-invalid:hasError(item.name) ? 'true' : 'false', aria-describedby:describedBy(item)"
+                  @change="onInput(item.name, $event)"
+                  @blur="onBlur(item.name)"
+                >
+                  <option value="" data-text="item.placeholder || 'Select…'"></option>
+                  <template data-each="item.options" data-key="value">
+                    <option data-bind="value:item.value" data-text="item.label"></option>
+                  </template>
+                </select>
+              </div>
+              <p class="micra-formkit__help" data-if="item.help" data-bind="id:fieldId(item.name) + '-help'" data-text="item.help"></p>
+              <p class="micra-formkit__error" data-bind="id:fieldId(item.name) + '-err'" data-text="errorFor(item.name)"></p>
+            </div>
+
+            <!-- checkbox -->
+            <div data-if="isCheckbox(item)">
+              <label class="micra-formkit__check">
+                <input
+                  type="checkbox"
+                  data-bind="id:fieldId(item.name), name:item.name, checked:isChecked(item.name), aria-invalid:hasError(item.name) ? 'true' : 'false', aria-describedby:describedBy(item)"
+                  @change="onCheck(item.name, $event)"
+                  @blur="onBlur(item.name)"
+                />
+                <span data-text="item.label"></span>
+              </label>
+              <p class="micra-formkit__help" data-if="item.help" data-bind="id:fieldId(item.name) + '-help'" data-text="item.help"></p>
+              <p class="micra-formkit__error" data-bind="id:fieldId(item.name) + '-err'" data-text="errorFor(item.name)"></p>
+            </div>
+
+            <!-- radio group -->
+            <div data-if="isRadio(item)" role="radiogroup" data-bind="aria-required:item.required ? 'true' : 'false', aria-invalid:hasError(item.name) ? 'true' : 'false'">
+              <span class="micra-formkit__label">
+                <span data-text="item.label"></span>
+                <span class="micra-formkit__req" data-if="item.required" aria-hidden="true">*</span>
+              </span>
+              <div class="micra-formkit__radios">
+                <template data-each="item.options" data-key="value">
+                  <!-- Inside this inner loop `item` is the OPTION. The radio name is
+                       the same for the group; we look up the field name from the
+                       option's parent via a closure-free pattern: each option
+                       carries the field name on the option object (see seed). -->
+                  <label class="micra-formkit__radio">
+                    <input
+                      type="radio"
+                      data-bind="name:item.field, value:item.value, checked:isRadioOn(item.field + '|' + item.value)"
+                      @change="onInput(item.field, $event)"
+                      @blur="onBlur(item.field)"
+                    />
+                    <span data-text="item.label"></span>
+                  </label>
+                </template>
+              </div>
+              <p class="micra-formkit__error" data-bind="id:fieldId(item.name) + '-err'" data-text="errorFor(item.name)"></p>
+            </div>
+
+            <!-- file -->
+            <div data-if="isFile(item)">
+              <label class="micra-formkit__label" data-bind="for:fieldId(item.name)">
+                <span data-text="item.label"></span>
+                <span class="micra-formkit__req" data-if="item.required" aria-hidden="true">*</span>
+              </label>
+              <input
+                type="file"
+                class="micra-formkit__file-input"
+                data-bind="id:fieldId(item.name), name:item.name, accept:item.accept || '', aria-required:item.required ? 'true' : 'false', aria-invalid:hasError(item.name) ? 'true' : 'false', aria-describedby:describedBy(item)"
+                @change="onFile(item.name, $event)"
+              />
+
+              <!-- Preview: thumbnail (image) or a file glyph, name, size, progress. -->
+              <div class="micra-formkit__preview" data-if="hasUpload(item.name)">
+                <img
+                  class="micra-formkit__thumb"
+                  data-if="upload(item.name) && upload(item.name).isImage"
+                  data-bind="src:upload(item.name) ? upload(item.name).url : ''"
+                  alt=""
+                />
+                <span class="micra-formkit__thumb micra-formkit__thumb--file" data-if="upload(item.name) && !upload(item.name).isImage">file</span>
+                <span class="micra-formkit__preview-meta">
+                  <span class="micra-formkit__preview-name" data-text="upload(item.name) ? upload(item.name).name : ''"></span>
+                  <span class="micra-formkit__preview-size" data-text="fileSize(item.name)"></span>
+                  <span class="micra-formkit__bar">
+                    <span class="micra-formkit__bar-fill" data-bind="style:uploadStyle(item.name), data-state:uploadDone(item.name) ? 'done' : 'uploading'"></span>
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  class="micra-formkit__remove"
+                  aria-label="Remove file"
+                  @click="removeFile(item.name)"
+                >
+                  &times;
+                </button>
+              </div>
+
+              <p class="micra-formkit__help" data-if="item.help" data-bind="id:fieldId(item.name) + '-help'" data-text="item.help"></p>
+              <p class="micra-formkit__error" data-bind="id:fieldId(item.name) + '-err'" data-text="errorFor(item.name)"></p>
+            </div>
+          </div>
+        </template>
+
+        <!-- Review block on the final step (demo content). -->
+        <div class="demo-review" data-if="isLastStep()">
+          <dl>
+            <dt>Name</dt><dd data-text="fieldValue('name')"></dd>
+            <dt>Email</dt><dd data-text="fieldValue('email')"></dd>
+            <dt>Role</dt><dd data-text="fieldValue('role')"></dd>
+            <dt>Bio</dt><dd data-text="fieldValue('bio')"></dd>
+            <dt>Avatar</dt><dd data-text="fieldValue('avatar') || '—'"></dd>
+          </dl>
+        </div>
+      </fieldset>
+
+      <!-- Footer: Back / Next / Submit + autosave indicator. -->
+      <div class="micra-formkit__footer">
+        <button
+          type="button"
+          class="micra-formkit__btn micra-formkit__btn--ghost"
+          data-if="!isFirstStep()"
+          @click="prev"
+        >
+          Back
+        </button>
+
+        <span class="micra-formkit__saved" data-if="isSaved()" data-text="savedNote()"></span>
+
+        <span class="micra-formkit__spacer"></span>
+
+        <button
+          type="button"
+          class="micra-formkit__btn"
+          data-if="!isLastStep()"
+          @click="next"
+        >
+          Next
+        </button>
+
+        <button
+          type="submit"
+          class="micra-formkit__btn"
+          data-if="isLastStep()"
+          data-bind="aria-disabled:submitting ? 'true' : 'false'"
+        >
+          Submit
+        </button>
+      </div>
+
+      <!-- Polite live region for the autosave note + validation summary. -->
+      <div class="micra-formkit__sr" aria-live="polite" data-text="savedNote()"></div>
+    </form>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // The schema. Seeded as a JSON prop on the root; the component parses it in
+      // onCreate. Radio options carry their field name so the inner option loop
+      // (where `item` is the option) can still write the right field.
+      const schema = {
+        steps: [
+          {
+            title: 'Account',
+            fields: [
+              { name: 'name', label: 'Full name', type: 'text', required: true, placeholder: 'Ada Lovelace' },
+              { name: 'email', label: 'Email', type: 'email', required: true, placeholder: 'ada@example.com' },
+              {
+                name: 'password',
+                label: 'Password',
+                type: 'password',
+                required: true,
+                minLength: 8,
+                rule: 'strongPassword',
+                help: 'At least 8 characters, with letters and numbers.',
+              },
+              {
+                name: 'plan',
+                label: 'Plan',
+                type: 'select',
+                required: true,
+                placeholder: 'Choose a plan…',
+                options: [
+                  { value: 'free', label: 'Free' },
+                  { value: 'pro', label: 'Pro' },
+                  { value: 'team', label: 'Team' },
+                ],
+              },
+            ],
+          },
+          {
+            title: 'Profile',
+            fields: [
+              {
+                name: 'role',
+                label: 'Role',
+                type: 'select',
+                required: true,
+                placeholder: 'Choose a role…',
+                options: [
+                  { value: 'admin', label: 'Admin' },
+                  { value: 'editor', label: 'Editor' },
+                  { value: 'viewer', label: 'Viewer' },
+                ],
+              },
+              {
+                name: 'bio',
+                label: 'Bio',
+                type: 'textarea',
+                maxLength: 280,
+                placeholder: 'A sentence or two about you.',
+                help: 'Up to 280 characters.',
+              },
+              {
+                name: 'avatar',
+                label: 'Avatar',
+                type: 'file',
+                accept: 'image/*',
+                help: 'PNG or JPG. Upload progress is simulated in this demo.',
+              },
+            ],
+          },
+          {
+            title: 'Review',
+            fields: [
+              {
+                name: 'terms',
+                label: 'I accept the terms of service',
+                type: 'checkbox',
+                required: true,
+              },
+            ],
+          },
+        ],
+      };
+
+      // Attach field name to each radio option so the inner loop can target it.
+      // (No radio fields in this demo, but the pattern is shown for completeness.)
+      schema.steps.forEach((s) =>
+        s.fields.forEach((f) => {
+          if (f.type === 'radio' && Array.isArray(f.options)) {
+            f.options.forEach((o) => (o.field = f.name));
+          }
+        })
+      );
+
+      // Seed the schema as a JSON attribute before start() mounts the component.
+      const form = document.querySelector('[data-component="formkit"]');
+      form.setAttribute('data-schema', JSON.stringify(schema));
+
+      Micra.start();
+
+      // Wire the public events. The host owns persistence + submission; the
+      // component only validates and hands back the values.
+      const fk = Micra.instances().get(form);
+      if (fk) {
+        fk.on('submit', (values) => {
+          console.log('[formkit] submit:', values);
+        });
+        fk.on('autosave', (values) => {
+          console.log('[formkit] autosave:', values);
+        });
+      }
+
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

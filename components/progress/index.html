@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Progress</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./progress.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .field {
+        max-width: 24rem;
+      }
+      .field + .field {
+        margin-top: 2.5rem;
+      }
+      .field__head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+      }
+      .field__head label {
+        user-select: none;
+      }
+      .field__value {
+        font-variant-numeric: tabular-nums;
+        color: var(--micra-muted);
+      }
+      .field__actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+    </div>
+
+    <!-- Determinate: live value + two buttons. No timer; the buttons drive it. -->
+    <micra-progress
+      class="field"
+      data-min="0"
+      data-max="100"
+      data-value="40"
+    >
+      <div class="field__head">
+        <label id="up-label">Upload</label>
+        <span class="field__value" data-text="valueText()"></span>
+      </div>
+
+      <div
+        class="micra-progress"
+        role="progressbar"
+        aria-labelledby="up-label"
+        data-bind="aria-valuemin:min, aria-valuenow:value, aria-valuemax:max"
+      >
+        <div class="micra-progress__track">
+          <div class="micra-progress__fill" data-bind="style:barStyle()"></div>
+        </div>
+      </div>
+
+      <div class="field__actions">
+        <button class="demo-ghost" @click="dec(10)">-10</button>
+        <button class="demo-ghost" @click="inc(10)">+10</button>
+      </div>
+    </micra-progress>
+
+    <!-- Indeterminate: no value, aria-busy, animated sliding bar (reduced-motion safe). -->
+    <micra-progress class="field" data-indeterminate="true">
+      <div class="field__head">
+        <label id="sync-label">Syncing…</label>
+      </div>
+
+      <div
+        class="micra-progress"
+        role="progressbar"
+        aria-labelledby="sync-label"
+        aria-busy="true"
+        data-state="indeterminate"
+      >
+        <div class="micra-progress__track">
+          <div class="micra-progress__fill"></div>
+        </div>
+      </div>
+    </micra-progress>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

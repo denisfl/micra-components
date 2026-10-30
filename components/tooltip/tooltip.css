@@ -1,0 +1,63 @@
+/*
+ * components/tooltip/tooltip.css — default skin for the Tooltip.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The bubble is always in the
+ * DOM and shown/hidden via [data-state], so it fades in and out cleanly and is
+ * non-interactive (visibility:hidden) while closed.
+ */
+
+.micra-tooltip-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.micra-tooltip {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  z-index: 50;
+  width: max-content;
+  max-width: 16rem;
+  transform: translateX(-50%) translateY(4px);
+
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  box-shadow: var(--micra-shadow);
+
+  /* hidden + non-interactive until [data-state="open"] */
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--micra-duration) var(--micra-ease),
+    visibility var(--micra-duration) var(--micra-ease),
+    transform var(--micra-duration) var(--micra-ease);
+}
+
+.micra-tooltip[data-state='open'] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Minimal token-driven button used by the demo triggers. */
+.micra-btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.55rem 1rem;
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border: 0;
+  border-radius: var(--micra-radius);
+}
+
+.micra-btn:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}

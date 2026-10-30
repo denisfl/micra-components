@@ -1,0 +1,332 @@
+/*
+ * components/charts/charts.css — default skin for Charts.
+ *
+ * References only --micra-* tokens (see theme/theme.css). The palette is defined
+ * here as --micra-chart-1..4, defaulting to the theme's primary + status accents;
+ * override those to re-color every chart. The plot wrapper is width:100% and the
+ * SVG carries the viewBox, so charts scale to their container. Motion (bars grow,
+ * line draws in) is gated behind prefers-reduced-motion: no-preference.
+ *
+ * The SVG is produced as a string by define.js and injected via data-html, so the
+ * shapes carry classes (.micra-charts__bar, __line, __slice, …) we style here.
+ * define.js writes palette colors as var(--micra-chart-N) / color-mix() into the
+ * fills, which resolve against the values below.
+ */
+
+micra-charts {
+  display: block;
+}
+
+
+.micra-charts {
+  /* Palette — defaults to the theme accents; override to recolor the series. */
+  --micra-chart-1: var(--micra-primary);
+  --micra-chart-2: var(--micra-success);
+  --micra-chart-3: var(--micra-warning);
+  --micra-chart-4: var(--micra-error);
+
+  display: block;
+  position: relative; /* positioning context for the tooltip overlay */
+  color: var(--micra-fg);
+}
+
+/* — interactive tooltip + crosshair (HTML overlay over the SVG) ————
+   Both are pointer-events:none so the SVG keeps its own :hover and the plot's
+   pointer handler keeps firing. define.js shows/positions them. */
+.micra-charts__crosshair {
+  position: absolute;
+  width: 1px;
+  background: var(--micra-border);
+  transform: translateX(-0.5px);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.micra-charts__tooltip {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  min-width: 7rem;
+  padding: 0.5rem 0.625rem;
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  box-shadow: var(--micra-shadow);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.micra-charts__tip-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.micra-charts__tip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.micra-charts__tip-row + .micra-charts__tip-row {
+  margin-top: 0.125rem;
+}
+
+.micra-charts__tip-swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+  flex: none;
+}
+
+.micra-charts__tip-name {
+  color: var(--micra-muted);
+}
+
+.micra-charts__tip-val {
+  margin-left: auto;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The responsive plot frame. The SVG inside is width:100%; aspect-ratio holds the
+   height so it never collapses while scaling. role="img" + aria-label live here. */
+.micra-charts__plot {
+  width: 100%;
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.micra-charts__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* — axis, grid & text —————————————————————————————————————————— */
+.micra-charts__axis {
+  stroke: var(--micra-border);
+  stroke-width: 1.5;
+}
+
+/* Horizontal value gridlines behind the plot — faint, token-driven. */
+.micra-charts__grid {
+  stroke: var(--micra-border);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+/* Numeric Y-axis (value) labels down the left edge. */
+.micra-charts__ylabel {
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  fill: var(--micra-muted);
+}
+
+.micra-charts__value,
+.micra-charts__xlabel,
+.micra-charts__slice-label,
+.micra-charts__empty {
+  font-family: system-ui, sans-serif;
+  fill: var(--micra-fg);
+}
+
+.micra-charts__value {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.micra-charts__xlabel {
+  font-size: 13px;
+  fill: var(--micra-muted);
+}
+
+.micra-charts__empty {
+  font-size: 16px;
+  fill: var(--micra-muted);
+}
+
+/* Slice labels sit on filled slices — primary-fg reads on every palette color. */
+.micra-charts__slice-label {
+  font-size: 14px;
+  font-weight: 600;
+  fill: var(--micra-primary-fg);
+  pointer-events: none;
+}
+
+/* — bars ——————————————————————————————————————————————————————— */
+.micra-charts__bar {
+  transition: opacity var(--micra-duration) var(--micra-ease);
+  transform-box: fill-box;
+  transform-origin: bottom;
+}
+
+.micra-charts__bar-g:hover .micra-charts__bar {
+  opacity: 0.82;
+}
+
+/* — line ——————————————————————————————————————————————————————— */
+.micra-charts__line {
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.micra-charts__area {
+  opacity: 0.12;
+}
+
+/* Stacked areas read as solid bands, not the faint single-series fill. */
+.micra-charts__area--stack {
+  opacity: 0.85;
+}
+
+.micra-charts__dot {
+  transition: r var(--micra-duration) var(--micra-ease);
+}
+
+.micra-charts__dot:hover {
+  r: 6;
+}
+
+/* — pie / donut ———————————————————————————————————————————————— */
+.micra-charts__slice {
+  stroke: var(--micra-surface);
+  stroke-width: 2;
+  transition: opacity var(--micra-duration) var(--micra-ease);
+}
+
+.micra-charts__slice:hover {
+  opacity: 0.85;
+}
+
+/* — legend (plain HTML, outside the svg) ——————————————————————— */
+.micra-charts__legend {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+}
+
+.micra-charts__legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--micra-fg);
+}
+
+/* Toggleable legend items (multi-series bar/line, pie slices) are clickable;
+   a hidden series/slice dims to show it's switched off. */
+.micra-charts__legend li[data-toggle="true"] {
+  cursor: pointer;
+  user-select: none;
+}
+
+.micra-charts__legend li[data-hidden="true"] {
+  opacity: 0.4;
+}
+
+.micra-charts__legend li[data-hidden="true"] .micra-charts__swatch {
+  filter: grayscale(1);
+}
+
+.micra-charts__swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 3px;
+  flex: none;
+}
+
+.micra-charts__legend-value {
+  color: var(--micra-muted);
+}
+
+/* Visually hidden but available to screen readers: the sr-only data list. */
+.micra-charts__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* — motion: only when the user hasn't asked to reduce it ——————————
+   Bars grow from the baseline; the line draws in along its length; slices and
+   dots fade up. Keyed off the plot's data-state (the chart type) so switching
+   type replays the entrance. */
+@media (prefers-reduced-motion: no-preference) {
+  .micra-charts__bar {
+    animation: micra-charts-grow var(--micra-duration, 150ms) var(--micra-ease) both;
+    animation-duration: calc(var(--micra-duration, 150ms) * 3);
+  }
+
+  .micra-charts__line {
+    stroke-dasharray: var(--line-len);
+    stroke-dashoffset: var(--line-len);
+    animation: micra-charts-draw var(--micra-ease) both;
+    animation-duration: calc(var(--micra-duration, 150ms) * 5);
+  }
+
+  .micra-charts__area,
+  .micra-charts__dot,
+  .micra-charts__slice,
+  .micra-charts__value,
+  .micra-charts__xlabel,
+  .micra-charts__slice-label {
+    animation: micra-charts-fade var(--micra-ease) both;
+    animation-duration: calc(var(--micra-duration, 150ms) * 3);
+  }
+
+  @keyframes micra-charts-grow {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+
+  @keyframes micra-charts-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes micra-charts-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* Preserve the area's resting opacity after its fade-in. */
+  .micra-charts__area {
+    animation-name: micra-charts-fade-area;
+  }
+
+  /* Stacked bands fade from 0 up to their own (0.85) resting opacity. */
+  .micra-charts__area--stack {
+    animation-name: micra-charts-fade;
+  }
+
+  @keyframes micra-charts-fade-area {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 0.12;
+    }
+  }
+}

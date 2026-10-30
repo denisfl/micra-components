@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Full Calendar</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./fullcalendar.css" />
+    <!-- The event editor reuses the Slide-over component. -->
+    <link rel="stylesheet" href="../slideover/slideover.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-wrap {
+        max-width: 64rem;
+      }
+      .demo-hint {
+        margin: 0 0 1rem;
+        color: var(--micra-muted);
+        font-size: 0.9rem;
+      }
+      .demo-hours {
+        display: inline-flex;
+        gap: 0.4rem;
+        align-items: center;
+      }
+      .demo-hours select {
+        font: inherit;
+        background: none;
+        color: inherit;
+        border: 0;
+        cursor: pointer;
+      }
+      /* Event-editor form inside the slide-over panel. */
+      .ev-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+      }
+      .ev-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        font-size: 0.9rem;
+        color: var(--micra-muted);
+      }
+      .ev-field input {
+        font: inherit;
+        color: var(--micra-fg);
+        background: var(--micra-surface);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+        padding: 0.5rem 0.65rem;
+      }
+      .ev-field input:focus-visible {
+        outline: 2px solid var(--micra-ring);
+        outline-offset: 1px;
+      }
+      .ev-check {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+      }
+      .ev-end-disabled {
+        opacity: 0.45;
+      }
+      .ev-del {
+        color: var(--micra-error);
+        margin-right: auto; /* push Delete to the left, Cancel/Save to the right */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+      <label class="demo-ghost demo-hours">
+        Week hours
+        <select id="hours-select">
+          <option value="6-22">6–22 (default)</option>
+          <option value="9-18">9–18 (business)</option>
+          <option value="7-20">7–20</option>
+          <option value="0-24">0–24 (full day)</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="demo-wrap">
+      <p class="demo-hint">
+        Click a day to add an event, or an event to edit it &mdash; a side panel
+        opens for the details. Events are seeded around today, so the calendar is
+        never empty.
+      </p>
+      <micra-fullcalendar class="micra-fullcalendar" data-view="month">
+        <!-- — Toolbar: navigation, live title, view toggle, export — -->
+        <div class="micra-fullcalendar__toolbar">
+          <div class="micra-fullcalendar__nav-group">
+            <button
+              class="micra-fullcalendar__btn micra-fullcalendar__nav"
+              type="button"
+              aria-label="Previous"
+              @click="prev"
+            >
+              <span aria-hidden="true">‹</span>
+            </button>
+            <button class="micra-fullcalendar__btn" type="button" @click="today">
+              Today
+            </button>
+            <button
+              class="micra-fullcalendar__btn micra-fullcalendar__nav"
+              type="button"
+              aria-label="Next"
+              @click="next"
+            >
+              <span aria-hidden="true">›</span>
+            </button>
+          </div>
+
+          <h2 class="micra-fullcalendar__title" aria-live="polite" data-text="title()"></h2>
+
+          <span class="micra-fullcalendar__spacer"></span>
+
+          <!-- Segmented view toggle. aria-pressed is the STRING source of truth. -->
+          <div class="micra-fullcalendar__toggle" role="group" aria-label="Calendar view">
+            <button
+              class="micra-fullcalendar__toggle-btn"
+              type="button"
+              @click="setView('month')"
+              data-bind="aria-pressed:monthPressed()"
+            >
+              Month
+            </button>
+            <button
+              class="micra-fullcalendar__toggle-btn"
+              type="button"
+              @click="setView('week')"
+              data-bind="aria-pressed:weekPressed()"
+            >
+              Week
+            </button>
+          </div>
+
+          <button class="micra-fullcalendar__btn" type="button" @click="exportICS">
+            Export .ics
+          </button>
+        </div>
+
+        <!-- ============================================ MONTH VIEW -->
+        <div
+          class="micra-fullcalendar__view micra-fullcalendar__month"
+          role="grid"
+          aria-label="Month"
+          data-if="isMonth()"
+        >
+          <!-- Weekday header (Monday-first; decorative — the cells carry the names). -->
+          <div class="micra-fullcalendar__weekday-row" role="row" aria-hidden="true">
+            <span class="micra-fullcalendar__weekday">Mon</span>
+            <span class="micra-fullcalendar__weekday">Tue</span>
+            <span class="micra-fullcalendar__weekday">Wed</span>
+            <span class="micra-fullcalendar__weekday">Thu</span>
+            <span class="micra-fullcalendar__weekday">Fri</span>
+            <span class="micra-fullcalendar__weekday">Sat</span>
+            <span class="micra-fullcalendar__weekday">Sun</span>
+          </div>
+
+          <!-- Outer data-each item = WEEK; nested item = DAY. Each day is
+               pre-flattened with its chips, so the innermost loop over a day's
+               chips is self-contained. -->
+          <template data-each="monthWeeks()" data-key="key">
+            <div class="micra-fullcalendar__week" role="row">
+              <template data-each="item.days" data-key="iso">
+                <!-- A day cell: clicking the empty area emits 'create' for the day.
+                     role="gridcell" with an accessible date label + aria-current. -->
+                <button
+                  class="micra-fullcalendar__day"
+                  type="button"
+                  role="gridcell"
+                  @click="createOnDay(item.iso)"
+                  data-bind="
+                    aria-label:item.label,
+                    aria-current:item.today ? 'date' : 'false',
+                    data-state:dayState(item)
+                  "
+                >
+                  <span class="micra-fullcalendar__daynum" data-text="item.day"></span>
+
+                  <span class="micra-fullcalendar__chips">
+                    <!-- Event chips for this day. A chip click selects the event;
+                         stop the click from also firing the cell's create. -->
+                    <template data-each="item.chips" data-key="id">
+                      <span
+                        class="micra-fullcalendar__chip"
+                        role="button"
+                        tabindex="0"
+                        @click.stop="selectEvent(item.id)"
+                        @keydown.enter.stop.prevent="selectEvent(item.id)"
+                        data-bind="aria-label:chipLabel(item), data-state:chipState(item)"
+                      >
+                        <span class="micra-fullcalendar__chip-time" data-text="item.time"></span>
+                        <span class="micra-fullcalendar__chip-title" data-text="item.title"></span>
+                      </span>
+                    </template>
+                    <span
+                      class="micra-fullcalendar__more"
+                      data-if="item.more"
+                      data-text="item.more"
+                    ></span>
+                  </span>
+                </button>
+              </template>
+            </div>
+          </template>
+        </div>
+
+        <!-- ============================================= WEEK VIEW -->
+        <div
+          class="micra-fullcalendar__view micra-fullcalendar__week-view"
+          aria-label="Week"
+          data-if="isWeek()"
+        >
+          <!-- Column headers: weekday name + date number. -->
+          <div class="micra-fullcalendar__week-head">
+            <span class="micra-fullcalendar__rail-spacer" aria-hidden="true"></span>
+            <template data-each="weekColumns()" data-key="key">
+              <div
+                class="micra-fullcalendar__col-head"
+                data-bind="data-state:item.today ? 'today' : ''"
+              >
+                <div class="micra-fullcalendar__col-name" data-text="item.name"></div>
+                <div class="micra-fullcalendar__col-num" data-text="item.dayNum"></div>
+              </div>
+            </template>
+          </div>
+
+          <!-- All-day band: one cell per column. -->
+          <div class="micra-fullcalendar__allday-row">
+            <span class="micra-fullcalendar__allday-label">All day</span>
+            <template data-each="weekColumns()" data-key="key">
+              <div class="micra-fullcalendar__allday-cell">
+                <template data-each="item.allDay" data-key="id">
+                  <span
+                    class="micra-fullcalendar__chip"
+                    data-state="allday"
+                    role="button"
+                    tabindex="0"
+                    @click.stop="selectEvent(item.id)"
+                    @keydown.enter.stop.prevent="selectEvent(item.id)"
+                    data-bind="aria-label:item.title"
+                  >
+                    <span class="micra-fullcalendar__chip-title" data-text="item.title"></span>
+                  </span>
+                </template>
+              </div>
+            </template>
+          </div>
+
+          <!-- Time grid: an hour rail + seven positioned day columns. -->
+          <div class="micra-fullcalendar__week-body">
+            <div class="micra-fullcalendar__hours" role="presentation">
+              <template data-each="hourRows()" data-key="key">
+                <div class="micra-fullcalendar__hour" data-text="item.label"></div>
+              </template>
+            </div>
+
+            <template data-each="weekColumns()" data-key="key">
+              <div class="micra-fullcalendar__col" role="group" data-bind="aria-label:item.name">
+                <!-- Empty-slot click targets, one per hour (transparent, behind the
+                     events). Each carries its own iso + hour, so the handler needs
+                     no outer scope. -->
+                <div class="micra-fullcalendar__col-slots">
+                  <template data-each="item.slots" data-key="key">
+                    <button
+                      class="micra-fullcalendar__hour"
+                      type="button"
+                      style="width: 100%; border: 0; background: none; display: block;"
+                      @click="createAt(item.iso, item.hour)"
+                      data-bind="aria-label:'Create at ' + item.label"
+                    ></button>
+                  </template>
+                </div>
+
+                <!-- Timed event blocks, absolutely positioned by item.style (a real
+                     object returned from the component — never an inline literal). -->
+                <template data-each="item.timed" data-key="id">
+                  <button
+                    class="micra-fullcalendar__event"
+                    type="button"
+                    @click.stop="selectEvent(item.id)"
+                    data-bind="
+                      style:item.style,
+                      aria-label:eventLabel(item),
+                      data-state:eventState(item)
+                    "
+                  >
+                    <span class="micra-fullcalendar__event-time" data-text="item.time"></span>
+                    <span class="micra-fullcalendar__event-title" data-text="item.title"></span>
+                  </button>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+      </micra-fullcalendar>
+
+      <!-- Event editor: a slide-over (another component) the calendar opens on
+           create/select. Shows two components composing — the calendar only
+           emits; this panel owns the form. The component itself depends on neither;
+           you can wire any modal/panel the same way. -->
+      <micra-slideover @keydown.escape.window="close" @keydown.tab.window="trapTab" data-side="right" data-size="22rem">
+        <div
+          class="micra-slideover"
+          data-bind="data-state:open ? 'open' : 'closed', data-side:side()"
+          @click.self="close"
+        >
+          <div
+            class="micra-slideover__panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ev-editor-title"
+            data-ref="panel"
+            tabindex="-1"
+            data-bind="data-side:side(), style:panelStyle()"
+          >
+            <header class="micra-slideover__head">
+              <h2 id="ev-editor-title">New event</h2>
+              <button class="micra-slideover__close" type="button" aria-label="Close" @click="close">&times;</button>
+            </header>
+
+            <form id="ev-form" class="micra-slideover__body ev-form">
+              <label class="ev-field">
+                <span>Title</span>
+                <input id="ev-title" type="text" required autocomplete="off" />
+              </label>
+              <label class="ev-check">
+                <input id="ev-allday" type="checkbox" /> All day
+              </label>
+              <label class="ev-field">
+                <span>Start</span>
+                <input id="ev-start" type="datetime-local" />
+              </label>
+              <label class="ev-field" id="ev-end-row">
+                <span>End</span>
+                <input id="ev-end" type="datetime-local" />
+              </label>
+            </form>
+
+            <footer class="micra-slideover__foot">
+              <button type="button" id="ev-delete" class="micra-btn--ghost ev-del">Delete</button>
+              <button type="button" class="micra-btn--ghost" @click="close">Cancel</button>
+              <button type="submit" form="ev-form" class="micra-btn">Save</button>
+            </footer>
+          </div>
+        </div>
+      </micra-slideover>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script src="../slideover/define.js"></script>
+    <script>
+      // Demo events seeded around the current month. The component also accepts a
+      // data-events JSON attribute, but JS lets us anchor everything to "now" so the
+      // demo always has events in view. Times are floating-local ISO strings.
+      function iso(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + day;
+      }
+      const today = new Date();
+      const at = (offsetDays, hhmm) => {
+        const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offsetDays);
+        return iso(d) + (hhmm ? 'T' + hhmm : '');
+      };
+      // Add an hour to a floating-local ISO datetime (default length for a new event).
+      const addHour = (start) => {
+        const d = new Date(start);
+        d.setHours(d.getHours() + 1);
+        const p = (n) => String(n).padStart(2, '0');
+        return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+          'T' + p(d.getHours()) + ':' + p(d.getMinutes());
+      };
+      let seq = 1; // ids for events created in the demo
+
+      let events = [
+        // Two events on the SAME day that OVERLAP in time → conflict demo.
+        { id: 'standup',  title: 'Standup',       start: at(0, '09:00'), end: at(0, '09:30') },
+        { id: 'review',   title: 'Design review', start: at(0, '09:15'), end: at(0, '10:15') },
+        // A non-conflicting timed event later the same day.
+        { id: 'lunch',    title: 'Lunch',         start: at(0, '12:00'), end: at(0, '13:00') },
+        // Another day, two stacked meetings (adjacent, not overlapping).
+        { id: 'onboard',  title: 'Onboarding',    start: at(1, '11:00'), end: at(1, '12:00') },
+        { id: 'demo',     title: 'Customer demo', start: at(1, '14:00'), end: at(1, '15:30') },
+        // An all-day event.
+        { id: 'offsite',  title: 'Team offsite',  start: at(2), allDay: true },
+        // A weekly-recurring event (4 occurrences) seeded a week back.
+        {
+          id: 'sync', title: 'Weekly sync',
+          start: at(-7, '15:00'), end: at(-7, '16:00'),
+          recur: { freq: 'weekly', count: 4 },
+        },
+        // A monthly-recurring planning block.
+        {
+          id: 'planning', title: 'Monthly planning',
+          start: at(-3, '16:30'), end: at(-3, '17:30'),
+          recur: { freq: 'monthly', count: 3 },
+        },
+      ];
+
+      Micra.start();
+
+      // Reach the live instance (read-only Map keyed by root el) and feed it.
+      const root = document.querySelector('[data-component="fullcalendar"]');
+      const cal = Micra.instances().get(root);
+      if (cal) {
+        cal.setEvents(events);
+
+        // The calendar only EMITS create/select — the host owns persistence and the
+        // editing UI. We open the Slide-over panel (a second component) as a real
+        // event editor and feed changes back with setEvents(). This is exactly how a
+        // template/app wires it; swap the panel for your own and the contract holds.
+        const so = Micra.instances().get(document.querySelector('[data-component="slideover"]'));
+        const F = {
+          heading: document.getElementById('ev-editor-title'),
+          title: document.getElementById('ev-title'),
+          allday: document.getElementById('ev-allday'),
+          start: document.getElementById('ev-start'),
+          end: document.getElementById('ev-end'),
+          endRow: document.getElementById('ev-end-row'),
+          del: document.getElementById('ev-delete'),
+          form: document.getElementById('ev-form'),
+        };
+        let editingId = null;
+
+        // ISO 'YYYY-MM-DD' or '…THH:mm[:ss]' → a datetime-local value 'YYYY-MM-DDTHH:mm'.
+        const toLocal = (s, hour) =>
+          !s ? '' : s.length <= 10 ? s + 'T' + String(hour).padStart(2, '0') + ':00' : s.slice(0, 16);
+
+        const syncAllDay = () => F.endRow.classList.toggle('ev-end-disabled', F.allday.checked);
+        F.allday.addEventListener('change', syncAllDay);
+
+        function openEditor(mode, data) {
+          if (mode === 'edit') {
+            editingId = data.id;
+            F.heading.textContent = 'Edit event';
+            F.del.style.display = '';
+            F.title.value = data.title || '';
+            F.allday.checked = !!data.allDay;
+            F.start.value = toLocal(data.start, 9);
+            F.end.value = toLocal(data.end || data.start, 10);
+          } else {
+            editingId = null;
+            F.heading.textContent = 'New event';
+            F.del.style.display = 'none';
+            F.title.value = '';
+            const timed = !!data.start; // week slot → timed; month day → all-day
+            F.allday.checked = !timed;
+            F.start.value = toLocal(data.start || data.date, 9);
+            F.end.value = toLocal(timed ? addHour(data.start) : data.date, 10);
+          }
+          syncAllDay();
+          so.open();
+          // Focus the title after the panel's own open-focus (both double-rAF; ours
+          // is registered second, so it runs last and wins).
+          requestAnimationFrame(() => requestAnimationFrame(() => F.title.focus()));
+        }
+
+        F.form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const title = F.title.value.trim();
+          if (!title) return;
+          const ev = F.allday.checked
+            ? { id: editingId || 'evt-' + seq++, title, start: F.start.value.slice(0, 10), allDay: true }
+            : { id: editingId || 'evt-' + seq++, title, start: F.start.value, end: F.end.value || addHour(F.start.value) };
+          events = editingId
+            ? events.map((x) => (x.id === editingId ? { ...x, ...ev } : x))
+            : [...events, ev];
+          cal.setEvents(events);
+          so.close();
+        });
+
+        F.del.addEventListener('click', () => {
+          if (editingId) { events = events.filter((x) => x.id !== editingId); cal.setEvents(events); }
+          so.close();
+        });
+
+        cal.on('create', (payload) => openEditor('create', payload));
+        cal.on('select', (ev) => openEditor('edit', ev));
+
+        // Week-view time band is configurable — via data-start-hour/data-end-hour
+        // at mount, or setHourRange(start, end) at runtime. The demo wires a preset
+        // picker and jumps to week view so the change is visible.
+        document.getElementById('hours-select').addEventListener('change', (e) => {
+          const [s, en] = e.target.value.split('-').map(Number);
+          cal.setHourRange(s, en);
+          cal.setView('week');
+        });
+
+        // Expose for quick console testing: cal.conflicts(), cal.buildICS(), …
+        window.cal = cal;
+      }
+
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const el = document.documentElement;
+        el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

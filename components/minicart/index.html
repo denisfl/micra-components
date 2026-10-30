@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Mini-cart</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./minicart.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-store {
+        max-width: 36rem;
+      }
+      .demo-store h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1.5rem;
+      }
+      .demo-store p {
+        margin: 0 0 1.5rem;
+        color: var(--micra-muted);
+      }
+      .demo-hint {
+        margin-top: 1.5rem;
+        font-size: 0.875rem;
+        color: var(--micra-muted);
+      }
+      .demo-hint code {
+        background: var(--micra-surface);
+        border: 1px solid var(--micra-border);
+        border-radius: 4px;
+        padding: 0.05rem 0.35rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+    </div>
+
+    <div class="demo-store">
+      <h1>The Pro Store</h1>
+      <p>A cart, coupons, and a three-step checkout in one slide-over drawer.</p>
+
+      <!-- The cart is seeded from data-items / data-coupons (set below before
+           start()); prices are in cents. Flat shipping is $5, free over $60. -->
+      <micra-minicart @keydown.escape.window="close" @keydown.tab.window="trapTab"
+        data-currency="$"
+        data-shipping="500"
+        data-free-over="6000"
+      >
+        <!-- Trigger: opens the drawer, shows a live item-count badge. -->
+        <button class="micra-minicart-trigger" @click="open" aria-label="Open cart">
+          Cart
+          <span
+            class="micra-minicart-trigger__badge"
+            data-if="itemCount() > 0"
+            data-text="itemCount()"
+            aria-hidden="true"
+          ></span>
+        </button>
+
+        <!-- Overlay + panel. FOUC-free: hidden via visibility until data-state=open. -->
+        <div
+          class="micra-minicart"
+          data-bind="data-state:open ? 'open' : 'closed'"
+          @click.self="close"
+        >
+          <div
+            class="micra-minicart__panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="minicart-title"
+            data-ref="panel"
+            tabindex="-1"
+          >
+            <header class="micra-minicart__head">
+              <h2 id="minicart-title">Your cart</h2>
+              <button
+                class="micra-minicart__close"
+                @click="close"
+                aria-label="Close cart"
+              >
+                &times;
+              </button>
+            </header>
+
+            <!-- Step indicator. Hidden once the order is placed. -->
+            <ol
+              class="micra-minicart__stepper"
+              aria-label="Checkout progress"
+              data-if="!placed"
+            >
+              <li
+                class="micra-minicart__step"
+                data-bind="data-state:stepState('cart'), aria-current:isCurrentStep('cart') ? 'step' : 'false'"
+              >
+                <span class="micra-minicart__step-badge">1</span>
+                <span>Cart</span>
+              </li>
+              <li
+                class="micra-minicart__step"
+                data-bind="data-state:stepState('details'), aria-current:isCurrentStep('details') ? 'step' : 'false'"
+              >
+                <span class="micra-minicart__step-badge">2</span>
+                <span>Details</span>
+              </li>
+              <li
+                class="micra-minicart__step"
+                data-bind="data-state:stepState('review'), aria-current:isCurrentStep('review') ? 'step' : 'false'"
+              >
+                <span class="micra-minicart__step-badge">3</span>
+                <span>Review</span>
+              </li>
+            </ol>
+
+            <div class="micra-minicart__body">
+              <!-- ============ SUCCESS ============ -->
+              <div class="micra-minicart__success" data-if="placed">
+                <div class="micra-minicart__success-mark" aria-hidden="true">&check;</div>
+                <h3>Order placed</h3>
+                <p>Thanks — a confirmation is on its way. (Check the console for the
+                  emitted <code>checkout</code> payload.)</p>
+              </div>
+
+              <!-- ============ STEP 1 — CART ============ -->
+              <div data-if="!placed && isStep('cart')">
+                <!-- Empty state -->
+                <div class="micra-minicart__empty" data-if="isEmpty()">
+                  <p>Your cart is empty.</p>
+                </div>
+
+                <!-- Line items -->
+                <ul class="micra-minicart__items" data-if="!isEmpty()">
+                  <template data-each="lineItems()" data-key="id">
+                    <li class="micra-minicart__item">
+                      <div>
+                        <div class="micra-minicart__item-name" data-text="item.name"></div>
+                        <div class="micra-minicart__item-price" data-text="unitPrice(item)"></div>
+                      </div>
+                      <div class="micra-minicart__item-total" data-text="lineTotal(item)"></div>
+
+                      <div class="micra-minicart__item-controls">
+                        <div class="micra-minicart__qty">
+                          <button
+                            type="button"
+                            class="micra-minicart__qty-btn"
+                            @click="dec(item.id)"
+                            data-bind="aria-disabled:item.qty <= 1 ? 'true' : 'false'"
+                            aria-label="Decrease quantity"
+                          >
+                            &minus;
+                          </button>
+                          <input
+                            class="micra-minicart__qty-input"
+                            type="number"
+                            min="1"
+                            data-bind="value:item.qty, aria-label:'Quantity for ' + item.name"
+                            @input="onQty(item.id, $event)"
+                          />
+                          <button
+                            type="button"
+                            class="micra-minicart__qty-btn"
+                            @click="inc(item.id)"
+                            aria-label="Increase quantity"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          class="micra-minicart__remove"
+                          @click="remove(item.id)"
+                          data-bind="aria-label:'Remove ' + item.name"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </li>
+                  </template>
+                </ul>
+
+                <!-- Coupon -->
+                <div data-if="!isEmpty()">
+                  <div class="micra-minicart__coupon-applied" data-if="hasCoupon()">
+                    <span data-text="couponLabel()"></span>
+                    <button
+                      type="button"
+                      class="micra-minicart__coupon-clear"
+                      @click="removeCoupon"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <div class="micra-minicart__coupon" data-if="!hasCoupon()">
+                    <input
+                      class="micra-minicart__coupon-input"
+                      type="text"
+                      placeholder="Coupon code"
+                      aria-label="Coupon code"
+                      data-model="coupon"
+                      data-bind="aria-invalid:hasCouponError() ? 'true' : 'false', aria-describedby:'minicart-coupon-msg'"
+                      @keydown.enter.prevent="applyCoupon"
+                    />
+                    <button type="button" class="micra-btn micra-btn--ghost" @click="applyCoupon">
+                      Apply
+                    </button>
+                  </div>
+                  <p
+                    class="micra-minicart__coupon-msg"
+                    id="minicart-coupon-msg"
+                    data-if="hasCouponError()"
+                    data-text="couponError"
+                  ></p>
+                </div>
+
+                <!-- Totals (live region) -->
+                <div
+                  class="micra-minicart__totals"
+                  data-if="!isEmpty()"
+                  aria-live="polite"
+                  aria-label="Order totals"
+                >
+                  <div class="micra-minicart__row">
+                    <span>Subtotal</span><span data-text="subtotal()"></span>
+                  </div>
+                  <div class="micra-minicart__row micra-minicart__row--discount" data-if="hasDiscount()">
+                    <span>Discount</span><span data-text="'-' + discount()"></span>
+                  </div>
+                  <div class="micra-minicart__row">
+                    <span>Shipping</span><span data-text="shipping()"></span>
+                  </div>
+                  <div class="micra-minicart__row micra-minicart__row--total">
+                    <span>Total</span><span data-text="total()"></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ============ STEP 2 — DETAILS ============ -->
+              <div data-if="!placed && isStep('details')">
+                <div class="micra-minicart__field">
+                  <label class="micra-minicart__label" data-bind="for:fieldId('name')">
+                    Name<span class="micra-minicart__req" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    class="micra-minicart__input"
+                    type="text"
+                    autocomplete="name"
+                    data-bind="id:fieldId('name'), value:fieldValue('name'), aria-required:'true', aria-invalid:hasError('name') ? 'true' : 'false', aria-describedby:errorId('name')"
+                    @input="onField('name', $event)"
+                    @blur="onFieldBlur('name')"
+                  />
+                  <p class="micra-minicart__error" data-bind="id:errorId('name')" data-text="errorFor('name')"></p>
+                </div>
+
+                <div class="micra-minicart__field">
+                  <label class="micra-minicart__label" data-bind="for:fieldId('email')">
+                    Email<span class="micra-minicart__req" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    class="micra-minicart__input"
+                    type="email"
+                    autocomplete="email"
+                    data-bind="id:fieldId('email'), value:fieldValue('email'), aria-required:'true', aria-invalid:hasError('email') ? 'true' : 'false', aria-describedby:errorId('email')"
+                    @input="onField('email', $event)"
+                    @blur="onFieldBlur('email')"
+                  />
+                  <p class="micra-minicart__error" data-bind="id:errorId('email')" data-text="errorFor('email')"></p>
+                </div>
+
+                <div class="micra-minicart__field">
+                  <label class="micra-minicart__label" data-bind="for:fieldId('address')">
+                    Shipping address<span class="micra-minicart__req" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    class="micra-minicart__input"
+                    type="text"
+                    autocomplete="street-address"
+                    data-bind="id:fieldId('address'), value:fieldValue('address'), aria-required:'true', aria-invalid:hasError('address') ? 'true' : 'false', aria-describedby:errorId('address')"
+                    @input="onField('address', $event)"
+                    @blur="onFieldBlur('address')"
+                  />
+                  <p class="micra-minicart__error" data-bind="id:errorId('address')" data-text="errorFor('address')"></p>
+                </div>
+              </div>
+
+              <!-- ============ STEP 3 — REVIEW ============ -->
+              <div data-if="!placed && isStep('review')">
+                <div class="micra-minicart__review-block">
+                  <h3>Items</h3>
+                  <template data-each="lineItems()" data-key="id">
+                    <div class="micra-minicart__review-line">
+                      <span data-text="item.name + ' × ' + item.qty"></span>
+                      <span data-text="lineTotal(item)"></span>
+                    </div>
+                  </template>
+                </div>
+
+                <div class="micra-minicart__review-block">
+                  <h3>Ship to</h3>
+                  <div class="micra-minicart__review-addr">
+                    <div data-text="fieldValue('name')"></div>
+                    <div data-text="fieldValue('email')"></div>
+                    <div data-text="fieldValue('address')"></div>
+                  </div>
+                </div>
+
+                <div class="micra-minicart__totals" aria-live="polite" aria-label="Order totals">
+                  <div class="micra-minicart__row">
+                    <span>Subtotal</span><span data-text="subtotal()"></span>
+                  </div>
+                  <div class="micra-minicart__row micra-minicart__row--discount" data-if="hasDiscount()">
+                    <span>Discount</span><span data-text="'-' + discount()"></span>
+                  </div>
+                  <div class="micra-minicart__row">
+                    <span>Shipping</span><span data-text="shipping()"></span>
+                  </div>
+                  <div class="micra-minicart__row micra-minicart__row--total">
+                    <span>Total</span><span data-text="total()"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ============ FOOTER ACTIONS ============ -->
+            <footer class="micra-minicart__foot" data-if="placed">
+              <button type="button" class="micra-btn" @click="reset">Done</button>
+            </footer>
+
+            <footer class="micra-minicart__foot" data-if="!placed && isStep('cart')">
+              <button
+                type="button"
+                class="micra-btn"
+                @click="toDetails"
+                data-bind="aria-disabled:itemCount() === 0 ? 'true' : 'false'"
+              >
+                Checkout
+              </button>
+            </footer>
+
+            <footer class="micra-minicart__foot" data-if="!placed && isStep('details')">
+              <button type="button" class="micra-btn micra-btn--ghost" @click="toCart">Back</button>
+              <button type="button" class="micra-btn" @click="toReview">Continue</button>
+            </footer>
+
+            <footer class="micra-minicart__foot" data-if="!placed && isStep('review')">
+              <button type="button" class="micra-btn micra-btn--ghost" @click="toDetails">Back</button>
+              <button type="button" class="micra-btn" @click="placeOrder">Place order</button>
+            </footer>
+          </div>
+        </div>
+      </micra-minicart>
+
+      <p class="demo-hint">
+        Try coupon <code>SAVE10</code> (10% off) or <code>FREESHIP</code> (free
+        shipping). Shipping is a flat <code>$5</code>, free over <code>$60</code>.
+      </p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // Seed three products (prices in cents) and the coupon map as JSON props on
+      // the root, before start() mounts the component.
+      const items = [
+        { id: 'tee', name: 'Pro T-shirt', price: 2400, qty: 1 },
+        { id: 'mug', name: 'Logo Mug', price: 1200, qty: 2 },
+        { id: 'cap', name: 'Embroidered Cap', price: 1800, qty: 1 },
+      ];
+      const coupons = {
+        SAVE10: { type: 'percent', value: 10 },
+        FREESHIP: { type: 'shipping' },
+      };
+
+      const cart = document.querySelector('[data-component="minicart"]');
+      cart.setAttribute('data-items', JSON.stringify(items));
+      cart.setAttribute('data-coupons', JSON.stringify(coupons));
+
+      Micra.start();
+
+      // Wire the public event. The host owns fulfilment; the component only hands
+      // back the order on a valid checkout.
+      const mc = Micra.instances().get(cart);
+      if (mc) {
+        mc.on('checkout', (order) => {
+          console.log('[minicart] checkout:', order);
+        });
+      }
+
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

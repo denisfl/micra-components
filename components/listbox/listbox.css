@@ -1,0 +1,141 @@
+/*
+ * components/listbox/listbox.css — default skin for the Listbox.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The list is always in the DOM
+ * and shown/hidden via [data-state], so it fades in and out cleanly and stays
+ * non-interactive when closed. The active option is marked with [data-state].
+ */
+
+micra-listbox {
+  display: block;
+}
+
+
+.micra-listbox {
+  position: relative;
+  display: inline-block;
+  width: min(22rem, 100%);
+}
+
+.micra-listbox__button {
+  font: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  color: var(--micra-fg);
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+}
+
+.micra-listbox__button:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+/* Placeholder text when nothing is selected (the value span is empty). */
+.micra-listbox__value:empty::before {
+  content: attr(data-placeholder);
+  color: var(--micra-muted);
+}
+
+/* Disclosure caret — rotates when open. */
+.micra-listbox__caret {
+  flex: none;
+  color: var(--micra-muted);
+  transition: transform var(--micra-duration) var(--micra-ease);
+}
+
+.micra-listbox__button[aria-expanded='true'] .micra-listbox__caret {
+  transform: rotate(180deg);
+}
+
+.micra-listbox__list {
+  position: absolute;
+  z-index: 50;
+  left: 0;
+  right: 0;
+  margin: 0.35rem 0 0;
+  padding: 0.35rem;
+  list-style: none;
+  max-height: 16rem;
+  overflow: auto;
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  box-shadow: var(--micra-shadow);
+
+  /* hidden + non-interactive until [data-state="open"] */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px) scale(0.98);
+  transform-origin: top center;
+  transition:
+    opacity var(--micra-duration) var(--micra-ease),
+    visibility var(--micra-duration) var(--micra-ease),
+    transform var(--micra-duration) var(--micra-ease);
+}
+
+.micra-listbox__list[data-state='open'] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+.micra-listbox__list:focus {
+  outline: none; /* focus lives on the container; options use aria-activedescendant */
+}
+
+.micra-listbox__list:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-listbox__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--micra-radius);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Active = keyboard/pointer highlight. Selected = the committed choice. */
+.micra-listbox__option[data-state='active'] {
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+}
+
+.micra-listbox__option[aria-selected='true'] {
+  font-weight: 600;
+}
+
+/* Check mark shown only on the selected option. */
+.micra-listbox__check {
+  flex: none;
+  visibility: hidden;
+}
+
+.micra-listbox__option[aria-selected='true'] .micra-listbox__check {
+  visibility: visible;
+}
+
+.micra-listbox__option[aria-disabled='true'] {
+  color: var(--micra-muted);
+  cursor: not-allowed;
+}
+
+.micra-listbox__option[aria-disabled='true'][data-state='active'] {
+  background: none;
+  color: var(--micra-muted);
+}

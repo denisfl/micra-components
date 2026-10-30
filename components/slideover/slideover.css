@@ -1,0 +1,163 @@
+/*
+ * components/slideover/slideover.css — default skin for the Slide-over.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The overlay is always in the
+ * DOM and shown/hidden via [data-state], so it fades in and out cleanly. The
+ * panel docks to an edge chosen by [data-side] and slides off-screen when closed.
+ *
+ * Size: --micra-slideover-size sets the panel's width (left/right) or height
+ * (top/bottom). The behavior sets it from data-size when present; this default
+ * applies otherwise.
+ */
+
+micra-slideover {
+  display: block;
+}
+
+
+.micra-slideover {
+  --micra-slideover-size: 24rem;
+
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--micra-overlay);
+
+  /* hidden + non-interactive until [data-state="open"] */
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--micra-duration) var(--micra-ease),
+    visibility var(--micra-duration) var(--micra-ease);
+}
+
+.micra-slideover[data-state='open'] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.micra-slideover__panel {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  border: 1px solid var(--micra-border);
+  box-shadow: var(--micra-shadow);
+
+  transition: transform var(--micra-duration) var(--micra-ease);
+}
+
+/* — Edge docking + slide direction, driven by [data-side] ——————————— */
+
+/* Left / right: full-height column, width from the size token. */
+.micra-slideover__panel[data-side='right'],
+.micra-slideover__panel[data-side='left'] {
+  top: 0;
+  bottom: 0;
+  width: min(var(--micra-slideover-size), 100%);
+}
+
+.micra-slideover__panel[data-side='right'] {
+  right: 0;
+  border-radius: var(--micra-radius) 0 0 var(--micra-radius);
+  transform: translateX(100%);
+}
+
+.micra-slideover__panel[data-side='left'] {
+  left: 0;
+  border-radius: 0 var(--micra-radius) var(--micra-radius) 0;
+  transform: translateX(-100%);
+}
+
+/* Top / bottom: full-width row, height from the size token. */
+.micra-slideover__panel[data-side='top'],
+.micra-slideover__panel[data-side='bottom'] {
+  left: 0;
+  right: 0;
+  height: min(var(--micra-slideover-size), 100%);
+}
+
+.micra-slideover__panel[data-side='top'] {
+  top: 0;
+  border-radius: 0 0 var(--micra-radius) var(--micra-radius);
+  transform: translateY(-100%);
+}
+
+.micra-slideover__panel[data-side='bottom'] {
+  bottom: 0;
+  border-radius: var(--micra-radius) var(--micra-radius) 0 0;
+  transform: translateY(100%);
+}
+
+/* Open: every side settles to its docked position. */
+.micra-slideover[data-state='open'] .micra-slideover__panel {
+  transform: none;
+}
+
+/* — Structure ——————————————————————————————————————————————————— */
+
+.micra-slideover__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--micra-border);
+}
+
+.micra-slideover__head h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.micra-slideover__close {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--micra-muted);
+  border-radius: var(--micra-radius);
+}
+
+.micra-slideover__close:hover {
+  color: var(--micra-fg);
+}
+
+.micra-slideover__body {
+  flex: 1;
+  padding: 1.25rem;
+}
+
+.micra-slideover__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--micra-border);
+}
+
+/* Minimal token-driven button used by the trigger and demo actions. */
+.micra-btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.55rem 1rem;
+  color: var(--micra-primary-fg);
+  background: var(--micra-primary);
+  border: 0;
+  border-radius: var(--micra-radius);
+}
+
+.micra-btn:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-btn--ghost {
+  color: var(--micra-fg);
+  background: none;
+  border: 1px solid var(--micra-border);
+}

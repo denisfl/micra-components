@@ -1,0 +1,60 @@
+/*
+ * components/switch/switch.css — default skin for the Switch.
+ *
+ * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
+ * those tokens, or rewrite this file — you own it. The track + thumb are driven
+ * by [data-state], so the thumb slides between off and on. The thumb transition
+ * uses --micra-duration/--micra-ease, so prefers-reduced-motion zeroes it.
+ */
+
+micra-switch {
+  display: block;
+}
+
+
+.micra-switch {
+  /* track */
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid var(--micra-border);
+  border-radius: 999px;
+  background: var(--micra-muted);
+  cursor: pointer;
+
+  transition: background var(--micra-duration) var(--micra-ease);
+}
+
+.micra-switch[data-state='checked'] {
+  background: var(--micra-primary);
+  border-color: var(--micra-primary);
+}
+
+.micra-switch:focus-visible {
+  outline: 2px solid var(--micra-ring);
+  outline-offset: 2px;
+}
+
+.micra-switch[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.micra-switch__thumb {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0 0.125rem;
+  border-radius: 50%;
+  background: var(--micra-primary-fg);
+  box-shadow: var(--micra-shadow);
+
+  transform: translateX(0);
+  transition: transform var(--micra-duration) var(--micra-ease);
+}
+
+.micra-switch[data-state='checked'] .micra-switch__thumb {
+  transform: translateX(1.25rem);
+}

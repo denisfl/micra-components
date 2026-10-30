@@ -1,0 +1,99 @@
+/*
+ * sortable.css — Micra token skin for the SortableJS wrapper.
+ *
+ * Skins the list rows and the three drag states SortableJS toggles classes for
+ * (ghostClass / chosenClass / dragClass). References only --micra-* tokens, so it
+ * follows your theme and works in light AND dark — recolor by overriding tokens,
+ * or edit this file; you own it.
+ */
+
+micra-sortable {
+  display: block;
+}
+
+
+/* ── List & rows ───────────────────────────────────────────────────────────── */
+.micra-sortable {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.micra-sortable__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--micra-surface);
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  color: var(--micra-fg);
+  transition: border-color var(--micra-duration) var(--micra-ease),
+    box-shadow var(--micra-duration) var(--micra-ease);
+}
+
+/* Rank badge — the visible priority (1, 2, 3…) driven by $index in state. */
+.micra-sortable__rank {
+  flex: none;
+  width: 1.6rem;
+  height: 1.6rem;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--micra-primary);
+  background: color-mix(in srgb, var(--micra-primary) 12%, transparent);
+  border-radius: calc(var(--micra-radius) - 4px);
+}
+
+.micra-sortable__label {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Drag handle — the ⠿ grip. Only this area starts a drag (matches the wrapper's
+   `handle` option), so the row text stays selectable. */
+.micra-sortable__handle {
+  flex: none;
+  cursor: grab;
+  color: var(--micra-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0 0.15rem;
+  user-select: none;
+  touch-action: none;
+}
+.micra-sortable__handle:active {
+  cursor: grabbing;
+}
+
+/* ── Drag states (classes toggled by SortableJS) ───────────────────────────── */
+
+/* .sortable-ghost — the drop-placeholder slot left in the list. Show it as a
+   faded, dashed outline so the target gap reads clearly. */
+.micra-sortable .sortable-ghost {
+  opacity: 0.5;
+  background: color-mix(in srgb, var(--micra-primary) 8%, var(--micra-surface));
+  border: 1px dashed var(--micra-primary);
+}
+.micra-sortable .sortable-ghost .micra-sortable__rank {
+  visibility: hidden;
+}
+
+/* .sortable-chosen — the item the moment it's picked up (still in the list).
+   Lift it with a token ring + shadow. */
+.micra-sortable .sortable-chosen {
+  border-color: var(--micra-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--micra-ring) 25%, transparent),
+    var(--micra-shadow);
+}
+
+/* .sortable-drag — the clone that follows the cursor. */
+.micra-sortable .sortable-drag {
+  opacity: 1;
+  cursor: grabbing;
+  box-shadow: var(--micra-shadow);
+}

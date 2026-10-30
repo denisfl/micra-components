@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Slide-over</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./slideover.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-triggers {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+      .demo-field {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.625rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+    </div>
+
+    <div class="demo-triggers">
+      <!-- Right-side slide-over: a filters drawer. -->
+      <micra-slideover @keydown.escape.window="close" @keydown.tab.window="trapTab" data-side="right" data-size="24rem">
+        <button class="micra-btn" @click="open">Filters</button>
+
+        <div
+          class="micra-slideover"
+          data-bind="data-state:open ? 'open' : 'closed', data-side:side()"
+          @click.self="close"
+        >
+          <div
+            class="micra-slideover__panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="filters-title"
+            data-ref="panel"
+            tabindex="-1"
+            data-bind="data-side:side(), style:panelStyle()"
+          >
+            <header class="micra-slideover__head">
+              <h2 id="filters-title">Filters</h2>
+              <button class="micra-slideover__close" @click="close" aria-label="Close">&times;</button>
+            </header>
+            <div class="micra-slideover__body">
+              <label class="demo-field">
+                <input type="checkbox" name="in-stock" checked />
+                In stock only
+              </label>
+              <label class="demo-field">
+                <input type="checkbox" name="on-sale" />
+                On sale
+              </label>
+              <label class="demo-field">
+                <input type="checkbox" name="free-shipping" />
+                Free shipping
+              </label>
+            </div>
+            <footer class="micra-slideover__foot">
+              <button class="micra-btn micra-btn--ghost" @click="close">Cancel</button>
+              <button class="micra-btn" @click="close">Apply</button>
+            </footer>
+          </div>
+        </div>
+      </micra-slideover>
+
+      <!-- Left-side drawer: navigation. Same behavior, opposite edge. -->
+      <micra-slideover @keydown.escape.window="close" @keydown.tab.window="trapTab" data-side="left" data-size="18rem">
+        <button class="micra-btn micra-btn--ghost" @click="open">Menu</button>
+
+        <div
+          class="micra-slideover"
+          data-bind="data-state:open ? 'open' : 'closed', data-side:side()"
+          @click.self="close"
+        >
+          <div
+            class="micra-slideover__panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="menu-title"
+            data-ref="panel"
+            tabindex="-1"
+            data-bind="data-side:side(), style:panelStyle()"
+          >
+            <header class="micra-slideover__head">
+              <h2 id="menu-title">Menu</h2>
+              <button class="micra-slideover__close" @click="close" aria-label="Close">&times;</button>
+            </header>
+            <div class="micra-slideover__body">
+              <p>A left-docked drawer — same focus trap, Escape, backdrop, and scroll
+                lock as the right one. Two independent instances on one page.</p>
+              <p><a href="#">Dashboard</a></p>
+              <p><a href="#">Projects</a></p>
+              <p><a href="#">Settings</a></p>
+            </div>
+            <footer class="micra-slideover__foot">
+              <button class="micra-btn" @click="close">Close</button>
+            </footer>
+          </div>
+        </div>
+      </micra-slideover>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

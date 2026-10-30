@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Dropdown</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./dropdown.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-status {
+        margin-top: 1.5rem;
+        color: var(--micra-muted);
+      }
+      .demo-status strong {
+        color: var(--micra-fg);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+    </div>
+
+    <micra-dropdown @pointerdown.outside="close">
+      <!-- .micra-dropdown is the positioning context: it must wrap ONLY the
+           trigger and the menu, so the menu anchors under the trigger. Sibling
+           content (like the status line below) lives outside it. -->
+      <div class="micra-dropdown">
+        <button
+          class="micra-dropdown__trigger"
+          data-ref="trigger"
+          aria-haspopup="menu"
+          aria-controls="dropdown-menu"
+          data-bind="aria-expanded:isOpen ? 'true' : 'false'"
+          @click="toggle"
+          @keydown.down.prevent="open"
+          @keydown.up.prevent="open"
+        >
+          Options
+        </button>
+
+        <ul
+          class="micra-dropdown__menu"
+          id="dropdown-menu"
+          role="menu"
+          data-ref="menu"
+          tabindex="-1"
+          data-bind="data-state:isOpen ? 'open' : 'closed', aria-activedescendant:activeDescendant()"
+          @keydown.down.prevent="moveDown"
+          @keydown.up.prevent="moveUp"
+          @keydown.home.prevent="moveFirst"
+          @keydown.end.prevent="moveLast"
+          @keydown.enter.prevent="activate"
+          @keydown.space.prevent="activate"
+          @keydown.escape="close"
+        >
+          <template data-each="items" data-key="id">
+            <li
+              class="micra-dropdown__item"
+              role="menuitem"
+              data-bind="id:item.id, aria-disabled:item.disabled ? 'true' : 'false', data-state:isActive(item.id) ? 'active' : ''"
+              @click="select(item.id)"
+              data-text="item.label"
+            ></li>
+          </template>
+        </ul>
+      </div>
+
+      <p class="demo-status">
+        Last selected: <strong data-text="lastSelected || '—'"></strong>
+      </p>
+    </micra-dropdown>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      Micra.start();
+
+      // Seed the menu items. Demo data only — in your app, set state.items from
+      // wherever your data lives.
+      const dropdown = Micra.instances().get(
+        document.querySelector('[data-component="dropdown"]')
+      );
+      dropdown.state.items = [
+        { id: 'new', label: 'New file' },
+        { id: 'open', label: 'Open…' },
+        { id: 'rename', label: 'Rename' },
+        { id: 'archive', label: 'Archive', disabled: true },
+        { id: 'delete', label: 'Delete' },
+      ];
+
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micra — Charts</title>
+    <link rel="stylesheet" href="../../theme/theme.css" />
+    <link rel="stylesheet" href="./charts.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 3rem;
+        background: var(--micra-bg);
+        color: var(--micra-fg);
+      }
+      .demo-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .demo-ghost {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.55rem 1rem;
+        background: none;
+        color: var(--micra-fg);
+        border: 1px solid var(--micra-border);
+        border-radius: var(--micra-radius);
+      }
+      .demo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+        gap: 2rem;
+        max-width: 72rem;
+      }
+      .demo-card h2 {
+        margin: 0 0 0.75rem;
+        font-size: 1rem;
+        color: var(--micra-muted);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
+      <span style="color: var(--micra-muted); font-size: 0.875rem"
+        >Tip: click a legend item to toggle a series / slice.</span
+      >
+    </div>
+
+    <div class="demo-grid">
+      <!-- BAR — grouped, two series (object form: categories + series). -->
+      <section class="demo-card">
+        <h2>Bar — revenue by year</h2>
+        <micra-charts
+          class="micra-charts"
+          data-type="bar"
+          data-data='{
+            "categories":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"],
+            "series":[
+              {"name":"2025","data":[9800,12400,11200,15600,18200,16100,19800,21400]},
+              {"name":"2026","data":[12400,18900,15200,21800,24600,19700,27300,30100]}
+            ]
+          }'
+        >
+          <div
+            class="micra-charts__plot"
+            role="img"
+            data-bind="aria-label:ariaSummary(), data-state:plotState()"
+            data-html="svg()"
+          ></div>
+
+          <ul class="micra-charts__legend">
+            <template data-each="legend()" data-key="key">
+              <li
+                data-bind="data-hidden:item.hidden ? 'true' : 'false', data-toggle:item.toggle ? 'true' : 'false'"
+                @click="toggle(item.index)"
+              >
+                <span class="micra-charts__swatch" data-bind="style:swatchStyle(item.color)"></span>
+                <span data-text="item.label"></span>
+                <span class="micra-charts__legend-value" data-text="item.value"></span>
+              </li>
+            </template>
+          </ul>
+
+          <ul class="micra-charts__sr">
+            <template data-each="dataList()" data-key="key">
+              <li><span data-text="item.label"></span>: <span data-text="item.value"></span></li>
+            </template>
+          </ul>
+        </micra-charts>
+      </section>
+
+      <!-- LINE — two series over the same categories. -->
+      <section class="demo-card">
+        <h2>Line — revenue trend (2 years)</h2>
+        <micra-charts
+          class="micra-charts"
+          data-type="line"
+          data-data='{
+            "categories":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"],
+            "series":[
+              {"name":"2025","data":[9800,12400,11200,15600,18200,16100,19800,21400]},
+              {"name":"2026","data":[12400,18900,15200,21800,24600,19700,27300,30100]}
+            ]
+          }'
+        >
+          <div
+            class="micra-charts__plot"
+            role="img"
+            data-bind="aria-label:ariaSummary(), data-state:plotState()"
+            data-html="svg()"
+          ></div>
+
+          <ul class="micra-charts__legend">
+            <template data-each="legend()" data-key="key">
+              <li
+                data-bind="data-hidden:item.hidden ? 'true' : 'false', data-toggle:item.toggle ? 'true' : 'false'"
+                @click="toggle(item.index)"
+              >
+                <span class="micra-charts__swatch" data-bind="style:swatchStyle(item.color)"></span>
+                <span data-text="item.label"></span>
+                <span class="micra-charts__legend-value" data-text="item.value"></span>
+              </li>
+            </template>
+          </ul>
+
+          <ul class="micra-charts__sr">
+            <template data-each="dataList()" data-key="key">
+              <li><span data-text="item.label"></span>: <span data-text="item.value"></span></li>
+            </template>
+          </ul>
+        </micra-charts>
+      </section>
+
+      <!-- PIE — traffic by source, 5 slices. -->
+      <section class="demo-card">
+        <h2>Pie — traffic by source</h2>
+        <micra-charts
+          class="micra-charts"
+          data-type="pie"
+          data-data='[
+            {"label":"Direct","value":4200},
+            {"label":"Organic","value":3100},
+            {"label":"Referral","value":1500},
+            {"label":"Social","value":980},
+            {"label":"Email","value":620}
+          ]'
+        >
+          <div
+            class="micra-charts__plot"
+            role="img"
+            data-bind="aria-label:ariaSummary(), data-state:plotState()"
+            data-html="svg()"
+          ></div>
+
+          <ul class="micra-charts__legend">
+            <template data-each="legend()" data-key="key">
+              <li
+                data-bind="data-hidden:item.hidden ? 'true' : 'false', data-toggle:item.toggle ? 'true' : 'false'"
+                @click="toggle(item.index)"
+              >
+                <span class="micra-charts__swatch" data-bind="style:swatchStyle(item.color)"></span>
+                <span data-text="item.label"></span>
+                <span class="micra-charts__legend-value" data-text="item.value"></span>
+              </li>
+            </template>
+          </ul>
+
+          <ul class="micra-charts__sr">
+            <template data-each="dataList()" data-key="key">
+              <li><span data-text="item.label"></span>: <span data-text="item.value"></span></li>
+            </template>
+          </ul>
+        </micra-charts>
+      </section>
+
+      <!-- BAR — stacked (data-stacked="true"); legend toggles series. -->
+      <section class="demo-card">
+        <h2>Bar — stacked</h2>
+        <micra-charts
+          class="micra-charts"
+          data-type="bar"
+          data-stacked="true"
+          data-data='{
+            "categories":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"],
+            "series":[
+              {"name":"Direct","data":[4200,4600,4100,5200,5800,5300,6100,6700]},
+              {"name":"Organic","data":[3100,3400,3000,3900,4300,3800,4600,5000]},
+              {"name":"Referral","data":[1500,1700,1400,1900,2100,1800,2300,2500]}
+            ]
+          }'
+        >
+          <div
+            class="micra-charts__plot"
+            role="img"
+            data-bind="aria-label:ariaSummary(), data-state:plotState()"
+            data-html="svg()"
+          ></div>
+
+          <ul class="micra-charts__legend">
+            <template data-each="legend()" data-key="key">
+              <li
+                data-bind="data-hidden:item.hidden ? 'true' : 'false', data-toggle:item.toggle ? 'true' : 'false'"
+                @click="toggle(item.index)"
+              >
+                <span class="micra-charts__swatch" data-bind="style:swatchStyle(item.color)"></span>
+                <span data-text="item.label"></span>
+                <span class="micra-charts__legend-value" data-text="item.value"></span>
+              </li>
+            </template>
+          </ul>
+
+          <ul class="micra-charts__sr">
+            <template data-each="dataList()" data-key="key">
+              <li><span data-text="item.label"></span>: <span data-text="item.value"></span></li>
+            </template>
+          </ul>
+        </micra-charts>
+      </section>
+
+      <!-- AREA — stacked line (data-type="line" data-stacked="true"). -->
+      <section class="demo-card">
+        <h2>Area — stacked</h2>
+        <micra-charts
+          class="micra-charts"
+          data-type="line"
+          data-stacked="true"
+          data-data='{
+            "categories":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"],
+            "series":[
+              {"name":"Direct","data":[4200,4600,4100,5200,5800,5300,6100,6700]},
+              {"name":"Organic","data":[3100,3400,3000,3900,4300,3800,4600,5000]},
+              {"name":"Referral","data":[1500,1700,1400,1900,2100,1800,2300,2500]}
+            ]
+          }'
+        >
+          <div
+            class="micra-charts__plot"
+            role="img"
+            data-bind="aria-label:ariaSummary(), data-state:plotState()"
+            data-html="svg()"
+          ></div>
+
+          <ul class="micra-charts__legend">
+            <template data-each="legend()" data-key="key">
+              <li
+                data-bind="data-hidden:item.hidden ? 'true' : 'false', data-toggle:item.toggle ? 'true' : 'false'"
+                @click="toggle(item.index)"
+              >
+                <span class="micra-charts__swatch" data-bind="style:swatchStyle(item.color)"></span>
+                <span data-text="item.label"></span>
+                <span class="micra-charts__legend-value" data-text="item.value"></span>
+              </li>
+            </template>
+          </ul>
+
+          <ul class="micra-charts__sr">
+            <template data-each="dataList()" data-key="key">
+              <li><span data-text="item.label"></span>: <span data-text="item.value"></span></li>
+            </template>
+          </ul>
+        </micra-charts>
+      </section>
+      <!-- MIXED — revenue bars (left axis) + margin % line (right axis). -->
+      <section class="demo-card">
+        <h2>Mixed — revenue + margin (dual axis)</h2>
+        <micra-charts
+          class="micra-charts"
+          data-type="mixed"
+          data-data='{
+            "categories":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"],
+            "series":[
+              {"name":"Revenue","kind":"bar","axis":"left","data":[12400,18900,15200,21800,24600,19700,27300,30100]},
+              {"name":"Margin %","kind":"line","axis":"right","data":[18,22,19,24,26,21,28,31]}
+            ]
+          }'
+        >
+          <div
+            class="micra-charts__plot"
+            role="img"
+            data-bind="aria-label:ariaSummary(), data-state:plotState()"
+            data-html="svg()"
+          ></div>
+
+          <ul class="micra-charts__legend">
+            <template data-each="legend()" data-key="key">
+              <li
+                data-bind="data-hidden:item.hidden ? 'true' : 'false', data-toggle:item.toggle ? 'true' : 'false'"
+                @click="toggle(item.index)"
+              >
+                <span class="micra-charts__swatch" data-bind="style:swatchStyle(item.color)"></span>
+                <span data-text="item.label"></span>
+                <span class="micra-charts__legend-value" data-text="item.value"></span>
+              </li>
+            </template>
+          </ul>
+
+          <ul class="micra-charts__sr">
+            <template data-each="dataList()" data-key="key">
+              <li><span data-text="item.label"></span>: <span data-text="item.value"></span></li>
+            </template>
+          </ul>
+        </micra-charts>
+      </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>
+    <script src="./define.js"></script>
+    <script>
+      Micra.start();
+
+      // Demo chrome only — light/dark switch.
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+
+      // — Driving a chart from JS (the public API) ————————————————————
+      // Reach a live instance via Micra.instances() — a read-only Map keyed by the
+      // root element — and call setData() / setType() to update it reactively.
+      //
+      //   const el = document.querySelector('[data-component="charts"]');
+      //   const chart = Micra.instances().get(el);
+      //   chart.setData([{ label: 'Q1', value: 40 }, { label: 'Q2', value: 65 }]);
+      //   chart.setType('line'); // 'bar' | 'line' | 'pie'
+    </script>
+  </body>
+</html>

@@ -1,0 +1,103 @@
+/*
+ * chartjs.css — Micra token skin for the Chart.js wrapper.
+ *
+ * Chart.js paints colors to a <canvas>, so the chart's COLORS live in JS
+ * (define.js reads --micra-* tokens at runtime — see applyTheme()). This file
+ * only styles the *card* around the canvas: the sized, position:relative
+ * container Chart.js needs for responsive sizing, plus the toolbar chrome.
+ * References only --micra-* tokens — recolor by overriding them, or edit here.
+ */
+
+micra-chartjs {
+  display: block;
+}
+
+
+/* The chart card. */
+.micra-chartcard {
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+  padding: 1rem 1.1rem 1.1rem;
+}
+
+/* Chart.js responsive sizing REQUIRES a sized, positioned parent for the canvas
+   — otherwise the canvas grows on every resize. Fixed height + relative wins. */
+.micra-chart {
+  position: relative;
+  height: 22rem;
+  width: 100%;
+}
+.micra-chart > canvas {
+  display: block;
+}
+
+/* Toolbar above the chart — the reactive Micra controls. */
+.micra-chart-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+.micra-chart-bar__spacer {
+  flex: 1;
+}
+
+/* A segmented line/bar switch. Active state comes from data-active via data-bind. */
+.micra-seg {
+  display: inline-flex;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  overflow: hidden;
+}
+.micra-seg__btn {
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.4rem 0.75rem;
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+  border: 0;
+}
+.micra-seg__btn + .micra-seg__btn {
+  border-left: 1px solid var(--micra-border);
+}
+.micra-seg__btn[data-active='true'] {
+  background: color-mix(in srgb, var(--micra-primary) 14%, transparent);
+  color: var(--micra-primary);
+}
+
+.micra-chart-btn {
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--micra-border);
+  border-radius: var(--micra-radius);
+  background: var(--micra-surface);
+  color: var(--micra-fg);
+}
+.micra-chart-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* A small state readout — point count + zoom indicator, driven by Micra state. */
+.micra-chart-readout {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  font-size: 0.85rem;
+  color: var(--micra-muted);
+}
+.micra-chart-readout__badge {
+  font-weight: 600;
+}
+.micra-chart-readout__badge[data-zoomed='true'] {
+  color: var(--micra-warning);
+}
+.micra-chart-readout__badge[data-zoomed='false'] {
+  color: var(--micra-success);
+}
