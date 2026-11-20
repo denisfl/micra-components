@@ -2,9 +2,10 @@
  * components/commandpalette/commandpalette.css — default skin for the Command palette.
  *
  * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
- * those tokens, or rewrite this file — you own it. The overlay is always in the
- * DOM and shown/hidden via [data-state] (not data-show), so it fades cleanly and
- * never flashes before Micra mounts. The active option is marked with [data-state].
+ * those tokens, or rewrite this file — you own it. The <dialog> is a
+ * transparent full-viewport layer, so a click outside the panel lands on it
+ * (@click.self closes); fades use @starting-style. The active option is marked
+ * with [data-state].
  */
 
 micra-commandpalette {
@@ -13,26 +14,54 @@ micra-commandpalette {
 
 
 .micra-cmdk {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
+  /* Undo the UA dialog box: the dialog is a transparent full-viewport layer. */
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 12vh 1rem 1rem;
+  border: 0;
+  background: transparent;
+  color: var(--micra-fg);
+
+  opacity: 0;
+  transition:
+    opacity var(--micra-duration) var(--micra-ease),
+    overlay var(--micra-duration) var(--micra-ease) allow-discrete,
+    display var(--micra-duration) var(--micra-ease) allow-discrete;
+}
+
+.micra-cmdk[open] {
   display: grid;
   align-items: start;
   justify-items: center;
-  padding: 12vh 1rem 1rem;
-  background: var(--micra-overlay);
-
-  /* hidden + non-interactive until [data-state="open"] */
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity var(--micra-duration) var(--micra-ease),
-    visibility var(--micra-duration) var(--micra-ease);
+  opacity: 1;
 }
 
-.micra-cmdk[data-state='open'] {
+.micra-cmdk::backdrop {
+  background: var(--micra-overlay);
+  opacity: 0;
+  transition:
+    opacity var(--micra-duration) var(--micra-ease),
+    overlay var(--micra-duration) var(--micra-ease) allow-discrete,
+    display var(--micra-duration) var(--micra-ease) allow-discrete;
+}
+
+.micra-cmdk[open]::backdrop {
   opacity: 1;
-  visibility: visible;
+}
+
+@starting-style {
+  .micra-cmdk[open],
+  .micra-cmdk[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* Lock the page scroll while the palette is open. */
+html:has(.micra-cmdk[open]) {
+  overflow: hidden;
 }
 
 .micra-cmdk__panel {
@@ -51,8 +80,14 @@ micra-commandpalette {
   transition: transform var(--micra-duration) var(--micra-ease);
 }
 
-.micra-cmdk[data-state='open'] .micra-cmdk__panel {
+.micra-cmdk[open] .micra-cmdk__panel {
   transform: none;
+}
+
+@starting-style {
+  .micra-cmdk[open] .micra-cmdk__panel {
+    transform: translateY(-8px) scale(0.98);
+  }
 }
 
 .micra-cmdk__input {

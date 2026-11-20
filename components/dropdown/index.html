@@ -44,10 +44,9 @@
       <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
     </div>
 
-    <micra-dropdown @pointerdown.outside="close">
-      <!-- .micra-dropdown is the positioning context: it must wrap ONLY the
-           trigger and the menu, so the menu anchors under the trigger. Sibling
-           content (like the status line below) lives outside it. -->
+    <micra-dropdown>
+      <!-- The menu is a native popover anchored to the trigger (CSS anchor
+           positioning, or define.js where the browser lacks it). -->
       <div class="micra-dropdown">
         <button
           class="micra-dropdown__trigger"
@@ -55,7 +54,7 @@
           aria-haspopup="menu"
           aria-controls="dropdown-menu"
           data-bind="aria-expanded:isOpen ? 'true' : 'false'"
-          @click="toggle"
+          popovertarget="dropdown-menu"
           @keydown.down.prevent="open"
           @keydown.up.prevent="open"
         >
@@ -66,16 +65,17 @@
           class="micra-dropdown__menu"
           id="dropdown-menu"
           role="menu"
+          popover
+          @toggle="onToggle"
           data-ref="menu"
           tabindex="-1"
-          data-bind="data-state:isOpen ? 'open' : 'closed', aria-activedescendant:activeDescendant()"
+          data-bind="aria-activedescendant:activeDescendant()"
           @keydown.down.prevent="moveDown"
           @keydown.up.prevent="moveUp"
           @keydown.home.prevent="moveFirst"
           @keydown.end.prevent="moveLast"
           @keydown.enter.prevent="activate"
           @keydown.space.prevent="activate"
-          @keydown.escape="close"
         >
           <template data-each="items" data-key="id">
             <li

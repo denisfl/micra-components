@@ -22,12 +22,15 @@ directives for the small stuff.
 - Derived values are **methods** (`total()`, `filtered()`), never `state` fields.
 - Wire events with `@event` / `data-on` (`@click`, `@submit.prevent`,
   `@keydown.escape`). Outside-click and global keys are modifiers on the root:
-  `@pointerdown.outside="close"`, `@keydown.escape.window="close"` (Micra 2.9+).
-  The only `addEventListener` allowed is a third-party-library listener, added in
-  `onCreate` and removed in `onDestroy`.
+  `@pointerdown.outside="close"`, `@keydown.meta.k.window.prevent="toggle"`
+  (Micra 2.9+). A listener added from JS goes through
+  `this.listen(target, type, fn)` (Micra 2.14+), never a bare `addEventListener`.
+- Overlays use the platform: a modal is `<dialog>` + `showModal()`, a menu or
+  popover is `popover` + `popovertarget`. Mirror their `close` / `toggle` events
+  into state instead of reimplementing focus traps, Escape or outside-click.
+- JSON props: `this.prop('items', [])` parses `data-items` (Micra 2.14+).
 - After a state write, `await this.tick()` before focusing or scrolling to what
-  changed. Overlays that fade in via a `visibility` transition are the exception:
-  wait a double `requestAnimationFrame` before focusing into them.
+  changed.
 - Mutate state by replacing the top-level value: `state.items = [...]`,
   `state.user = { ...state.user, name }`, or `this.set('user.name', x)`.
 - Style with `--micra-*` tokens only. Dark mode is the same tokens under

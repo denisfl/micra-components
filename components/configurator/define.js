@@ -77,9 +77,9 @@ Micra.define('configurator', {
     this._currency = this.prop('currency', 'USD') || 'USD';
     this._locale = this.prop('locale', 'en-US') || 'en-US';
 
-    // Seed the config from a data-config JSON attr. prop() hands back the raw
-    // string; parse defensively and REPLACE the config object (shallow proxy).
-    const config = this._parseJSON(this.prop('config'));
+    // Seed the config from a data-config JSON attr. An object default makes prop()
+    // parse it (a malformed attr falls back to {}); REPLACE the config object.
+    const config = this.prop('config', {});
     if (config && Array.isArray(config.steps)) {
       this.state.config = config;
       this._warnDuplicateIds(config);
@@ -544,16 +544,5 @@ Micra.define('configurator', {
         seen[o.id] = true;
       });
     });
-  },
-
-  // prop() hands back the raw JSON string for data-config; parse defensively (a
-  // malformed attr should not crash the component).
-  _parseJSON(raw) {
-    if (raw == null || raw === '' || typeof raw !== 'string') return null;
-    try {
-      return JSON.parse(raw);
-    } catch (e) {
-      return null;
-    }
   },
 });

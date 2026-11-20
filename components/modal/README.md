@@ -1,7 +1,9 @@
 # Modal
 
-Accessible dialog: focus trap, focus return to the trigger, Escape to close,
-backdrop click to close, body scroll lock. Headless behavior in `define.js`; the
+Accessible dialog on a native `<dialog>`: `showModal()` makes the rest of the page
+inert, so Tab stays inside; Escape closes; focus moves in and returns to the trigger;
+the dialog sits in the top layer above everything. Backdrop click closes, page
+scroll is locked while open (CSS `:has()`). Headless behavior in `define.js`; the
 look is a default skin in `modal.css` driven by `theme/theme.css` tokens.
 
 Open `index.html` to see it running (light + dark).
@@ -20,14 +22,12 @@ Open `index.html` to see it running (light + dark).
 2. Drop in the markup (set the title with `data-title`):
 
    ```html
-   <micra-modal @keydown.escape.window="close" @keydown.tab.window="trapTab" data-title="Delete project?">
+   <micra-modal data-title="Delete project?">
      <button class="micra-btn" @click="open">Delete project…</button>
 
-     <div class="micra-modal"
-          data-bind="data-state:isOpen ? 'open' : 'closed'"
-          @click.self="close">
-       <div class="micra-modal__dialog" role="dialog" aria-modal="true"
-            aria-labelledby="m-title" data-ref="dialog" tabindex="-1">
+     <dialog class="micra-modal" data-ref="dialog" aria-labelledby="m-title"
+             @close="closed" @click.self="close">
+       <div class="micra-modal__dialog">
          <header class="micra-modal__head">
            <h2 id="m-title" data-text="title"></h2>
            <button class="micra-modal__close" @click="close" aria-label="Close">&times;</button>
@@ -36,7 +36,7 @@ Open `index.html` to see it running (light + dark).
            <p>Your content here.</p>
          </div>
        </div>
-     </div>
+     </dialog>
    </micra-modal>
    ```
 
@@ -56,16 +56,19 @@ is an independent instance with its own state.
 - **Dark mode** — set `data-theme="dark"` on `<html>` (or rely on the OS
   preference; `theme.css` auto-applies dark unless `data-theme="light"`).
 - **Full control** — edit `modal.css`. It is yours.
-- **Tailwind (optional)** — the state lives in `data-state`, so you can skip
-  `modal.css` and style with native variants instead:
-  `class="… data-[state=open]:opacity-100"`.
+- **Tailwind (optional)** — the open state is the dialog's own `[open]`
+  attribute, so you can skip `modal.css` and use the `open:` variant:
+  `class="… open:grid backdrop:bg-black/50"`.
 
 ## Accessibility
 
-`role="dialog"` + `aria-modal`, labelled by the heading. Focus moves into the
-dialog on open and returns to the trigger on close; Tab is trapped inside;
-Escape closes. Motion respects `prefers-reduced-motion` (tokens zero the
-duration). The backdrop is non-interactive when closed (`visibility: hidden`).
+A native modal `<dialog>`, labelled by its heading. The browser moves focus to the
+first focusable element on open, keeps Tab inside (the page behind is inert), and
+closes on Escape; the component returns focus to the button that opened it (Safari
+doesn't focus a clicked button, so the browser alone would lose it). `isOpen`
+follows the dialog however it closes. Motion respects `prefers-reduced-motion`
+(tokens zero the duration); fades use `@starting-style`, and browsers without it
+open and close instantly.
 
 ## License
 

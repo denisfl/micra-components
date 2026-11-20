@@ -71,14 +71,14 @@ Micra.define('datatable', {
     this._debounceMs = this.prop('debounce', 250) || 250;
 
     // Columns / rows may be seeded as JSON props (data-columns / data-rows). The
-    // prop returns the raw string; parse it and REPLACE the array. Columns set in
+    // An array default makes prop() parse the JSON (Micra 2.14+); REPLACE the array. Columns set in
     // JS (host code) can carry a real format function; JSON columns carry a string
     // format name (resolved by formatters() below) or none.
-    const columns = this._parseJSON(this.prop('columns'));
-    if (Array.isArray(columns)) this.state.columns = columns;
+    const columns = this.prop('columns', []);
+    if (Array.isArray(columns) && columns.length) this.state.columns = columns;
 
-    const rows = this._parseJSON(this.prop('rows'));
-    if (Array.isArray(rows)) this.state.rows = rows;
+    const rows = this.prop('rows', []);
+    if (Array.isArray(rows) && rows.length) this.state.rows = rows;
 
     // Server mode fetches its first page; client mode already has its data.
     if (this.state.server) this.requestData();
@@ -536,17 +536,6 @@ Micra.define('datatable', {
     const out = [];
     for (let n = start; n <= end; n++) out.push(n);
     return out;
-  },
-
-  // prop() hands back the raw JSON string for data-columns / data-rows; parse it
-  // defensively (a malformed attr should not crash the component).
-  _parseJSON(raw) {
-    if (raw == null || raw === '' || typeof raw !== 'string') return null;
-    try {
-      return JSON.parse(raw);
-    } catch (e) {
-      return null;
-    }
   },
 
   // Flatten the structured params into a query the backend can read. sort becomes

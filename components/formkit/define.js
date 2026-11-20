@@ -57,9 +57,9 @@ Micra.define('formkit', {
     this._key = this.prop('autosaveKey', '') || '';
     this._debounceMs = this.prop('autosaveDebounce', 800) || 800;
 
-    // Seed the schema from a data-schema JSON attr. prop() hands back the raw
-    // string; parse it defensively and REPLACE the schema object.
-    const schema = this._parseJSON(this.prop('schema'));
+    // Seed the schema from a data-schema JSON attr. An object default makes prop()
+    // parse it (a malformed attr falls back to {}); REPLACE the schema object.
+    const schema = this.prop('schema', {});
     if (schema && Array.isArray(schema.steps)) this.state.schema = schema;
 
     // Initialise values from each field's default, then layer any saved draft
@@ -573,16 +573,5 @@ Micra.define('formkit', {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  },
-
-  // prop() hands back the raw JSON string for data-schema; parse defensively (a
-  // malformed attr should not crash the component).
-  _parseJSON(raw) {
-    if (raw == null || raw === '' || typeof raw !== 'string') return null;
-    try {
-      return JSON.parse(raw);
-    } catch (e) {
-      return null;
-    }
   },
 });

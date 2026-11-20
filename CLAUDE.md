@@ -63,15 +63,20 @@ unless `data-theme="light"` is set). `prefers-reduced-motion` zeroes
 - **Derived values are methods**, not state fields. State holds raw data only;
   counts/filters/labels are methods (`total() { return this.state.items.length }`).
 - **Event handlers** via `@event` / `data-on` (`@click`, `@submit.prevent`,
-  `@keydown.escape`, …) — never `addEventListener` inside a method. Outside-click
-  and global keys go on the component root as modifiers (Micra 2.9+), which Micra
-  removes on destroy: `@pointerdown.outside="close"`, `@keydown.escape.window="close"`,
-  `@keydown.tab.window="trapTab"`. Listeners that live only for one gesture (the
-  slider drag) or belong to a third-party library are added and removed by hand.
+  `@keydown.escape`, …) — never `addEventListener` inside a method. Global keys and
+  outside-click go on the component root as modifiers (Micra 2.9+), which Micra
+  removes on destroy: `@keydown.meta.k.window.prevent="toggle"`,
+  `@pointerdown.outside="close"`. A listener that must be added from JS (a scroll
+  follower, a third-party library's event, a drag) uses
+  `this.listen(target, type, fn)` (Micra 2.14+), which destroy() also removes.
+- **Overlays are native.** Modal, slide-over and command palette are a `<dialog>`
+  opened with `showModal()` (inert page, Escape, focus in and back, top layer);
+  dropdown and popover are `popover` + `popovertarget` (light dismiss, top layer)
+  anchored with CSS anchor positioning and a JS fallback. State (`isOpen` / `open`)
+  follows the element's `close` / `toggle` event. No focus trap, scroll-lock JS or
+  double `requestAnimationFrame` in these components.
 - **Wait for the render with `await this.tick()`** before focusing or scrolling to
-  something a state write just changed. Exception: focusing into an overlay on open.
-  Its skin transitions `visibility`, which is still `hidden` when the render lands,
-  so `focus()` no-ops; those keep the double `requestAnimationFrame`.
+  something a state write just changed.
 - **No manual re-render** after a mutation. Writing a top-level `state` property
   schedules a batched render; methods recompute on read.
 - **No nested-path writes** (`state.user.name = x`). Replace the top-level

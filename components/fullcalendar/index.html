@@ -327,19 +327,17 @@
            create/select. Shows two components composing — the calendar only
            emits; this panel owns the form. The component itself depends on neither;
            you can wire any modal/panel the same way. -->
-      <micra-slideover @keydown.escape.window="close" @keydown.tab.window="trapTab" data-side="right" data-size="22rem">
-        <div
+      <micra-slideover data-side="right" data-size="22rem">
+        <dialog
           class="micra-slideover"
-          data-bind="data-state:open ? 'open' : 'closed', data-side:side()"
+          data-ref="dialog"
+          aria-labelledby="ev-editor-title"
+          data-bind="data-side:side()"
+          @close="closed"
           @click.self="close"
         >
           <div
             class="micra-slideover__panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="ev-editor-title"
-            data-ref="panel"
-            tabindex="-1"
             data-bind="data-side:side(), style:panelStyle()"
           >
             <header class="micra-slideover__head">
@@ -371,7 +369,7 @@
               <button type="submit" form="ev-form" class="micra-btn">Save</button>
             </footer>
           </div>
-        </div>
+        </dialog>
       </micra-slideover>
     </div>
 

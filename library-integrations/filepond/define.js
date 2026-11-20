@@ -51,16 +51,10 @@ Micra.define('filepond', {
     // descriptors, e.g. [{ "source": "<dataURI>", "options": { "type": "local" } }].
     // Loaded client-side (data URIs need no network), so the demo shows populated
     // files in the sandbox without a server.
-    let files = [];
-    const seed = this.prop('seed');
-    if (seed) {
-      try {
-        const parsed = JSON.parse(seed);
-        if (Array.isArray(parsed)) files = parsed;
-      } catch (_) {
-        /* ignore malformed seed */
-      }
-    }
+    // An array default makes prop() parse the JSON (Micra 2.14+); a malformed
+    // seed falls back to it.
+    const seed = this.prop('seed', []);
+    const files = Array.isArray(seed) ? seed : [];
 
     this._pond = FilePond.create(this._input, {
       credits: false, // hide the "Powered by PQINA" credit

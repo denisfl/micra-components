@@ -1,9 +1,10 @@
 /*
  * components/minicart/define.js — Mini-cart / Checkout (headless behavior).
  *
- * A shopping cart in a modal side drawer with a multi-step checkout. The drawer
- * mechanics are modal-grade and match the slideover (focus trap, focus return,
- * Escape, backdrop click, body scroll lock, FOUC-free visibility). On top of that
+ * A shopping cart in a modal side drawer with a multi-step checkout. The drawer is
+ * a native <dialog> like the slideover: showModal() makes the page inert (Tab
+ * stays inside), Escape closes, focus moves in and returns, backdrop click and
+ * scroll lock come from the skin. On top of that
  * it owns the cart math (line totals, subtotal, coupon discount, shipping, total),
  * a coupon validator, and a cart -> details -> review wizard with per-field
  * validation that blocks advancing while a step is invalid. Pair with
@@ -16,7 +17,8 @@
  * Every derived value — item count, subtotal, discount, shipping, total, step
  * validity, formatted currency — is a METHOD, never a state field.
  *
- * Two JSON props seed the cart in onCreate (parsed defensively, then REPLACED):
+ * Two JSON props seed the cart in onCreate (parsed by prop() with an array/object
+ * default, Micra 2.14+, then REPLACED):
  *   data-items='[{ "id", "name", "price", "qty" }, …]'   line items (price in cents)
  *   data-coupons='{ "CODE": { "type": "percent"|"shipping", "value"? }, … }'
  * plus optional scalars:
@@ -25,18 +27,17 @@
  *   data-free-over="5000"    subtotal (cents) above which shipping is free
  *
  * Markup contract (see index.html for the full template):
- *   <div data-component="minicart" @keydown.escape.window="close" @keydown.tab.window="trapTab" data-items='…' data-coupons='…'>
+ *   <micra-minicart data-items='…' data-coupons='…'>
  *     <button @click="open">Cart (<span data-text="itemCount()"></span>)</button>
- *     <div class="micra-minicart"
- *          data-bind="data-state:open ? 'open' : 'closed'" @click.self="close">
- *       <div class="micra-minicart__panel" role="dialog" aria-modal="true"
- *            aria-labelledby="…" data-ref="panel" tabindex="-1"> … </div>
- *     </div>
- *   </div>
+ *     <dialog class="micra-minicart" data-ref="dialog" aria-labelledby="…"
+ *             @close="closed" @click.self="close">
+ *       <div class="micra-minicart__panel"> … </div>
+ *     </dialog>
+ *   </micra-minicart>
  *
  * GOTCHAS this file works around:
  *  - prop() on a bare data-* attr returns "" (falsy), and casts "true"/numbers; a
- *    JSON prop comes back as a raw string we parse + replace.
+ *    JSON prop needs an array/object default to be parsed (Micra 2.14+).
  *  - ARIA / state styling values are bound as STRINGS ('true'/'false', step tokens)
  *    in the markup, never bare booleans.
  *  - A method must not share a name with a state key (the key would win in an
@@ -62,9 +63,9 @@ Micra.define('minicart', {
   },
 
   onCreate() {
-    // Seed items + coupons from JSON props (raw string → parse → REPLACE).
-    const items = this._parseJSON(this.prop('items'));
-    if (Array.isArray(items)) {
+    // Seed items + coupons from JSON props (array/object default → parsed, then REPLACE).
+    const items = this.prop('items', []);
+    if (Array.isArray(items) && items.length) {
       this.state.items = items.map((it) => ({
         id: it.id,
         name: it.name,
@@ -73,7 +74,7 @@ Micra.define('minicart', {
       }));
     }
 
-    const coupons = this._parseJSON(this.prop('coupons'));
+    const coupons = this.prop('coupons', {});
     this._coupons = coupons && typeof coupons === 'object' ? coupons : {};
 
     // Money config. prop() casts a present numeric to a number; default the rest.
@@ -85,31 +86,24 @@ Micra.define('minicart', {
     this.state.fields = { name: '', email: '', address: '' };
   },
 
-  onDestroy() {
-    this._setScrollLock(false); // never leave the body locked
-  },
-
   // — drawer actions ————————————————————————————————————————————————
-  open() {
-    this._trigger = document.activeElement; // remember who opened it
+  // From a click, remember the trigger: Safari doesn't focus a clicked button,
+  // so the browser's own focus return has nothing to go back to.
+  open(e) {
+    this._trigger = e && e.currentTarget;
+    this.refs.dialog.showModal();
     this.state.open = true;
-    this._setScrollLock(true);
-    // Move focus into the panel once it is actually visible. A double rAF waits
-    // until the open styles have been applied (a single one can fire too early,
-    // while the panel is still inheriting visibility:hidden, and focus() no-ops).
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => {
-        const panel = this.refs.panel;
-        if (panel) (this._focusables(panel)[0] || panel).focus();
-      })
-    );
   },
 
+  // Fires the dialog's close event, which runs closed() below.
   close() {
-    if (!this.state.open) return;
+    this.refs.dialog.close();
+  },
+
+  // The dialog closed: by close(), Escape, or a backdrop click.
+  closed() {
     this.state.open = false;
-    this._setScrollLock(false);
-    if (this._trigger && this._trigger.focus) this._trigger.focus(); // return focus
+    if (this._trigger) this._trigger.focus();
   },
 
   // — line items ————————————————————————————————————————————————————
@@ -406,49 +400,8 @@ Micra.define('minicart', {
     }));
   },
 
-  // Called from the root's @keydown.tab.window; a no-op while closed.
-  trapTab(e) {
-    if (!this.state.open) return;
-    const panel = this.refs.panel;
-    if (!panel) return;
-    const f = this._focusables(panel);
-    if (!f.length) return;
-    const first = f[0];
-    const last = f[f.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  },
-
-  _focusables(root) {
-    return Array.from(
-      root.querySelectorAll(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )
-    ).filter((el) => el.offsetParent !== null || el === root); // skip hidden steps
-  },
-
-  _setScrollLock(on) {
-    document.body.style.overflow = on ? 'hidden' : '';
-  },
-
   _uid() {
     if (!this._uidValue) this._uidValue = Math.random().toString(36).slice(2, 8);
     return this._uidValue;
-  },
-
-  // prop() hands back the raw JSON string for data-items / data-coupons; parse
-  // defensively (a malformed attr should not crash the component).
-  _parseJSON(raw) {
-    if (raw == null || raw === '' || typeof raw !== 'string') return null;
-    try {
-      return JSON.parse(raw);
-    } catch (e) {
-      return null;
-    }
   },
 });

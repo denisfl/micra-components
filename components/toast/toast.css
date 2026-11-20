@@ -21,15 +21,21 @@ micra-toast {
 }
 
 .micra-toasts {
-  position: fixed;
-  bottom: 1rem;
-  right: 1rem;
-  z-index: 60;
+  /* A manual popover (top layer): undo the UA popover box, pin bottom-right. */
+  inset: auto 1rem 1rem auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  max-width: min(22rem, calc(100vw - 2rem));
+  pointer-events: none; /* the container is just a stacking context */
+}
+
+.micra-toasts:popover-open {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  max-width: min(22rem, calc(100vw - 2rem));
-  pointer-events: none; /* the container is just a stacking context */
 }
 
 .micra-toast {

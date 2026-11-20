@@ -7,26 +7,25 @@
  * the global shortcut, the dialog focus trap and focus return, fuzzy matching
  * and ranking, keyboard navigation, and running the chosen command.
  *
- * It is two patterns nested: a modal dialog (overlay, focus trap, focus return,
- * Escape, scroll lock) wrapping a WAI-ARIA combobox (input + listbox, active
- * option tracked by aria-activedescendant). Like the combobox, the active
- * command is tracked by id (state.activeId), never by index — so when the
- * filtered list changes under the user's fingers, the highlight can't drift onto
- * the wrong row. After every keystroke we re-validate activeId against the
- * current filtered() set and reset it to the first match.
+ * It is two patterns nested: a modal <dialog> (showModal() makes the page
+ * behind inert, Escape closes, focus moves in and comes back) wrapping a WAI-ARIA
+ * combobox (input + listbox, active option tracked by aria-activedescendant).
+ * Like the combobox, the active command is tracked by id (state.activeId), never
+ * by index — so when the filtered list changes under the user's fingers, the
+ * highlight can't drift onto the wrong row. After every keystroke we re-validate
+ * activeId against the current filtered() set and reset it to the first match.
  *
  * Markup contract (see README / index.html):
- *   <div data-component="commandpalette" @keydown.escape.window="close" @keydown.tab.window="trapTab" @keydown.meta.k.window.prevent="toggle" @keydown.ctrl.k.window.prevent="toggle" data-commands='[{"id":…,"label":…}]'>
+ *   <micra-commandpalette @keydown.meta.k.window.prevent="toggle" @keydown.ctrl.k.window.prevent="toggle" data-commands='[{"id":…,"label":…}]'>
  *     <button @click="open">…</button>
- *     <div class="micra-cmdk" data-bind="data-state:open ? 'open' : 'closed'"
- *          @click.self="close">
- *       <div class="micra-cmdk__panel" role="dialog" aria-modal="true"
- *            aria-label="Command palette" data-ref="panel" tabindex="-1">
- *         <input role="combobox" aria-controls="cmdk-listbox" data-model="query" …>
+ *     <dialog class="micra-cmdk" data-ref="dialog" aria-label="Command palette"
+ *             @close="closed" @click.self="close">
+ *       <div class="micra-cmdk__panel">
+ *         <input autofocus role="combobox" aria-controls="cmdk-listbox" data-model="query" …>
  *         <ul id="cmdk-listbox" role="listbox"> … </ul>
  *       </div>
- *     </div>
- *   </div>
+ *     </dialog>
+ *   </micra-commandpalette>
  */
 Micra.define('commandpalette', {
   state: {
@@ -39,12 +38,9 @@ Micra.define('commandpalette', {
   onCreate() {
     // Seed commands from data-commands (JSON array). Replace the array wholesale —
     // never push into it (state is a shallow proxy).
-    const raw = this.prop('commands');
-    if (raw) this.state.commands = JSON.parse(raw);
-  },
-
-  onDestroy() {
-    this._setScrollLock(false);
+    // An array default parses the JSON; an absent attribute keeps what's in state.
+    const commands = this.prop('commands', []);
+    if (commands.length) this.state.commands = commands;
   },
 
   // — derived (methods, never state) ————————————————————————————
@@ -91,33 +87,28 @@ Micra.define('commandpalette', {
     this.state.open ? this.close() : this.open();
   },
 
-  open() {
+  // From a click, remember the trigger: Safari doesn't focus a clicked button,
+  // so the browser's own focus return has nothing to go back to. Opened by the
+  // shortcut, the browser returns focus to wherever it was. showModal() focuses
+  // the input (it has autofocus).
+  open(e) {
     if (this.state.open) return;
-    this._trigger = document.activeElement; // remember who opened it
+    this._trigger = e && e.currentTarget;
     this.state.query = '';
     this.state.activeId = this._firstId();
+    this.refs.dialog.showModal();
     this.state.open = true;
-    this._setScrollLock(true);
-    // Move focus into the input once it is actually visible. A double rAF waits
-    // until the open styles have applied (a single one can fire too early, while
-    // the panel is still inheriting visibility:hidden, and focus() no-ops).
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => {
-        if (this.refs.input) this.refs.input.focus();
-        else if (this.refs.panel) this.refs.panel.focus();
-      })
-    );
   },
 
+  // Fires the dialog's close event, which runs closed() below.
   close() {
-    if (!this.state.open) return;
+    this.refs.dialog.close();
+  },
+
+  // The dialog closed: by close(), Escape, or after running a command.
+  closed() {
     this.state.open = false;
-    this._setScrollLock(false);
-    if (this._trigger && this._trigger.focus) this._trigger.focus(); // return focus
-    // Opened by the shortcut with nothing focused, there is no trigger to return
-    // to; don't leave focus on the now-hidden input, or the next open can't focus it.
-    const panel = this.refs.panel;
-    if (panel && panel.contains(document.activeElement)) document.activeElement.blur();
+    if (this._trigger) this._trigger.focus();
   },
 
   // Fires on every keystroke. data-model also updates state.query from this same
@@ -219,37 +210,5 @@ Micra.define('commandpalette', {
     await this.tick();
     const el = this.$el.querySelector('[role="option"][data-state="active"]');
     if (el) el.scrollIntoView({ block: 'nearest' });
-  },
-
-  // — focus trap ————————————————————————————————————————————————
-  // Tab cycles within the panel; the input and any visible options participate.
-  // Called from the root's @keydown.tab.window; a no-op while closed.
-  trapTab(e) {
-    if (!this.state.open) return;
-    const panel = this.refs.panel;
-    if (!panel) return;
-    const f = this._focusables(panel);
-    if (!f.length) return;
-    const first = f[0];
-    const last = f[f.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  },
-
-  _focusables(root) {
-    return Array.from(
-      root.querySelectorAll(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )
-    );
-  },
-
-  _setScrollLock(on) {
-    document.body.style.overflow = on ? 'hidden' : '';
   },
 });

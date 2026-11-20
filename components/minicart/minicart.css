@@ -3,7 +3,7 @@
  *
  * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
  * those tokens, or rewrite this file — you own it. The overlay is always in the
- * DOM and shown/hidden via [data-state], so it fades in cleanly with no FOUC; the
+ * DOM as a native <dialog>; it slides in with @starting-style and never flashes; the
  * panel docks to the right edge and slides off-screen when closed.
  *
  * Width: --micra-minicart-size sets the panel width. Override it on the component
@@ -18,22 +18,39 @@ micra-minicart {
 .micra-minicart {
   --micra-minicart-size: 26rem;
 
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  background: var(--micra-overlay);
+  /* Undo the UA dialog box: the dialog is a transparent full-viewport layer, so
+     a click outside the panel lands on it (@click.self closes). */
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--micra-fg);
 
-  /* hidden + non-interactive until [data-state="open"] */
-  opacity: 0;
-  visibility: hidden;
   transition:
-    opacity var(--micra-duration) var(--micra-ease),
-    visibility var(--micra-duration) var(--micra-ease);
+    overlay var(--micra-duration) var(--micra-ease) allow-discrete,
+    display var(--micra-duration) var(--micra-ease) allow-discrete;
 }
 
-.micra-minicart[data-state='open'] {
+.micra-minicart::backdrop {
+  background: var(--micra-overlay);
+  opacity: 0;
+  transition:
+    opacity var(--micra-duration) var(--micra-ease),
+    overlay var(--micra-duration) var(--micra-ease) allow-discrete,
+    display var(--micra-duration) var(--micra-ease) allow-discrete;
+}
+
+.micra-minicart[open]::backdrop {
   opacity: 1;
-  visibility: visible;
+}
+
+/* Lock the page scroll while the cart is open. */
+html:has(.micra-minicart[open]) {
+  overflow: hidden;
 }
 
 .micra-minicart__panel {
@@ -53,8 +70,17 @@ micra-minicart {
   transition: transform var(--micra-duration) var(--micra-ease);
 }
 
-.micra-minicart[data-state='open'] .micra-minicart__panel {
+.micra-minicart[open] .micra-minicart__panel {
   transform: none;
+}
+
+@starting-style {
+  .micra-minicart[open]::backdrop {
+    opacity: 0;
+  }
+  .micra-minicart[open] .micra-minicart__panel {
+    transform: translateX(100%);
+  }
 }
 
 /* — Head ————————————————————————————————————————————————————————— */

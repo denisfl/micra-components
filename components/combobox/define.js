@@ -34,8 +34,9 @@ Micra.define('combobox', {
   onCreate() {
     // Seed options from data-options (JSON array of {id,label}) if provided.
     // Replace the array wholesale — never push into it (state is a shallow proxy).
-    const raw = this.prop('options');
-    if (raw) this.state.options = JSON.parse(raw);
+    // An array default parses the JSON; an absent attribute keeps what's in state.
+    const options = this.prop('options', []);
+    if (options.length) this.state.options = options;
   },
 
 

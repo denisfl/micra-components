@@ -2,8 +2,8 @@
 
 Fuzzy actions, keyboard-first. A Cmd/Ctrl+K launcher: open it, type to fuzzily
 filter your commands, arrow keys to move the highlight, Enter to run, Escape to
-close. It is a modal dialog (focus trap, focus return, scroll lock) wrapping a
-WAI-ARIA combobox (input + listbox, active option tracked by
+close. It is a native modal `<dialog>` (inert page behind, focus return, scroll
+lock) wrapping a WAI-ARIA combobox (input + listbox, active option tracked by
 `aria-activedescendant`). Headless behavior in `define.js`; the look is a default
 skin in `commandpalette.css` driven by `theme/theme.css` tokens.
 
@@ -25,7 +25,7 @@ Open `index.html` to see it running (light + dark). Press Cmd/Ctrl+K.
    an id, and point `aria-controls` at it:
 
    ```html
-   <micra-commandpalette @keydown.escape.window="close" @keydown.tab.window="trapTab" @keydown.meta.k.window.prevent="toggle" @keydown.ctrl.k.window.prevent="toggle"
+   <micra-commandpalette @keydown.meta.k.window.prevent="toggle" @keydown.ctrl.k.window.prevent="toggle"
      data-commands='[
        {"id":"settings","group":"Navigation","label":"Open Settings","keywords":["preferences","config"],"hint":"g s"},
        {"id":"deploy","group":"Actions","label":"Deploy to Production","keywords":["ship","release"],"hint":"Ctrl D"}
@@ -33,11 +33,11 @@ Open `index.html` to see it running (light + dark). Press Cmd/Ctrl+K.
    >
      <button class="micra-btn" @click="open">Open command palette</button>
 
-     <div class="micra-cmdk" data-bind="data-state:open ? 'open' : 'closed'" @click.self="close">
-       <div class="micra-cmdk__panel" role="dialog" aria-modal="true"
-            aria-label="Command palette" data-ref="panel" tabindex="-1">
+     <dialog class="micra-cmdk" data-ref="dialog" aria-label="Command palette" @close="closed" @click.self="close">
+       <div class="micra-cmdk__panel">
          <input
            class="micra-cmdk__input"
+         autofocus
            role="combobox"
            aria-autocomplete="list"
            aria-controls="cmdk-listbox"
@@ -49,7 +49,6 @@ Open `index.html` to see it running (light + dark). Press Cmd/Ctrl+K.
            @keydown.down.prevent="next"
            @keydown.up.prevent="prev"
            @keydown.enter.prevent="run"
-           @keydown.escape="close"
          />
 
          <ul class="micra-cmdk__listbox" id="cmdk-listbox" role="listbox" aria-label="Commands">
@@ -72,7 +71,7 @@ Open `index.html` to see it running (light + dark). Press Cmd/Ctrl+K.
            <li class="micra-cmdk__empty" role="presentation" data-if="noResults()">No commands</li>
          </ul>
        </div>
-     </div>
+     </dialog>
    </micra-commandpalette>
    ```
 
@@ -115,23 +114,23 @@ visible label.
   preference; `theme.css` auto-applies dark unless `data-theme="light"`).
 - **Full control** — edit `commandpalette.css`. It is yours.
 - **Tailwind (optional)** — the highlight lives in `data-state` and the open
-  state on the overlay, so you can skip `commandpalette.css` and style with
-  native variants: `class="… data-[state=active]:bg-indigo-600"` on options,
-  `class="… data-[state=open]:opacity-100"` on the overlay.
+  state is the dialog's `[open]`, so you can skip `commandpalette.css` and style
+  with variants: `class="… data-[state=active]:bg-indigo-600"` on options,
+  `class="… open:grid backdrop:bg-black/50"` on the dialog.
 
 ## Accessibility
 
-A WAI-ARIA combobox nested inside a dialog. The overlay is `role="dialog"` with
-`aria-modal` and an `aria-label`; focus moves into the input on open and returns
-to whatever was focused before on close, Tab is trapped inside the panel, and
-Escape closes. The input is `role="combobox"` with `aria-autocomplete="list"`,
+A WAI-ARIA combobox nested inside a native modal `<dialog>` with an `aria-label`.
+Focus moves into the input on open (it has `autofocus`) and returns to the trigger
+on close, or to whatever was focused before when the shortcut opened it; Tab stays
+inside because the page behind is inert; Escape closes. The input is `role="combobox"` with `aria-autocomplete="list"`,
 `aria-expanded` bound to the open state, `aria-controls` pointing at the listbox,
 and `aria-activedescendant` tracking the highlighted command's id. The list is
 `role="listbox"`; each row is `role="option"` with a stable id and
 `aria-selected`. The active command is tracked **by id**, so fuzzy filtering can
 never desync the highlight; arrow keys wrap and scroll the active option into
 view; Enter runs it. Motion respects `prefers-reduced-motion` (tokens zero the
-duration). The overlay is non-interactive when closed (`visibility: hidden`).
+duration).
 
 ## License
 

@@ -44,7 +44,7 @@
       <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
     </div>
 
-    <micra-commandpalette @keydown.escape.window="close" @keydown.tab.window="trapTab" @keydown.meta.k.window.prevent="toggle" @keydown.ctrl.k.window.prevent="toggle"
+    <micra-commandpalette @keydown.meta.k.window.prevent="toggle" @keydown.ctrl.k.window.prevent="toggle"
       data-commands='[
         {"id":"home","group":"Navigation","label":"Go to Dashboard","keywords":["home","overview","start"]},
         {"id":"projects","group":"Navigation","label":"Open Projects","keywords":["repos","workspaces"]},
@@ -66,21 +66,17 @@
         Press <span class="micra-kbd">Cmd/Ctrl</span> + <span class="micra-kbd">K</span> anywhere.
       </p>
 
-      <div
+      <dialog
         class="micra-cmdk"
-        data-bind="data-state:open ? 'open' : 'closed'"
+        data-ref="dialog"
+        aria-label="Command palette"
+        @close="closed"
         @click.self="close"
       >
-        <div
-          class="micra-cmdk__panel"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Command palette"
-          data-ref="panel"
-          tabindex="-1"
-        >
+        <div class="micra-cmdk__panel">
           <input
             class="micra-cmdk__input"
+          autofocus
             role="combobox"
             aria-autocomplete="list"
             aria-controls="cmdk-listbox"
@@ -93,7 +89,6 @@
             @keydown.down.prevent="next"
             @keydown.up.prevent="prev"
             @keydown.enter.prevent="run"
-            @keydown.escape="close"
           />
 
           <ul
@@ -125,7 +120,7 @@
             <li class="micra-cmdk__empty" role="presentation" data-if="noResults()">No commands</li>
           </ul>
         </div>
-      </div>
+      </dialog>
     </micra-commandpalette>
 
     <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>

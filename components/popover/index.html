@@ -46,10 +46,9 @@
       <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
     </div>
 
-    <micra-popover @pointerdown.outside="close">
-      <!-- .micra-popover is the positioning context: it must wrap ONLY the
-           trigger and the panel, so the panel anchors under the trigger. Sibling
-           content lives outside it. -->
+    <micra-popover>
+      <!-- The panel is a native popover anchored to the trigger (CSS anchor
+           positioning, or define.js where the browser lacks it). -->
       <div class="micra-popover">
         <button
           class="micra-popover__trigger"
@@ -57,7 +56,7 @@
           aria-haspopup="dialog"
           aria-controls="popover-panel"
           data-bind="aria-expanded:isOpen ? 'true' : 'false'"
-          @click="toggle"
+          popovertarget="popover-panel"
         >
           Filters
         </button>
@@ -66,11 +65,11 @@
           class="micra-popover__panel"
           id="popover-panel"
           role="dialog"
+          popover
           aria-labelledby="popover-title"
           data-ref="panel"
           tabindex="-1"
-          data-bind="data-state:isOpen ? 'open' : 'closed'"
-          @keydown.escape="close"
+          @toggle="onToggle"
         >
           <h2 id="popover-title" class="micra-popover__title">Filters</h2>
 

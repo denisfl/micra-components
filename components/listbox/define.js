@@ -44,8 +44,9 @@ Micra.define('listbox', {
     // Seed options from data-options (JSON array of {id,label[,disabled]}) if
     // provided. Replace the array wholesale — never push into it (state is a
     // shallow proxy). Default the selection to the first enabled option.
-    const raw = this.prop('options');
-    if (raw) this.state.options = JSON.parse(raw);
+    // An array default parses the JSON; an absent attribute keeps what's in state.
+    const options = this.prop('options', []);
+    if (options.length) this.state.options = options;
 
     // Optional: preselect a given id (data-value), or fall back to the first
     // enabled option when data-select-first is present. Default is no selection

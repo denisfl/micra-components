@@ -50,21 +50,19 @@
 
     <div class="demo-triggers">
       <!-- Right-side slide-over: a filters drawer. -->
-      <micra-slideover @keydown.escape.window="close" @keydown.tab.window="trapTab" data-side="right" data-size="24rem">
+      <micra-slideover data-side="right" data-size="24rem">
         <button class="micra-btn" @click="open">Filters</button>
 
-        <div
+        <dialog
           class="micra-slideover"
-          data-bind="data-state:open ? 'open' : 'closed', data-side:side()"
+          data-ref="dialog"
+          aria-labelledby="filters-title"
+          data-bind="data-side:side()"
+          @close="closed"
           @click.self="close"
         >
           <div
             class="micra-slideover__panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="filters-title"
-            data-ref="panel"
-            tabindex="-1"
             data-bind="data-side:side(), style:panelStyle()"
           >
             <header class="micra-slideover__head">
@@ -90,25 +88,23 @@
               <button class="micra-btn" @click="close">Apply</button>
             </footer>
           </div>
-        </div>
+        </dialog>
       </micra-slideover>
 
       <!-- Left-side drawer: navigation. Same behavior, opposite edge. -->
-      <micra-slideover @keydown.escape.window="close" @keydown.tab.window="trapTab" data-side="left" data-size="18rem">
+      <micra-slideover data-side="left" data-size="18rem">
         <button class="micra-btn micra-btn--ghost" @click="open">Menu</button>
 
-        <div
+        <dialog
           class="micra-slideover"
-          data-bind="data-state:open ? 'open' : 'closed', data-side:side()"
+          data-ref="dialog"
+          aria-labelledby="menu-title"
+          data-bind="data-side:side()"
+          @close="closed"
           @click.self="close"
         >
           <div
             class="micra-slideover__panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="menu-title"
-            data-ref="panel"
-            tabindex="-1"
             data-bind="data-side:side(), style:panelStyle()"
           >
             <header class="micra-slideover__head">
@@ -126,7 +122,7 @@
               <button class="micra-btn" @click="close">Close</button>
             </footer>
           </div>
-        </div>
+        </dialog>
       </micra-slideover>
     </div>
 

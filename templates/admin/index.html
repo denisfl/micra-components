@@ -385,19 +385,17 @@
            `admin` shell owns the table. They talk over Micra's event bus —
            `user:new` / `user:save` / `editor:close` — never reaching into each
            other's state. -->
-      <micra-slideover id="user-editor" @keydown.escape.window="close" @keydown.tab.window="trapTab" data-side="right" data-size="26rem">
-        <div
+      <micra-slideover id="user-editor" data-side="right" data-size="26rem">
+        <dialog
           class="micra-slideover"
-          data-bind="data-state:open ? 'open' : 'closed', data-side:side()"
+          data-ref="dialog"
+          aria-labelledby="user-editor-title"
+          data-bind="data-side:side()"
+          @close="closed"
           @click.self="close"
         >
           <div
             class="micra-slideover__panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="user-editor-title"
-            data-ref="panel"
-            tabindex="-1"
             data-bind="data-side:side(), style:panelStyle()"
           >
             <form data-component="userform" @submit.prevent="save">
@@ -444,23 +442,21 @@
               </footer>
             </form>
           </div>
-        </div>
+        </dialog>
       </micra-slideover>
 
       <!-- ── Add-customer slide-over (same composition as the user one) ──────── -->
-      <micra-slideover id="customer-editor" @keydown.escape.window="close" @keydown.tab.window="trapTab" data-side="right" data-size="26rem">
-        <div
+      <micra-slideover id="customer-editor" data-side="right" data-size="26rem">
+        <dialog
           class="micra-slideover"
-          data-bind="data-state:open ? 'open' : 'closed', data-side:side()"
+          data-ref="dialog"
+          aria-labelledby="customer-editor-title"
+          data-bind="data-side:side()"
+          @close="closed"
           @click.self="close"
         >
           <div
             class="micra-slideover__panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="customer-editor-title"
-            data-ref="panel"
-            tabindex="-1"
             data-bind="data-side:side(), style:panelStyle()"
           >
             <form data-component="customerform" @submit.prevent="save">
@@ -515,14 +511,14 @@
               </footer>
             </form>
           </div>
-        </div>
+        </dialog>
       </micra-slideover>
 
       <!-- ── Command palette (⌘K) ──────────────────────────────────────────────
            Shipped component: built-in Cmd/Ctrl+K, fuzzy search, keyboard nav.
            It emits `run` on the bus with the chosen command; the admin shell
            routes that to a view switch or an action below. -->
-      <micra-commandpalette @keydown.escape.window="close" @keydown.tab.window="trapTab" @keydown.meta.k.window.prevent="toggle" @keydown.ctrl.k.window.prevent="toggle"
+      <micra-commandpalette @keydown.meta.k.window.prevent="toggle" @keydown.ctrl.k.window.prevent="toggle"
         data-commands='[
           {"id":"nav-users","group":"Navigation","label":"Go to Users","keywords":["team","people","members"]},
           {"id":"nav-customers","group":"Navigation","label":"Go to Customers","keywords":["accounts","companies","billing"]},
@@ -532,10 +528,11 @@
           {"id":"toggle-theme","group":"Actions","label":"Toggle dark mode","keywords":["theme","appearance","light","dark"]}
         ]'
       >
-        <div class="micra-cmdk" data-bind="data-state:open ? 'open' : 'closed'" @click.self="close">
-          <div class="micra-cmdk__panel" role="dialog" aria-modal="true" aria-label="Command palette" data-ref="panel" tabindex="-1">
+        <dialog class="micra-cmdk" data-ref="dialog" aria-label="Command palette" @close="closed" @click.self="close">
+          <div class="micra-cmdk__panel">
             <input
               class="micra-cmdk__input"
+            autofocus
               role="combobox"
               aria-autocomplete="list"
               aria-controls="cmdk-listbox"
@@ -548,7 +545,6 @@
               @keydown.down.prevent="next"
               @keydown.up.prevent="prev"
               @keydown.enter.prevent="run"
-              @keydown.escape="close"
             />
             <ul class="micra-cmdk__listbox" id="cmdk-listbox" role="listbox" aria-label="Commands">
               <template data-each="filtered()" data-key="id">
@@ -569,7 +565,7 @@
               <li class="micra-cmdk__empty" role="presentation" data-if="noResults()">No commands</li>
             </ul>
           </div>
-        </div>
+        </dialog>
       </micra-commandpalette>
     </micra-admin>
 

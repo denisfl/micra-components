@@ -62,10 +62,10 @@ Micra.define('pricing', {
   },
 
   onCreate() {
-    // Seed the catalog from a data-config JSON attr. prop() hands back the raw
-    // string; parse it defensively (a malformed attr must not crash the mount)
-    // and REPLACE the relevant top-level keys.
-    const cfg = this._parseJSON(this.prop('config'));
+    // Seed the catalog from a data-config JSON attr. An object default makes prop()
+    // parse it (a malformed attr falls back to {}, so the mount never crashes);
+    // REPLACE the relevant top-level keys.
+    const cfg = this.prop('config', {});
     if (cfg && typeof cfg === 'object') {
       if (Array.isArray(cfg.plans)) this.state.plans = cfg.plans;
       if (Array.isArray(cfg.addons)) this.state.addonsConfig = cfg.addons;
@@ -360,16 +360,5 @@ Micra.define('pricing', {
     const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
     this.state.emailError = ok ? '' : 'Enter a valid email address';
     return ok;
-  },
-
-  // prop() hands back the raw JSON string for data-config; parse defensively (a
-  // malformed attr should not crash the component).
-  _parseJSON(raw) {
-    if (raw == null || raw === '' || typeof raw !== 'string') return null;
-    try {
-      return JSON.parse(raw);
-    } catch (e) {
-      return null;
-    }
   },
 });

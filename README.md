@@ -34,8 +34,9 @@ markup from the component's README:
 
 `define()` registers the `<micra-modal>` tag, and the tag mounts itself when it
 appears in the document, however it got there: server HTML, htmx, Turbo or
-`innerHTML`. It also cleans up after itself when removed. This needs Micra 2.10 or
-later. The component READMEs still mention `Micra.start()`: with tags it is optional,
+`innerHTML`. It also cleans up after itself when removed. The catalog needs Micra
+2.14 or later (tags since 2.10, JSON props and `this.listen()` since 2.14); the CDN
+`@2` range already serves it. The component READMEs still mention `Micra.start()`: with tags it is optional,
 and you need it only when a script reads `Micra.instances()` right after defining.
 
 The attribute form works everywhere too, and it is the one to use when the root has
@@ -51,9 +52,14 @@ Behavior lives in `define.js` (focus, keyboard, ARIA, data). The look lives in
 overriding a few variables or by rewriting its CSS. Dark mode is
 `data-theme="dark"`. Tailwind is optional; see [`theme/README.md`](theme/README.md).
 
-Some behavior is wired by attributes on the component's root, for example
-`@pointerdown.outside="close"` or `@keydown.escape.window="close"`. Keep them when
-you copy the markup, or the component loses outside-click, Escape or its focus trap.
+Overlays use the platform: the modal, slide-over and command palette are a native
+`<dialog>` opened with `showModal()`, the dropdown and popover are native popovers
+(`popover` + `popovertarget`), and toasts sit in the top layer above them. Focus
+trapping, Escape, outside-click and focus return come from the browser.
+
+Some behavior is still wired by attributes on the component's root, for example
+`@pointerdown.outside="close"` on the listbox or `@keydown.meta.k.window.prevent="toggle"`
+on the command palette. Keep them when you copy the markup.
 
 ## What's here
 

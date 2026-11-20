@@ -313,17 +313,18 @@
       </div>
 
       <!-- ── Command palette (⌘K) ──────────────────────────────────────────── -->
-      <micra-commandpalette @keydown.escape.window="close" @keydown.tab.window="trapTab" @keydown.meta.k.window.prevent="toggle" @keydown.ctrl.k.window.prevent="toggle"
+      <micra-commandpalette @keydown.meta.k.window.prevent="toggle" @keydown.ctrl.k.window.prevent="toggle"
         data-commands='[
           {"id":"nav-overview","group":"Navigation","label":"Go to Overview","keywords":["dashboard","home","start"]},
           {"id":"nav-settings","group":"Navigation","label":"Go to Settings","keywords":["preferences","account"]},
           {"id":"toggle-theme","group":"Actions","label":"Toggle dark mode","keywords":["theme","appearance","light","dark"]}
         ]'
       >
-        <div class="micra-cmdk" data-bind="data-state:open ? 'open' : 'closed'" @click.self="close">
-          <div class="micra-cmdk__panel" role="dialog" aria-modal="true" aria-label="Command palette" data-ref="panel" tabindex="-1">
+        <dialog class="micra-cmdk" data-ref="dialog" aria-label="Command palette" @close="closed" @click.self="close">
+          <div class="micra-cmdk__panel">
             <input
               class="micra-cmdk__input"
+            autofocus
               role="combobox"
               aria-autocomplete="list"
               aria-controls="cmdk-listbox"
@@ -336,7 +337,6 @@
               @keydown.down.prevent="next"
               @keydown.up.prevent="prev"
               @keydown.enter.prevent="run"
-              @keydown.escape="close"
             />
             <ul class="micra-cmdk__listbox" id="cmdk-listbox" role="listbox" aria-label="Commands">
               <template data-each="filtered()" data-key="id">
@@ -357,7 +357,7 @@
               <li class="micra-cmdk__empty" role="presentation" data-if="noResults()">No commands</li>
             </ul>
           </div>
-        </div>
+        </dialog>
       </micra-commandpalette>
     </micra-dashboard>
 

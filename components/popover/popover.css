@@ -2,9 +2,10 @@
  * components/popover/popover.css — default skin for the Popover.
  *
  * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
- * those tokens, or rewrite this file — you own it. The panel is always in the DOM
- * and shown/hidden via [data-state], so it fades in and out cleanly and stays
- * non-interactive when closed.
+ * those tokens, or rewrite this file — you own it. The panel is a native
+ * popover: the browser shows it in the top layer, anchored under the trigger with
+ * CSS anchor positioning (define.js places it by hand where that's missing).
+ * Fades use @starting-style.
  */
 
 micra-popover {
@@ -33,10 +34,12 @@ micra-popover {
 }
 
 .micra-popover__panel {
-  position: absolute;
-  z-index: 50;
-  top: calc(100% + 0.5rem);
-  left: 0;
+  /* Undo the UA popover box, then anchor under the trigger (flips above it
+     when there's no room below). */
+  inset: auto;
+  margin: 0.5rem 0 0;
+  position-area: bottom span-right;
+  position-try-fallbacks: flip-block;
   width: 18rem;
   max-height: 22rem;
   overflow: auto;
@@ -47,21 +50,26 @@ micra-popover {
   border-radius: var(--micra-radius);
   box-shadow: var(--micra-shadow);
 
-  /* hidden + non-interactive until [data-state="open"] */
   opacity: 0;
-  visibility: hidden;
   transform: translateY(4px) scale(0.98);
   transform-origin: top left;
   transition:
     opacity var(--micra-duration) var(--micra-ease),
-    visibility var(--micra-duration) var(--micra-ease),
-    transform var(--micra-duration) var(--micra-ease);
+    transform var(--micra-duration) var(--micra-ease),
+    overlay var(--micra-duration) var(--micra-ease) allow-discrete,
+    display var(--micra-duration) var(--micra-ease) allow-discrete;
 }
 
-.micra-popover__panel[data-state='open'] {
+.micra-popover__panel:popover-open {
   opacity: 1;
-  visibility: visible;
   transform: none;
+}
+
+@starting-style {
+  .micra-popover__panel:popover-open {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
 }
 
 .micra-popover__panel:focus-visible {

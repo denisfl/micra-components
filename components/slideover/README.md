@@ -1,10 +1,10 @@
 # Slide-over
 
-A modal side drawer: the panel slides in from an edge instead of centering, but
-the behavior is modal-grade — focus trap, focus return to the trigger, Escape to
-close, backdrop click to close, body scroll lock. Headless behavior in
-`define.js`; the look is a default skin in `slideover.css` driven by
-`theme/theme.css` tokens.
+A modal side drawer on a native `<dialog>`: the panel slides in from an edge
+instead of centering, and the behavior is the modal's — the page behind is inert
+(Tab stays inside), Escape closes, focus returns to the trigger, backdrop click
+closes, page scroll is locked. Headless behavior in `define.js`; the look is a
+default skin in `slideover.css` driven by `theme/theme.css` tokens.
 
 Open `index.html` to see it running (right and left drawers, light + dark).
 
@@ -23,14 +23,18 @@ Open `index.html` to see it running (right and left drawers, light + dark).
    `left` / `top` / `bottom`) and an optional `data-size`:
 
    ```html
-   <micra-slideover @keydown.escape.window="close" @keydown.tab.window="trapTab" data-side="right" data-size="24rem">
+   <micra-slideover data-side="right" data-size="24rem">
      <button class="micra-btn" @click="open">Filters</button>
 
-     <div class="micra-slideover"
-          data-bind="data-state:open ? 'open' : 'closed', data-side:side()"
-          @click.self="close">
-       <div class="micra-slideover__panel" role="dialog" aria-modal="true"
-            aria-labelledby="so-title" data-ref="panel" tabindex="-1"
+     <dialog
+       class="micra-slideover"
+       data-ref="dialog"
+       aria-labelledby="so-title"
+       data-bind="data-side:side()"
+       @close="closed"
+       @click.self="close"
+     >
+       <div class="micra-slideover__panel"
             data-bind="data-side:side(), style:panelStyle()">
          <header class="micra-slideover__head">
            <h2 id="so-title">Filters</h2>
@@ -43,7 +47,7 @@ Open `index.html` to see it running (right and left drawers, light + dark).
            <button class="micra-btn" @click="close">Apply</button>
          </footer>
        </div>
-     </div>
+     </dialog>
    </micra-slideover>
    ```
 
@@ -74,18 +78,18 @@ Multiple slide-overs on one page work out of the box — each
 - **Dark mode** — set `data-theme="dark"` on `<html>` (or rely on the OS
   preference; `theme.css` auto-applies dark unless `data-theme="light"`).
 - **Full control** — edit `slideover.css`. It is yours.
-- **Tailwind (optional)** — the state lives in `data-state` and the edge in
-  `data-side`, so you can skip `slideover.css` and style with native variants
-  instead: `class="… data-[state=open]:translate-x-0 data-[side=left]:left-0"`.
+- **Tailwind (optional)** — the open state is the dialog's `[open]` and the edge
+  is `data-side`, so you can skip `slideover.css` and style with variants instead:
+  `class="… open:… data-[side=left]:left-0"`.
 
 ## Accessibility
 
-`role="dialog"` + `aria-modal`, labelled by the heading. Focus moves into the
-panel on open and returns to the trigger on close; Tab is trapped inside; Escape
-closes. The backdrop is non-interactive when closed (`visibility: hidden`), and
-body scroll is locked while open and restored on close (and on destroy). Motion
-respects `prefers-reduced-motion` (tokens zero the duration), so the panel
-arrives instantly without disabling the component.
+A native modal `<dialog>`, labelled by its heading. Focus moves into the panel on
+open; Tab stays inside because the page behind is inert; Escape closes; focus
+returns to the trigger (or, when the drawer was opened from code, wherever the
+browser restores it). Page scroll is locked while open. Motion respects
+`prefers-reduced-motion` (tokens zero the duration), so the panel arrives instantly
+without disabling the component.
 
 ## License
 

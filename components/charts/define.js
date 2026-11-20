@@ -51,7 +51,7 @@ Micra.define('charts', {
     const t = this.prop('type', 'bar');
     this.state.type = ['bar', 'line', 'pie', 'mixed'].includes(t) ? t : 'bar';
     this.state.stacked = this.prop('stacked', false) !== false;
-    const seed = this._normalize(this._parseJSON(this.prop('data')));
+    const seed = this._normalize(this.prop('data', {}));
     this.state.categories = seed.categories;
     this.state.series = seed.series;
     this.state.hidden = [];
@@ -659,14 +659,5 @@ Micra.define('charts', {
 
   _esc(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  },
-
-  _parseJSON(raw) {
-    if (raw == null || raw === '' || typeof raw !== 'string') return null;
-    try {
-      return JSON.parse(raw);
-    } catch (e) {
-      return null;
-    }
   },
 });

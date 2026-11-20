@@ -65,7 +65,7 @@
 
       <!-- The cart is seeded from data-items / data-coupons (set below before
            start()); prices are in cents. Flat shipping is $5, free over $60. -->
-      <micra-minicart @keydown.escape.window="close" @keydown.tab.window="trapTab"
+      <micra-minicart
         data-currency="$"
         data-shipping="500"
         data-free-over="6000"
@@ -81,20 +81,15 @@
           ></span>
         </button>
 
-        <!-- Overlay + panel. FOUC-free: hidden via visibility until data-state=open. -->
-        <div
+        <!-- The drawer: a native modal <dialog>. -->
+        <dialog
           class="micra-minicart"
-          data-bind="data-state:open ? 'open' : 'closed'"
+          data-ref="dialog"
+          aria-labelledby="minicart-title"
+          @close="closed"
           @click.self="close"
         >
-          <div
-            class="micra-minicart__panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="minicart-title"
-            data-ref="panel"
-            tabindex="-1"
-          >
+          <div class="micra-minicart__panel">
             <header class="micra-minicart__head">
               <h2 id="minicart-title">Your cart</h2>
               <button
@@ -370,7 +365,7 @@
               <button type="button" class="micra-btn" @click="placeOrder">Place order</button>
             </footer>
           </div>
-        </div>
+        </dialog>
       </micra-minicart>
 
       <p class="demo-hint">

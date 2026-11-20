@@ -2,9 +2,9 @@
 
 A shopping cart in a modal side drawer with a multi-step checkout: line items with
 quantity steppers, coupon validation, live totals, and a cart → details → review
-wizard that blocks advancing on invalid input. The drawer is modal-grade (focus
-trap, focus return, Escape, backdrop click, body scroll lock, FOUC-free
-visibility). Headless behavior in `define.js`; the look is a default skin in
+wizard that blocks advancing on invalid input. The drawer is a native modal
+`<dialog>` (inert page behind, focus return, Escape, backdrop click, page scroll
+lock). Headless behavior in `define.js`; the look is a default skin in
 `minicart.css` driven by `theme/theme.css` tokens.
 
 Open `index.html` to see it running (light + dark): a small store with three
@@ -27,7 +27,7 @@ logged to the console on place-order.
    `data-*` attributes (set them before `Micra.start()`); prices are in **cents**.
 
    ```html
-   <micra-minicart @keydown.escape.window="close" @keydown.tab.window="trapTab"
+   <micra-minicart
         data-currency="$"
         data-shipping="500"
         data-free-over="6000">
@@ -37,14 +37,17 @@ logged to the console on place-order.
              data-if="itemCount() > 0" data-text="itemCount()"></span>
      </button>
 
-     <div class="micra-minicart"
-          data-bind="data-state:open ? 'open' : 'closed'"
-          @click.self="close">
-       <div class="micra-minicart__panel" role="dialog" aria-modal="true"
-            aria-labelledby="mc-title" data-ref="panel" tabindex="-1">
+     <dialog
+       class="micra-minicart"
+       data-ref="dialog"
+       aria-labelledby="mc-title"
+       @close="closed"
+       @click.self="close"
+     >
+       <div class="micra-minicart__panel">
          <!-- stepper, cart / details / review, footer — see index.html -->
        </div>
-     </div>
+     </dialog>
    </micra-minicart>
 
    <script>
@@ -132,17 +135,15 @@ Events on the instance bus:
 
 ## Drawer mechanics
 
-Same model-grade behavior as the Modal and Slide-over, owned by `define.js`:
+Same behavior as the Modal and Slide-over, from a native `<dialog>` opened with
+`showModal()`:
 
 - Focus moves into the panel on open and returns to the trigger on close.
-- `Tab` / `Shift+Tab` are trapped inside the panel (visible focusables only, so
-  hidden checkout steps are skipped).
-- `Escape` closes; a backdrop click closes (`@click.self`); the body is scroll-
-  locked while open and always unlocked in `onDestroy`.
-- The overlay stays in the DOM and is shown via `[data-state='open']`
-  (`visibility` toggled, not `data-show`), so it fades cleanly with no flash of
-  unstyled content before mount. The document `keydown` listener added in
-  `onCreate` is removed in `onDestroy`.
+- `Tab` / `Shift+Tab` stay inside the drawer: the page behind is inert.
+- `Escape` closes; a backdrop click closes (`@click.self`); the page is
+  scroll-locked while open (`html:has(.micra-minicart[open])` in the skin).
+- The panel slides in with `@starting-style`; browsers without it open and close
+  instantly.
 
 ## Theming
 
@@ -166,8 +167,8 @@ Same model-grade behavior as the Modal and Slide-over, owned by `define.js`:
 
 ## Accessibility
 
-The panel is a `role="dialog"` with `aria-modal="true"`, labelled by its heading;
-focus is trapped and returned, Escape closes. Quantity steppers and the remove
+The drawer is a native modal `<dialog>`, labelled by its heading; Tab stays inside
+because the page behind is inert, focus returns to the trigger, Escape closes. Quantity steppers and the remove
 button are labelled (the input's label and the remove button name include the
 product name). The coupon and checkout inputs are labelled and carry
 `aria-invalid` and `aria-describedby` (as the strings `"true"`/`"false"`) pointing

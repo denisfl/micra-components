@@ -37,22 +37,17 @@
       <button class="demo-ghost" id="theme-toggle">Toggle theme</button>
     </div>
 
-    <micra-modal @keydown.escape.window="close" @keydown.tab.window="trapTab" data-title="Delete project?">
+    <micra-modal data-title="Delete project?">
       <button class="micra-btn" @click="open">Delete project…</button>
 
-      <div
+      <dialog
         class="micra-modal"
-        data-bind="data-state:isOpen ? 'open' : 'closed'"
+        data-ref="dialog"
+        aria-labelledby="modal-title"
+        @close="closed"
         @click.self="close"
       >
-        <div
-          class="micra-modal__dialog"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-title"
-          data-ref="dialog"
-          tabindex="-1"
-        >
+        <div class="micra-modal__dialog">
           <header class="micra-modal__head">
             <h2 id="modal-title" data-text="title"></h2>
             <button class="micra-modal__close" @click="close" aria-label="Close">&times;</button>
@@ -62,7 +57,7 @@
             <button class="micra-btn" @click="close">Confirm</button>
           </div>
         </div>
-      </div>
+      </dialog>
     </micra-modal>
 
     <script src="https://cdn.jsdelivr.net/npm/micra.js@2/dist/micra.min.js"></script>

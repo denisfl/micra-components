@@ -2,35 +2,64 @@
  * components/modal/modal.css — default skin for the Modal.
  *
  * References only --micra-* tokens (see theme/theme.css). Re-skin by overriding
- * those tokens, or rewrite this file — you own it. The overlay is always in the
- * DOM and shown/hidden via [data-state], so it fades in and out cleanly.
+ * those tokens, or rewrite this file — you own it. The <dialog> fills the
+ * viewport and centers the panel, so a click outside the panel lands on the
+ * dialog itself (@click.self closes it). Fades use @starting-style; browsers
+ * without it open and close instantly.
  */
 
 micra-modal {
   display: block;
 }
 
-
 .micra-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: grid;
-  place-items: center;
+  /* Undo the UA dialog box: the dialog is a transparent full-viewport layer. */
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
   padding: 1rem;
-  background: var(--micra-overlay);
+  border: 0;
+  background: transparent;
+  color: var(--micra-fg);
 
-  /* hidden + non-interactive until [data-state="open"] */
   opacity: 0;
-  visibility: hidden;
   transition:
     opacity var(--micra-duration) var(--micra-ease),
-    visibility var(--micra-duration) var(--micra-ease);
+    overlay var(--micra-duration) var(--micra-ease) allow-discrete,
+    display var(--micra-duration) var(--micra-ease) allow-discrete;
 }
 
-.micra-modal[data-state='open'] {
+.micra-modal[open] {
+  display: grid;
+  place-items: center;
   opacity: 1;
-  visibility: visible;
+}
+
+.micra-modal::backdrop {
+  background: var(--micra-overlay);
+  opacity: 0;
+  transition:
+    opacity var(--micra-duration) var(--micra-ease),
+    overlay var(--micra-duration) var(--micra-ease) allow-discrete,
+    display var(--micra-duration) var(--micra-ease) allow-discrete;
+}
+
+.micra-modal[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  .micra-modal[open],
+  .micra-modal[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* Lock the page scroll while a modal is open. */
+html:has(.micra-modal[open]) {
+  overflow: hidden;
 }
 
 .micra-modal__dialog {
@@ -47,8 +76,14 @@ micra-modal {
   transition: transform var(--micra-duration) var(--micra-ease);
 }
 
-.micra-modal[data-state='open'] .micra-modal__dialog {
+.micra-modal[open] .micra-modal__dialog {
   transform: none;
+}
+
+@starting-style {
+  .micra-modal[open] .micra-modal__dialog {
+    transform: translateY(8px) scale(0.98);
+  }
 }
 
 .micra-modal__head {

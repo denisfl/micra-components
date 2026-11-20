@@ -7,9 +7,16 @@
  * duration}); this file owns the behavior: queueing, per-toast auto-dismiss
  * timers, manual dismiss, and timer cleanup.
  *
+ * The region is a manual popover, shown once on mount, so toasts sit in the top
+ * layer: above everything, including a modal <dialog>. A toast raised while a
+ * modal is open re-shows the region, which puts it back above the modal. (The
+ * modal still makes the page inert, so its Dismiss button can't be clicked
+ * until the modal closes; the toast times out as usual.)
+ *
  * Markup contract (a single element; the region/list lives inside it):
- *   <div data-component="toast">
- *     <div class="micra-toasts" role="region" aria-label="Notifications" aria-live="polite">
+ *   <micra-toast>
+ *     <div class="micra-toasts" popover="manual" data-ref="region" role="region"
+ *          aria-label="Notifications" aria-live="polite">
  *       <template data-each="toasts" data-key="id">
  *         <div class="micra-toast" role="status"
  *              data-bind="class:toastClass(item)">
@@ -18,7 +25,7 @@
  *         </div>
  *       </template>
  *     </div>
- *   </div>
+ *   </micra-toast>
  *
  * Toasts are stored as plain objects {id, message, type}; the array is always
  * REPLACED (shallow proxy — never mutated in place). Ids come from an incrementing
@@ -34,6 +41,7 @@ Micra.define('toast', {
     // Subscribe to the global bus so any code can raise a toast. The bus is
     // auto-cleaned by Micra, but the timers it schedules are ours to clear.
     this.on('toast', (p) => this.add(p || {}));
+    this.refs.region.showPopover();
   },
 
   onDestroy() {
@@ -50,6 +58,12 @@ Micra.define('toast', {
       type: type === 'success' || type === 'error' ? type : 'info',
     };
     this.state.toasts = [...this.state.toasts, toast]; // replace, don't mutate
+
+    // A modal opened after the region covers it; showing again moves it on top.
+    if (document.querySelector('dialog:modal')) {
+      this.refs.region.hidePopover();
+      this.refs.region.showPopover();
+    }
 
     // Auto-dismiss after `duration` (default 4s). Store the handle so a manual
     // dismiss or onDestroy can cancel it.

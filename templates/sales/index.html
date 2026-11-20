@@ -142,9 +142,9 @@
            the chrome; a `dealdetail` component (defined here) holds the deal and
            renders fields + linked contact + activity feed, and emits won/lost
            back to the shell over the bus. -->
-      <micra-slideover id="deal-editor" @keydown.escape.window="close" @keydown.tab.window="trapTab" data-side="right" data-size="34rem">
-        <div class="micra-slideover" data-bind="data-state:open ? 'open' : 'closed', data-side:side()" @click.self="close">
-          <div class="micra-slideover__panel" role="dialog" aria-modal="true" aria-labelledby="deal-title" data-ref="panel" tabindex="-1" data-bind="data-side:side(), style:panelStyle()">
+      <micra-slideover id="deal-editor" data-side="right" data-size="34rem">
+        <dialog class="micra-slideover" data-ref="dialog" aria-labelledby="deal-title" data-bind="data-side:side()" @close="closed" @click.self="close">
+          <div class="micra-slideover__panel" data-bind="data-side:side(), style:panelStyle()">
             <micra-dealdetail>
               <header class="micra-slideover__head dd__head">
                 <div class="dd__head-main">
@@ -230,7 +230,7 @@
               </footer>
             </micra-dealdetail>
           </div>
-        </div>
+        </dialog>
       </micra-slideover>
     </micra-crm>
 

@@ -55,15 +55,10 @@ Micra.define('sortable', {
 
     // Optional seed: data-seed='[{"id":1,"label":"…"}, …]' on the root, loaded
     // once. Otherwise the host sets state.items before Micra.start().
-    const seed = this.prop('seed');
-    if (seed && this.state.items.length === 0) {
-      try {
-        const parsed = JSON.parse(seed);
-        if (Array.isArray(parsed)) this.state.items = parsed;
-      } catch (_) {
-        /* ignore malformed seed */
-      }
-    }
+    // An array default makes prop() parse the JSON (Micra 2.14+); a malformed
+    // seed falls back to it.
+    const seed = this.prop('seed', []);
+    if (Array.isArray(seed) && seed.length && this.state.items.length === 0) this.state.items = seed;
     this.state.savedOrder = this.state.items.map((it) => it.id);
 
     this._sortable = Sortable.create(this._list, {

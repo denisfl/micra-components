@@ -46,10 +46,10 @@ Micra.define('kanban', {
   },
 
   onCreate() {
-    // Seed the board from a data-columns JSON attribute. prop() hands back the raw
-    // string; parse it defensively and REPLACE the array (shallow proxy).
-    const columns = this._parseJSON(this.prop('columns'));
-    if (Array.isArray(columns)) this.state.columns = columns;
+    // Seed the board from a data-columns JSON attribute. An array default makes
+    // prop() parse it (a malformed attr falls back to []); REPLACE the array.
+    const columns = this.prop('columns', []);
+    if (Array.isArray(columns) && columns.length) this.state.columns = columns;
   },
 
   onDestroy() {
@@ -390,17 +390,6 @@ Micra.define('kanban', {
     const total = this.forecast();
     const share = total > 0 ? Math.round((this.columnTotal(col.id) / total) * 100) : 0;
     return { width: share + '%' };
-  },
-
-  // prop() hands back the raw JSON string for data-columns; parse defensively so a
-  // malformed attribute does not crash the component.
-  _parseJSON(raw) {
-    if (raw == null || raw === '' || typeof raw !== 'string') return null;
-    try {
-      return JSON.parse(raw);
-    } catch (e) {
-      return null;
-    }
   },
 
   // Escape an id for use inside an attribute selector. CSS.escape where available

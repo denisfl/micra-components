@@ -60,11 +60,11 @@ Micra.define('fullcalendar', {
     // The cursor defaults to today (any day inside the range the title/grid show).
     this.state.cursor = this._todayISO();
 
-    // Events may be seeded as a data-events JSON attribute. prop() returns the raw
-    // string; parse defensively and REPLACE the array (shallow proxy). Host code
-    // can also call setEvents() after start() for richer data.
-    const events = this._parseJSON(this.prop('events'));
-    if (Array.isArray(events)) this.state.events = events;
+    // Events may be seeded as a data-events JSON attribute. An array default makes
+    // prop() parse it (a malformed attr falls back to []); REPLACE the array. Host
+    // code can also call setEvents() after mount for richer data.
+    const events = this.prop('events', []);
+    if (Array.isArray(events) && events.length) this.state.events = events;
 
     // The visible week band starts at this hour and ends at this hour (exclusive
     // labels run startHour..endHour-1). Configurable via data-start-hour /
@@ -766,11 +766,6 @@ Micra.define('fullcalendar', {
     const n = Number(v);
     if (!Number.isFinite(n)) return fallback;
     return Math.min(Math.max(Math.round(n), 0), 24);
-  },
-
-  _parseJSON(raw) {
-    if (raw == null || raw === '' || typeof raw !== 'string') return null;
-    try { return JSON.parse(raw); } catch (e) { return null; }
   },
 
   // Trigger a browser download from an in-memory string (the datatable pattern).

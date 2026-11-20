@@ -1,9 +1,11 @@
 # Dropdown
 
-Accessible menu button: click or arrow keys to open, keyboard navigation with a
-roving `aria-activedescendant` (real focus never leaves the menu), wrap-around
-arrows that skip disabled items, Home/End jumps, Enter/Space to select, Escape to
-close, outside-click to close, focus return to the trigger. Headless behavior in
+Accessible menu button on the native Popover API: click or arrow keys to open,
+keyboard navigation with a roving `aria-activedescendant` (real focus never leaves
+the menu), wrap-around arrows that skip disabled items, Home/End jumps, Enter/Space
+to select. The browser closes it on Escape or an outside click and shows it in the
+top layer; focus returns to the trigger. The menu is anchored with CSS anchor
+positioning (placed from JS where the browser lacks it). Headless behavior in
 `define.js`; the look is a default skin in `dropdown.css` driven by
 `theme/theme.css` tokens.
 
@@ -24,27 +26,27 @@ Open `index.html` to see it running (light + dark).
    rendered with `<template data-each>`:
 
    ```html
-   <micra-dropdown class="micra-dropdown" @pointerdown.outside="close">
+   <micra-dropdown class="micra-dropdown">
      <button class="micra-dropdown__trigger" data-ref="trigger"
              aria-haspopup="menu" aria-controls="dropdown-menu"
              data-bind="aria-expanded:isOpen ? 'true' : 'false'"
-             @click="toggle"
+             popovertarget="dropdown-menu"
              @keydown.down.prevent="open"
              @keydown.up.prevent="open">
        Options
      </button>
 
      <ul class="micra-dropdown__menu" id="dropdown-menu" role="menu"
+         popover
+         @toggle="onToggle"
          data-ref="menu" tabindex="-1"
-         data-bind="data-state:isOpen ? 'open' : 'closed',
-                    aria-activedescendant:activeDescendant()"
+         data-bind="aria-activedescendant:activeDescendant()"
          @keydown.down.prevent="moveDown"
          @keydown.up.prevent="moveUp"
          @keydown.home.prevent="moveFirst"
          @keydown.end.prevent="moveLast"
          @keydown.enter.prevent="activate"
-         @keydown.space.prevent="activate"
-         @keydown.escape="close">
+         @keydown.space.prevent="activate">
        <template data-each="items" data-key="id">
          <li class="micra-dropdown__item" role="menuitem"
              data-bind="id:item.id,
@@ -91,9 +93,9 @@ is an independent instance with its own state. Give each menu a unique `id` /
 - **Dark mode** — set `data-theme="dark"` on `<html>` (or rely on the OS
   preference; `theme.css` auto-applies dark unless `data-theme="light"`).
 - **Full control** — edit `dropdown.css`. It is yours.
-- **Tailwind (optional)** — the state lives in `data-state`, so you can skip
-  `dropdown.css` and style with native variants instead:
-  `class="… data-[state=open]:opacity-100 data-[state=active]:bg-indigo-600"`.
+- **Tailwind (optional)** — the open state is the native `:popover-open` and the
+  highlight is `data-state`, so you can skip `dropdown.css` and style with
+  variants: `class="… data-[state=active]:bg-indigo-600"` on items.
 
 ## Accessibility
 
@@ -105,8 +107,9 @@ while focus stays on the container. Items are `role="menuitem"` with
 `aria-disabled` bound for disabled entries (which navigation and selection skip).
 Arrow keys wrap, Home/End jump to the first/last enabled item, Enter/Space
 select, Escape closes and returns focus to the trigger. Motion respects
-`prefers-reduced-motion` (tokens zero the duration). The menu is non-interactive
-when closed (`visibility: hidden`).
+`prefers-reduced-motion` (tokens zero the duration).
+
+Needs Micra 2.14 or later.
 
 ## License
 

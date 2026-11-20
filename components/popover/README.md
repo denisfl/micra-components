@@ -1,10 +1,11 @@
 # Popover
 
-Accessible, non-modal anchored panel: a trigger opens a `role="dialog"` popup of
-arbitrary content (a form, filters, rich content) positioned under it. Focus
-moves into the panel on open and returns to the trigger on close; Escape and
-outside-click close it. Headless behavior in `define.js`; the look is a default
-skin in `popover.css` driven by `theme/theme.css` tokens.
+Accessible, non-modal anchored panel on the native Popover API: a trigger opens a
+`role="dialog"` popup of arbitrary content (a form, filters, rich content) anchored
+under it. Focus moves into the panel on open and returns to the trigger on close;
+the browser closes it on Escape or an outside click and shows it in the top layer.
+Headless behavior in `define.js`; the look is a default skin in `popover.css`
+driven by `theme/theme.css` tokens.
 
 It is the generic-content sibling of the Dropdown — use the Dropdown for a menu
 of actions, the Popover for everything else.
@@ -22,18 +23,17 @@ Open `index.html` to see it running (light + dark).
    <script src="define.js"></script>
    ```
 
-2. Drop in the markup. The root `.micra-popover` is the positioning context — it
-   must wrap **only** the trigger and the panel:
+2. Drop in the markup (the panel's `id` must match the trigger's `popovertarget`):
 
    ```html
-   <micra-popover class="micra-popover" @pointerdown.outside="close">
+   <micra-popover class="micra-popover">
      <button
        class="micra-popover__trigger"
        data-ref="trigger"
        aria-haspopup="dialog"
        aria-controls="popover-panel"
        data-bind="aria-expanded:isOpen ? 'true' : 'false'"
-       @click="toggle"
+       popovertarget="popover-panel"
      >
        Filters
      </button>
@@ -42,11 +42,11 @@ Open `index.html` to see it running (light + dark).
        class="micra-popover__panel"
        id="popover-panel"
        role="dialog"
+       popover
        aria-labelledby="popover-title"
        data-ref="panel"
        tabindex="-1"
-       data-bind="data-state:isOpen ? 'open' : 'closed'"
-       @keydown.escape="close"
+       @toggle="onToggle"
      >
        <h2 id="popover-title" class="micra-popover__title">Filters</h2>
        <!-- Your content here. -->
@@ -71,9 +71,8 @@ Multiple popovers on one page work out of the box — each
 - **Dark mode** — set `data-theme="dark"` on `<html>` (or rely on the OS
   preference; `theme.css` auto-applies dark unless `data-theme="light"`).
 - **Full control** — edit `popover.css`. It is yours.
-- **Tailwind (optional)** — the state lives in `data-state`, so you can skip
-  `popover.css` and style with native variants instead:
-  `class="… data-[state=open]:opacity-100"`.
+- **Tailwind (optional)** — the open state is the native `:popover-open`, so you
+  can skip `popover.css` and style the panel with your own classes.
 
 ## Accessibility
 
@@ -81,8 +80,9 @@ The trigger has `aria-haspopup="dialog"`, `aria-controls` pointing at the panel,
 and `aria-expanded` reflecting open/closed. The panel is `role="dialog"` labelled
 by its heading. Focus moves into the panel on open and returns to the trigger on
 close; Escape and outside-click close it. Motion respects
-`prefers-reduced-motion` (tokens zero the duration). The panel is
-non-interactive when closed (`visibility: hidden`).
+`prefers-reduced-motion` (tokens zero the duration).
+
+Needs Micra 2.14 or later.
 
 **Non-modal by design.** Unlike the modal, the popover does **not** trap focus or
 lock scrolling — Tab moves through the panel and may leave it, and the rest of the

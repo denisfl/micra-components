@@ -1,28 +1,30 @@
 /*
- * components/dropdown/define.js — Dropdown menu (headless behavior).
+ * components/dropdown/define.js — Dropdown menu (headless behavior) on the
+ * native Popover API.
  *
  * A menu button (headless-ui Menu / react-aria MenuButton): a trigger that opens
  * a role="menu" popup of items. Pair with dropdown.css (default skin) and
- * theme/theme.css (tokens). The markup sets data-state via data-bind, so styling
- * reacts to open/closed; this file owns the behavior: open/close, roving
- * activedescendant (no real DOM focus moves between items), keyboard navigation,
- * selection, outside-click, focus return to the trigger.
+ * theme/theme.css (tokens). The browser owns opening on click, closing on an
+ * outside click or Escape, and the top layer (popovertarget + popover). This file
+ * mirrors that into `isOpen`, moves focus, runs the roving activedescendant
+ * (no real DOM focus moves between items), keyboard navigation and selection.
  *
- * Markup contract (the root needs class="micra-dropdown" — its position:relative
- * is what anchors the absolutely-positioned menu under the trigger):
- *   <div class="micra-dropdown" data-component="dropdown" @pointerdown.outside="close">
+ * Placement: CSS anchor positioning in the skin. Where the browser lacks it,
+ * _place() sets top/left from the trigger's box and follows scroll and resize.
+ *
+ * Markup contract:
+ *   <micra-dropdown>
  *     <button class="micra-dropdown__trigger" data-ref="trigger"
- *             aria-haspopup="menu" aria-controls="dropdown-menu"
+ *             popovertarget="dropdown-menu" aria-haspopup="menu"
  *             data-bind="aria-expanded:isOpen ? 'true' : 'false'"
- *             @click="toggle" @keydown.down.prevent="open" @keydown.up.prevent="open">…</button>
+ *             @keydown.down.prevent="open" @keydown.up.prevent="open">…</button>
  *
- *     <ul class="micra-dropdown__menu" id="dropdown-menu" role="menu"
- *         data-ref="menu" tabindex="-1"
- *         data-bind="data-state:isOpen ? 'open' : 'closed', aria-activedescendant:activeDescendant()"
+ *     <ul class="micra-dropdown__menu" id="dropdown-menu" role="menu" popover
+ *         data-ref="menu" tabindex="-1" @toggle="onToggle"
+ *         data-bind="aria-activedescendant:activeDescendant()"
  *         @keydown.down.prevent="moveDown" @keydown.up.prevent="moveUp"
  *         @keydown.home.prevent="moveFirst" @keydown.end.prevent="moveLast"
- *         @keydown.enter.prevent="activate" @keydown.space.prevent="activate"
- *         @keydown.escape="close">
+ *         @keydown.enter.prevent="activate" @keydown.space.prevent="activate">
  *       <template data-each="items" data-key="id">
  *         <li class="micra-dropdown__item" role="menuitem"
  *             data-bind="id:item.id, aria-disabled:item.disabled ? 'true' : 'false',
@@ -30,37 +32,50 @@
  *             @click="select(item.id)" data-text="item.label"></li>
  *       </template>
  *     </ul>
- *   </div>
+ *   </micra-dropdown>
  */
 Micra.define('dropdown', {
   state: { isOpen: false, items: [], activeId: null, lastSelected: '' },
 
 
 
+  onCreate() {
+    // A unique anchor name per instance, so several dropdowns on a page each
+    // attach their menu to their own trigger.
+    const name = '--micra-dropdown-' + Math.random().toString(36).slice(2);
+    this.refs.trigger.style.anchorName = name;
+    this.refs.menu.style.positionAnchor = name;
+  },
+
   toggle() {
-    this.state.isOpen ? this.close() : this.open();
+    this.refs.menu.togglePopover();
   },
 
   open() {
-    if (this.state.isOpen) return;
-    this._trigger = this.refs.trigger; // remember who opened it, to return focus
-    this.state.activeId = this._firstEnabledId();
-    this.state.isOpen = true;
-    // Focus the menu container once it is actually visible. A double rAF waits
-    // until the open styles have been applied (a single one can fire too early,
-    // while the menu is still inheriting visibility:hidden, and focus() no-ops).
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => {
-        if (this.refs.menu) this.refs.menu.focus();
-      })
-    );
+    if (!this.state.isOpen) this.refs.menu.showPopover();
   },
 
   close() {
-    if (!this.state.isOpen) return;
-    this.state.isOpen = false;
-    this.state.activeId = null;
-    if (this._trigger && this._trigger.focus) this._trigger.focus(); // return focus
+    if (this.state.isOpen) this.refs.menu.hidePopover();
+  },
+
+  // The popover opened or closed: by the trigger, an outside click, Escape,
+  // or open()/close().
+  onToggle(e) {
+    const menu = this.refs.menu;
+    if (e.newState === 'open') {
+      this.state.activeId = this._firstEnabledId();
+      this.state.isOpen = true;
+      this._place();
+      menu.focus();
+    } else {
+      this.state.isOpen = false;
+      this.state.activeId = null;
+      if (this._unfollow) this._unfollow();
+      // Return focus to the trigger, unless the user clicked somewhere else.
+      const a = document.activeElement;
+      if (!a || a === document.body || menu.contains(a)) this.refs.trigger.focus();
+    }
   },
 
   // Activate the currently active item (Enter / Space).
@@ -126,6 +141,21 @@ Micra.define('dropdown', {
     const next = (current + step + enabled.length) % enabled.length;
     this.state.activeId = enabled[next].id;
     this._scrollActiveIntoView();
+  },
+
+  // Without CSS anchor positioning, put the menu under the trigger by hand and
+  // keep it there while the page scrolls or resizes.
+  _place() {
+    if (CSS.supports('position-anchor: --a')) return;
+    const follow = () => {
+      const r = this.refs.trigger.getBoundingClientRect();
+      this.refs.menu.style.top = r.bottom + 'px'; // the skin's margin adds the gap
+      this.refs.menu.style.left = r.left + 'px';
+    };
+    follow();
+    const offScroll = this.listen(window, 'scroll', follow, true);
+    const offResize = this.listen(window, 'resize', follow);
+    this._unfollow = () => (offScroll(), offResize(), (this._unfollow = null));
   },
 
   // Keep the active item visible when navigating a scrollable menu. A render is

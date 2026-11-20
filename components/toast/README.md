@@ -23,7 +23,7 @@ Open `index.html` to see it running (light + dark).
 
    ```html
    <micra-toast>
-     <div class="micra-toasts" role="region" aria-label="Notifications" aria-live="polite">
+     <div class="micra-toasts" popover="manual" data-ref="region" role="region" aria-label="Notifications" aria-live="polite">
        <template data-each="toasts" data-key="id">
          <div role="status" data-bind="class:toastClass(item)">
            <span data-text="item.message"></span>
@@ -78,6 +78,12 @@ The container is a `role="region"` labelled "Notifications" with
 toast is a `role="status"` and its dismiss button carries `aria-label="Dismiss"`.
 Enter motion respects `prefers-reduced-motion` (tokens zero the duration). Every
 auto-dismiss timer is cleared on dismiss and on teardown — no stray callbacks.
+
+The region is a manual popover shown once on mount, so toasts sit in the top layer,
+above a modal `<dialog>` too: a toast raised while a modal is open re-shows the
+region on top. The modal still makes the rest of the page inert, so a toast's
+Dismiss button can't be clicked until the modal closes; the toast times out as
+usual.
 
 ## License
 
